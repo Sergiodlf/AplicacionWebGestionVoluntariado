@@ -1,0 +1,40 @@
+<div class="d-flex flex-column h-100 bg-light">
+  <app-navbar></app-navbar>
+  <div class="d-flex flex-grow-1 overflow-hidden">
+    <app-sidebar></app-sidebar>
+    <div class="flex-grow-1 overflow-auto">
+      <div class="container-fluid p-4">
+        
+        <!-- Header Section -->
+        <div class="d-flex flex-column align-items-start mb-4">
+          <h2 class="text-custom-blue fw-bold mb-4">Organizaciones</h2>
+          <div class="d-flex justify-content-between w-100 align-items-center">
+            <app-status-toggle 
+              leftLabel="Pendientes" 
+              rightLabel="Aprobadas" 
+              [leftCount]="2" 
+              (optionChanged)="onTabChange($event)">
+            </app-status-toggle>
+            <app-add-button label="Añadir Organización" (onClick)="onAddOrganization()"></app-add-button>
+          </div>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="row g-4">
+          <div class="col-md-6" *ngFor="let org of organizations">
+            <app-organization-card
+              [name]="org.name"
+              [type]="org.type"
+              [location]="org.location"
+              [description]="org.description"
+              [tags]="org.tags"
+              (onAccept)="onAccept(org)"
+              (onReject)="onReject(org)">
+            </app-organization-card>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
