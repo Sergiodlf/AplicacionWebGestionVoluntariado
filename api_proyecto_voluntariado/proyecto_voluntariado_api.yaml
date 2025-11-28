@@ -1,0 +1,305 @@
+openapi: 3.0.3
+info:
+  title: API Plataforma de Voluntariado
+  description: API Backend para la gestión de voluntarios, organizaciones y actividades solidarias.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Servidor Local Symfony
+
+paths:
+  # ==========================================
+  # AUTENTICACIÓN Y REGISTRO
+  # ==========================================
+  /auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Iniciar sesión
+      description: Login común para Voluntarios y Organizaciones.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso. Devuelve token y rol.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales incorrectas
+
+  /auth/register/voluntario:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar nuevo voluntario
+      description: Crea un voluntario con perfil completo (habilidades, disponibilidad, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoluntarioRegistro'
+      responses:
+        '201':
+          description: Voluntario creado correctamente
+        '409':
+          description: El DNI o Correo ya existen
+
+  /auth/register/organizacion:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar nueva organización
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizacionRegistro'
+      responses:
+        '201':
+          description: Organización creada correctamente
+        '409':
+          description: El CIF o Email ya existen
+
+  # ==========================================
+  # ACTIVIDADES
+  # ==========================================
+  /actividades:
+    get:
+      tags:
+        - Actividades
+      summary: Listar todas las actividades
+      description: Devuelve la lista de actividades disponibles.
+      responses:
+        '200':
+          description: Lista recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActividadDetalle'
+
+  /actividades/crear:
+    post:
+      tags:
+        - Actividades
+      summary: Publicar una nueva actividad
+      description: Una organización crea una actividad.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActividadCreacion'
+      responses:
+        '201':
+          description: Actividad creada exitosamente
+
+  /actividades/{codActividad}/inscribir:
+    post:
+      tags:
+        - Actividades
+      summary: Inscribir voluntario en actividad
+      description: Apunta a un voluntario a una actividad específica.
+      parameters:
+        - name: codActividad
+          in: path
+          required: true
+          description: ID único de la actividad
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InscripcionRequest'
+      responses:
+        '200':
+          description: Inscripción realizada con éxito
+        '404':
+          description: Actividad o Voluntario no encontrados
+        '409':
+          description: El voluntario ya está inscrito o no hay plazas
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- MODELOS DE AUTENTICACIÓN ---
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "usuario@email.com"
+        password:
+          type: string
+          format: password
+          example: "1234"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        rol:
+          type: string
+          example: "ROLE_VOLUNTARIO"
+        id:
+          type: string
+          description: "DNI o CIF del usuario logueado"
+          example: "12345678Z"
+
+    # --- MODELO REGISTRO VOLUNTARIO ---
+    VoluntarioRegistro:
+      type: object
+      required: [nombreCompleto, dni, correo, password]
+      properties:
+        nombreCompleto:
+          type: string
+          example: "Juan Pérez García"
+        dni:
+          type: string
+          example: "12345678Z"
+        correo:
+          type: string
+          format: email
+          example: "juan@gmail.com"
+        password:
+          type: string
+          format: password
+        zona:
+          type: string
+          example: "Pamplona"
+        ciclo:
+          type: string
+          example: "DAW"
+        fechaNacimiento:
+          type: string
+          format: date
+          example: "1998-05-20"
+        experiencia:
+          type: string
+          example: "Voluntariado previo en Cruz Roja"
+        coche:
+          type: string
+          description: "Puede ser 'Si', 'No', 'true', etc."
+          example: "Si"
+        idiomas:
+          type: array
+          items:
+            type: string
+          example: ["Inglés", "Euskera"]
+        habilidades:
+          type: array
+          items:
+            type: string
+          example: ["Primeros Auxilios", "Conducción"]
+        intereses:
+          type: array
+          items:
+            type: string
+          example: ["Medio Ambiente", "Social"]
+        disponibilidad:
+          type: array
+          items:
+            type: string
+          example: ["Lunes Mañana", "Fines de Semana"]
+
+    # --- MODELO REGISTRO ORGANIZACIÓN ---
+    OrganizacionRegistro:
+      type: object
+      required: [cif, nombre, email, password]
+      properties:
+        cif:
+          type: string
+          example: "G99887766"
+        nombre:
+          type: string
+          example: "Asociación Ayuda Mutua"
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        sector:
+          type: string
+          example: "Salud"
+        zona:
+          type: string
+          example: "Burlada"
+        descripcion:
+          type: string
+          example: "ONG dedicada a..."
+
+    # --- MODELOS DE ACTIVIDADES ---
+    ActividadCreacion:
+      type: object
+      required: [cifOrganizacion, nombre]
+      properties:
+        cifOrganizacion:
+          type: string
+          description: "CIF de la organización dueña"
+          example: "G99887766"
+        nombre:
+          type: string
+          example: "Recogida de Alimentos"
+        descripcion:
+          type: string
+        fechaInicio:
+          type: string
+          format: date
+          example: "2025-12-01"
+        maxParticipantes:
+          type: integer
+          example: 20
+        ods:
+          type: array
+          items:
+            type: string
+          example: ["Hambre Cero", "Salud"]
+
+    ActividadDetalle:
+      type: object
+      properties:
+        codActividad:
+          type: integer
+        nombre:
+          type: string
+        organizacion:
+          type: object
+          properties:
+            nombre:
+              type: string
+            cif:
+              type: string
+        descripcion:
+          type: string
+        fechaInicio:
+          type: string
+          format: date
+
+    # --- MODELO INSCRIPCIÓN ---
+    InscripcionRequest:
+      type: object
+      required: [dni_voluntario]
+      properties:
+        dni_voluntario:
+          type: string
+          example: "12345678Z"
