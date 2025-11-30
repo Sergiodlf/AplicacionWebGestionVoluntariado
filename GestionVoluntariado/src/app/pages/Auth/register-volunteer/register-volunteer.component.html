@@ -1,0 +1,93 @@
+<div class="d-flex align-items-center justify-content-center min-vh-100 bg-white py-5">
+  <div class="container" style="max-width: 800px;">
+    <div class="text-center mb-5">
+      <h1 class="fw-bold text-custom-blue display-4">Registrarse</h1>
+    </div>
+
+    <form>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Nombre y Apellidos</label>
+          <input type="text" class="form-control bg-white border-light-gray" placeholder="Juan Pérez Rodriguez">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Correo Electrónico</label>
+          <input type="email" class="form-control bg-white border-light-gray" placeholder="juan@gmail.com">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">DNI</label>
+          <input type="text" class="form-control bg-white border-light-gray" placeholder="12345678M">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Contraseña</label>
+          <input type="password" class="form-control bg-white border-light-gray" placeholder="Contraseña">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Zona</label>
+          <input type="text" class="form-control bg-white border-light-gray" placeholder="Pamplona">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Idiomas</label>
+          <select class="form-select bg-white border-light-gray">
+            <option selected></option>
+            <option value="1">Inglés</option>
+            <option value="2">Francés</option>
+          </select>
+        </div>
+        
+        <div class="col-md-6">
+           <div class="d-flex flex-column gap-3">
+             <button type="button" class="btn btn-custom-blue text-white rounded-pill py-2 d-flex align-items-center justify-content-center gap-2">
+               <i class="bi bi-plus-lg"></i> Añadir Habilidades
+             </button>
+             <button type="button" class="btn btn-custom-blue text-white rounded-pill py-2 d-flex align-items-center justify-content-center gap-2">
+               <i class="bi bi-plus-lg"></i> Añadir Intereses
+             </button>
+           </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="row g-3">
+             <div class="col-12">
+                <label class="form-label fw-bold text-dark">Experiencia</label>
+                <select class="form-select bg-white border-light-gray">
+                  <option selected></option>
+                </select>
+             </div>
+             <div class="col-12">
+                <label class="form-label fw-bold text-dark">Fecha de Nacimiento</label>
+                <input type="date" class="form-control bg-white border-light-gray">
+             </div>
+             <div class="col-6">
+                <label class="form-label fw-bold text-dark">Coche</label>
+                <select class="form-select bg-white border-light-gray">
+                  <option selected></option>
+                </select>
+             </div>
+             <div class="col-6">
+                <label class="form-label fw-bold text-dark">Ciclo</label>
+                <select class="form-select bg-white border-light-gray">
+                  <option selected></option>
+                </select>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-5">
+        <label class="form-label fw-bold text-dark">Datos Añadidos</label>
+        <div class="border rounded-3 p-3 bg-white border-light-gray" style="min-height: 100px;">
+          <div class="d-flex gap-2 flex-wrap">
+            <span *ngFor="let skill of addedSkills" class="badge bg-light-blue text-custom-blue border border-0 px-3 py-2 rounded-pill fw-normal">
+              {{ skill }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <button type="submit" class="btn btn-custom-blue px-5 py-2 fs-5 rounded-3 text-white">Registrarme</button>
+      </div>
+    </form>
+  </div>
+</div>

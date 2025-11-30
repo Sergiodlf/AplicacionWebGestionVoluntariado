@@ -5,8 +5,17 @@ import { OrganizationsComponent } from './pages/Administrator/organizations/orga
 import { VolunteersListComponent } from './pages/Administrator/volunteers-list/volunteers-list.component';
 import { Matches } from './pages/Administrator/matches/matches';
 
+import { LoginComponent } from './pages/Auth/login/login.component';
+import { RegisterSelectionComponent } from './pages/Auth/register-selection/register-selection.component';
+import { RegisterVolunteerComponent } from './pages/Auth/register-volunteer/register-volunteer.component';
+import { RegisterOrganizationComponent } from './pages/Auth/register-organization/register-organization.component';
+
 export const routes: Routes = [
-    { path: '', redirectTo: '/admin/dashboard', pathMatch: 'full' },
+    { path: '', redirectTo: '/login', pathMatch: 'full' },
+    { path: 'login', component: LoginComponent },
+    { path: 'register', component: RegisterSelectionComponent },
+    { path: 'register/volunteer', component: RegisterVolunteerComponent },
+    { path: 'register/organization', component: RegisterOrganizationComponent },
     { path: 'admin/dashboard', component: Dashboard },
     { path: 'admin/volunteers', component: VolunteersComponent },
     { path: 'admin/organizations', component: OrganizationsComponent },
