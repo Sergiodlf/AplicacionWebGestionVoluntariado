@@ -9,9 +9,10 @@ import { LoginComponent } from './pages/Auth/login/login.component';
 import { RegisterSelectionComponent } from './pages/Auth/register-selection/register-selection.component';
 import { RegisterVolunteerComponent } from './pages/Auth/register-volunteer/register-volunteer.component';
 import { RegisterOrganizationComponent } from './pages/Auth/register-organization/register-organization.component';
+import { LandingPageComponent } from './pages/Landing/landing-page.component';
 
 export const routes: Routes = [
-    { path: '', redirectTo: '/login', pathMatch: 'full' },
+    { path: '', component: LandingPageComponent },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterSelectionComponent },
     { path: 'register/volunteer', component: RegisterVolunteerComponent },
