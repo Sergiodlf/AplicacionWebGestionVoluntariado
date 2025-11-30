@@ -1,0 +1,45 @@
+<div class="card border-0 shadow-sm h-100 rounded-4 p-3">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div class="d-flex align-items-center">
+      <div>
+        <h5 class="fw-bold text-custom-blue mb-0">{{ title }}</h5>
+        <small class="text-muted"><i class="bi bi-building me-1"></i>{{ organization }}</small>
+      </div>
+    </div>
+    <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
+      Apuntarse
+    </button>
+  </div>
+
+  <div class="mb-2">
+    <div class="d-flex align-items-center mb-2">
+      <i class="bi bi-gear text-custom-blue me-2"></i>
+      <span class="fw-bold text-custom-blue me-2">Habilidades:</span>
+      <div class="d-flex gap-1 flex-wrap">
+        <span *ngFor="let skill of skills" class="badge bg-light text-custom-blue border">{{ skill }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-2">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-calendar3 text-custom-blue me-2"></i>
+      <span class="fw-bold text-custom-blue me-2">Fecha:</span>
+      <span class="text-muted">{{ date }}</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="d-flex align-items-center">
+      <i class="bi bi-globe text-custom-blue me-2"></i>
+      <span class="fw-bold text-custom-blue me-2">ODS:</span>
+      <div class="d-flex gap-1 flex-wrap">
+        <span *ngFor="let item of ods" 
+              class="badge text-white border-0 px-2 py-1 rounded-pill"
+              [style.backgroundColor]="item.color">
+          {{ item.name }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

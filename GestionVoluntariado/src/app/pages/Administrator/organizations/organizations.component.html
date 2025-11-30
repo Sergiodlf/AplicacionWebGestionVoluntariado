@@ -6,17 +6,23 @@
       <div class="container-fluid p-4">
         
         <!-- Header Section -->
-        <div class="d-flex flex-column align-items-start mb-4">
+        <div class="d-flex flex-column align-items-center mb-5">
           <h2 class="text-custom-blue fw-bold mb-4">Organizaciones</h2>
-          <div class="d-flex justify-content-between w-100 align-items-center">
-            <app-status-toggle 
-              leftLabel="Pendientes" 
-              rightLabel="Aprobadas" 
-              [leftCount]="2" 
-              (optionChanged)="onTabChange($event)">
-            </app-status-toggle>
-            <app-add-button label="Añadir Organización" (onClick)="onAddOrganization()"></app-add-button>
+          <app-status-toggle 
+            leftLabel="Pendientes" 
+            rightLabel="Aprobadas" 
+            [leftCount]="2" 
+            (optionChanged)="onTabChange($event)">
+          </app-status-toggle>
+        </div>
+
+        <!-- Subheader & Action -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center text-custom-blue">
+            <i class="bi bi-briefcase me-2 fs-4"></i>
+            <h4 class="fw-bold mb-0">Organizaciones Pendientes</h4>
           </div>
+          <app-add-button label="Añadir Organización" (onClick)="onAddOrganization()"></app-add-button>
         </div>
 
         <!-- Cards Grid -->

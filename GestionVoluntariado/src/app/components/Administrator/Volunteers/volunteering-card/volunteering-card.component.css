@@ -1,0 +1,19 @@
+.bg-light-blue {
+    background-color: #e8f0fe;
+    /* Adjust based on your theme */
+}
+
+.text-custom-blue {
+    color: #1e3a8a;
+    /* Adjust based on your theme, assuming dark blue */
+}
+
+.btn-custom-blue {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-custom-blue:hover {
+    background-color: #172e6e;
+    border-color: #172e6e;
+}
