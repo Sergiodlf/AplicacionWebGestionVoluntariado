@@ -1,14 +1,27 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
+  email = '';
+  password = '';
+  errorMessage = '';
 
+  constructor(private router: Router) {}
+
+  login() {
+    if (this.email === 'test@example.com' && this.password === 'password') {
+      this.router.navigate(['/admin/dashboard']);
+    } else {
+      this.errorMessage = 'Credenciales incorrectas. Prueba con test@example.com / password';
+    }
+  }
 }
