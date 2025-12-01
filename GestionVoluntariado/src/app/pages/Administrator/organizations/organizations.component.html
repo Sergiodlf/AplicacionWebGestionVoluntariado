@@ -21,10 +21,26 @@
           <div class="d-flex align-items-center text-custom-blue">
             <i class="bi bi-briefcase me-2 fs-4"></i>
             <h4 class="fw-bold mb-0">Organizaciones Pendientes</h4>
-              (onAccept)="onAccept(org)"
-              (onReject)="onReject(org)">
-            </app-organization-card>
           </div>
+          <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAddOrganization()">
+            Añadir Organización
+          </button>
+        </div>
+
+        <div class="row g-4">
+          @for (org of organizations(); track org.name) {
+            <div class="col-12 col-md-6 col-xl-4">
+              <app-organization-card
+                [name]="org.name"
+                [type]="org.type"
+                [location]="org.location"
+                [description]="org.description"
+                [tags]="org.tags"
+                (onAccept)="onAccept(org)"
+                (onReject)="onReject(org)">
+              </app-organization-card>
+            </div>
+          }
         </div>
 
       </div>
