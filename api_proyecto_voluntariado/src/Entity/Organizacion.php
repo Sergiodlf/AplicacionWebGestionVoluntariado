@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\OrganizacionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -13,32 +15,49 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\Column(length: 20)]
-    private ?string $cif = null; // Clave primaria
+    #[ORM\Column(name: 'CIF', type: Types::STRING, length: 9, options: ['fixed' => true])] 
+    private ?string $cif = null; 
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(name: 'NOMBRE', length: 40)]
     private ?string $nombre = null;
 
-    #[ORM\Column(length: 180, unique: true)]
+    // Usamos columnDefinition para evitar que intente cambiar VARCHAR a NVARCHAR
+    #[ORM\Column(name: 'EMAIL', length: 100, unique: true, columnDefinition: 'VARCHAR(100) NOT NULL UNIQUE')]
     private ?string $email = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: 'PASSWORD', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
     private ?string $password = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(name: 'SECTOR', length: 100, nullable: true)]
     private ?string $sector = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    // Quitamos nullable: true porque en SQL es NOT NULL
+    #[ORM\Column(name: 'DIRECCION', length: 40)]
     private ?string $direccion = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(name: 'LOCALIDAD', length: 40)]
     private ?string $localidad = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    // MARTILLAZO AQUÍ: Definimos CHAR(5) explícitamente para que no choque con la Constraint
+    #[ORM\Column(name: 'CP', type: Types::STRING, length: 5, columnDefinition: 'CHAR(5) NOT NULL')] 
+    private ?string $cp = null;
+
+    #[ORM\Column(name: 'DESCRIPCION', length: 200)]
     private ?string $descripcion = null;
+    
+    #[ORM\Column(name: 'CONTACTO', length: 40)]
+    private ?string $contacto = null;
+
+    #[ORM\OneToMany(mappedBy: 'organizacion', targetEntity: Actividad::class)]
+    private Collection $actividades;
+
+    public function __construct()
+    {
+        $this->actividades = new ArrayCollection();
+    }
 
     // ==========================================
-    // MÉTODOS DE SEGURIDAD (UserInterface)
+    // MÉTODOS DE SEGURIDAD
     // ==========================================
 
     public function getUserIdentifier(): string
@@ -48,9 +67,7 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        // Todas las organizaciones tienen este rol por defecto
-        $roles = ['ROLE_ORGANIZACION'];
-        return array_unique($roles);
+        return ['ROLE_ORGANIZACION'];
     }
 
     public function getPassword(): ?string
@@ -60,7 +77,6 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // Si almacenas datos temporales o sensibles, límpialos aquí
     }
 
     // ==========================================
@@ -145,4 +161,12 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
         $this->descripcion = $descripcion;
         return $this;
     }
+    
+    public function getCp(): ?string { return $this->cp; }
+    public function setCp(string $cp): static { $this->cp = $cp; return $this; }
+    
+    public function getContacto(): ?string { return $this->contacto; }
+    public function setContacto(string $contacto): static { $this->contacto = $contacto; return $this; }
+
+    public function getActividades(): Collection { return $this->actividades; }
 }
