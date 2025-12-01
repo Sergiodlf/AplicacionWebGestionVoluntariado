@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { AddButtonComponent } from '../../../components/Global-Components/add-button/add-button.component';
 import { OrganizationCardComponent } from '../../../components/Administrator/Organizations/organization-card/organization-card.component';
+import { OrganizationFormComponent } from '../../../components/Global-Components/organization-form/organization-form.component';
+import { OrganizationService } from '../../../services/organization.service';
 
 @Component({
   selector: 'app-organizations',
@@ -15,37 +17,29 @@ import { OrganizationCardComponent } from '../../../components/Administrator/Org
     SidebarComponent, 
     StatusToggleComponent, 
     AddButtonComponent,
-    OrganizationCardComponent
+    OrganizationCardComponent,
+    OrganizationFormComponent
   ],
   templateUrl: './organizations.component.html',
   styleUrl: './organizations.component.css'
 })
 export class OrganizationsComponent {
+  private organizationService = inject(OrganizationService);
+  organizations = this.organizationService.getOrganizations();
   activeTab: 'left' | 'right' = 'left';
 
-  organizations = [
-    {
-      name: 'Fundación Ayuda',
-      type: 'ONG',
-      location: 'Madrid',
-      description: 'Ayuda a personas sin hogar',
-      tags: ['Cocina', 'Logística']
-    },
-    {
-      name: 'Centro Cultural',
-      type: 'Cultural',
-      location: 'Valencia',
-      description: 'Promoción de la cultura local',
-      tags: ['Arte', 'Música']
-    }
-  ];
+  showModal = false;
 
   onTabChange(tab: 'left' | 'right') {
     this.activeTab = tab;
   }
 
   onAddOrganization() {
-    console.log('Add organization clicked');
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
   }
 
   onAccept(org: any) {

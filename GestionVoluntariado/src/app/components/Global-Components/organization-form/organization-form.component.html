@@ -1,0 +1,36 @@
+<form (ngSubmit)="submit()">
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Nombre</label>
+      <input type="text" class="form-control bg-white border-light-gray" placeholder="ONG Ejemplo">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Correo Electrónico</label>
+      <input type="email" class="form-control bg-white border-light-gray" placeholder="contacto@gmail.com">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Sector</label>
+      <select class="form-select bg-white border-light-gray">
+        <option selected>Educación</option>
+        <option value="1">Salud</option>
+        <option value="2">Medio Ambiente</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Zona</label>
+      <select class="form-select bg-white border-light-gray">
+        <option selected>Pamplona</option>
+        <option value="1">Tudela</option>
+      </select>
+    </div>
+    
+    <div class="col-12">
+      <label class="form-label fw-bold text-dark">Descripción</label>
+      <textarea class="form-control bg-white border-light-gray" rows="4" placeholder="Cuéntanos acerca de tu organización..."></textarea>
+    </div>
+  </div>
+
+  <div class="text-center mt-5">
+    <button type="submit" class="btn btn-custom-blue px-5 py-2 fs-5 rounded-3 text-white">{{ submitLabel }}</button>
+  </div>
+</form>

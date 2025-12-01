@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -9,11 +9,11 @@ import { CommonModule } from '@angular/common';
   styleUrl: './volunteer-card.component.css'
 })
 export class VolunteerCardComponent {
-  @Input() name: string = '';
-  @Input() email: string = '';
-  @Input() skills: string[] = [];
-  @Input() availability: string = '';
-  @Input() interests: string[] = [];
+  name = input.required<string>();
+  email = input.required<string>();
+  skills = input<string[]>([]);
+  availability = input<string>('');
+  interests = input<string[]>([]);
   
   @Output() onAccept = new EventEmitter<void>();
   @Output() onReject = new EventEmitter<void>();

@@ -21,25 +21,30 @@
           <div class="d-flex align-items-center text-custom-blue">
             <i class="bi bi-briefcase me-2 fs-4"></i>
             <h4 class="fw-bold mb-0">Organizaciones Pendientes</h4>
-          </div>
-          <app-add-button label="Añadir Organización" (onClick)="onAddOrganization()"></app-add-button>
-        </div>
-
-        <!-- Cards Grid -->
-        <div class="row g-4">
-          <div class="col-md-6" *ngFor="let org of organizations">
-            <app-organization-card
-              [name]="org.name"
-              [type]="org.type"
-              [location]="org.location"
-              [description]="org.description"
-              [tags]="org.tags"
               (onAccept)="onAccept(org)"
               (onReject)="onReject(org)">
             </app-organization-card>
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showModal">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body px-5 pb-5">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold text-custom-blue">Añadir Organización</h2>
+        </div>
+
+        <app-organization-form submitLabel="Añadir" (onSubmit)="closeModal()"></app-organization-form>
       </div>
     </div>
   </div>
