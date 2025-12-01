@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class AuthController extends AbstractController
 {
     // =========================================================================
-    // 1. REGISTRO DE VOLUNTARIOS
+    // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
     // =========================================================================
     #[Route('/register/voluntario', name: 'register_voluntario', methods: ['POST'])]
     public function registerVoluntario(
@@ -30,7 +30,6 @@ class AuthController extends AbstractController
     {
         $json = $request->getContent();
 
-        // 1. Deserializar JSON a DTO
         try {
             /** @var RegistroVoluntarioDTO $dto */
             $dto = $serializer->deserialize($json, RegistroVoluntarioDTO::class, 'json');
@@ -39,8 +38,6 @@ class AuthController extends AbstractController
         }
 
         $repo = $entityManager->getRepository(Voluntario::class);
-
-        // 2. Comprobar duplicados
         if ($repo->findOneBy(['dni' => $dto->dni])) {
             return $this->json(['error' => 'El DNI ya existe'], 409);
         }
@@ -48,44 +45,78 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'El correo ya existe'], 409);
         }
 
-        // 3. Mapear DTO a Entidad Voluntario
-        $voluntario = new Voluntario();
-        $voluntario->setDni($dto->dni);
-        $voluntario->setCorreo($dto->correo);
-        $voluntario->setZona($dto->zona);
-        $voluntario->setCursoCiclos($dto->ciclo);
-        $voluntario->setExperiencia($dto->experiencia);
+        // --- PREPARACIÓN DE DATOS ---
 
-        // Lógica: Dividir "Nombre Completo" en Nombre y Apellidos
+        // 1. Nombres
         $partes = explode(' ', trim($dto->nombreCompleto));
-        $voluntario->setNombre($partes[0] ?? '');
-        $voluntario->setApellido1($partes[1] ?? '');
-        if (count($partes) > 2) {
-            $voluntario->setApellido2(implode(' ', array_slice($partes, 2)));
-        }
+        $nombre = $partes[0] ?? '';
+        $apellido1 = $partes[1] ?? '';
+        $apellido2 = (count($partes) > 2) ? implode(' ', array_slice($partes, 2)) : '';
 
-        // Lógica: Fecha de Nacimiento
+        // 2. Fecha (Formato Ymd para SQL Server)
+        $fechaSql = null;
         if ($dto->fechaNacimiento) {
             try {
-                $voluntario->setFechaNacimiento(new \DateTime($dto->fechaNacimiento));
+                $fechaObj = new \DateTime($dto->fechaNacimiento);
+                $fechaSql = $fechaObj->format('Ymd'); 
             } catch (\Exception $e) {}
         }
 
-        // Lógica: Coche (Convertir string/bool a booleano)
+        // 3. Coche
         $cocheStr = strtolower((string)$dto->coche);
-        $voluntario->setCoche(in_array($cocheStr, ['si', 'yes', 'true', '1']));
+        $cocheBit = in_array($cocheStr, ['si', 'yes', 'true', '1']) ? 1 : 0;
 
-        // Lógica: Arrays a String
-        $voluntario->setIdiomas(implode(', ', $dto->idiomas));
-        $voluntario->setHabilidades(implode(', ', $dto->habilidades));
-        $voluntario->setIntereses(implode(', ', $dto->intereses));
+        // 4. Arrays
+        $idiomas = implode(', ', $dto->idiomas);
+        $habilidades = implode(', ', $dto->habilidades);
+        $intereses = implode(', ', $dto->intereses);
 
-        // 4. Encriptar contraseña y Guardar
-        $hashedPassword = $passwordHasher->hashPassword($voluntario, $dto->password);
-        $voluntario->setPassword($hashedPassword);
+        // 5. Contraseña (CORRECCIÓN IMPORTANTE)
+        // Usamos un objeto Voluntario "lleno" para generar el hash.
+        // Esto asegura que si el hasher usa el email/dni como salt, coincida con el login.
+        $userParaHash = new Voluntario();
+        $userParaHash->setCorreo($dto->correo); // Clave para el UserIdentifier
+        $userParaHash->setDni($dto->dni);
+        
+        $hashedPassword = $passwordHasher->hashPassword($userParaHash, $dto->password);
 
-        $entityManager->persist($voluntario);
-        $entityManager->flush();
+        // --- INSERT MANUAL ---
+        try {
+            $conn = $entityManager->getConnection();
+            
+            $sql = "
+                INSERT INTO VOLUNTARIOS (
+                    DNI, NOMBRE, APELLIDO1, APELLIDO2, CORREO, PASSWORD, 
+                    COCHE, FECHA_NACIMIENTO, ZONA, EXPERIENCIA, 
+                    IDIOMAS, HABILIDADES, INTERESES
+                ) VALUES (
+                    :dni, :nombre, :ap1, :ap2, :correo, :pass, 
+                    :coche, :fecha, :zona, :exp, 
+                    :idiomas, :hab, :int
+                )
+            ";
+
+            $params = [
+                'dni' => $dto->dni,
+                'nombre' => $nombre,
+                'ap1' => $apellido1,
+                'ap2' => $apellido2,
+                'correo' => $dto->correo,
+                'pass' => $hashedPassword,
+                'coche' => $cocheBit,
+                'fecha' => $fechaSql,
+                'zona' => $dto->zona,
+                'exp' => $dto->experiencia,
+                'idiomas' => $idiomas,
+                'hab' => $habilidades,
+                'int' => $intereses
+            ];
+
+            $conn->executeStatement($sql, $params);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error SQL al guardar', 'detalle' => $e->getMessage()], 500);
+        }
 
         return $this->json(['message' => 'Voluntario registrado correctamente'], 201);
     }
@@ -112,35 +143,41 @@ class AuthController extends AbstractController
 
         $repo = $entityManager->getRepository(Organizacion::class);
 
-        // 1. Validar duplicados
-        if ($repo->findOneBy(['cif' => $dto->cif])) {
+        if ($repo->find($dto->cif)) {
             return $this->json(['error' => 'CIF ya registrado'], 409);
         }
         if ($repo->findOneBy(['email' => $dto->email])) {
             return $this->json(['error' => 'Email ya registrado'], 409);
         }
 
-        // 2. Crear Entidad Organizacion
         $org = new Organizacion();
         $org->setCif($dto->cif);
         $org->setNombre($dto->nombre);
         $org->setEmail($dto->email);
-        $org->setSector($dto->sector ?? '');
-        $org->setDescripcion($dto->descripcion ?? '');
-        $org->setLocalidad($dto->zona); // Mapeamos 'zona' del JSON a 'localidad' de la Entidad
+        $org->setDireccion($dto->direccion);
+        $org->setCp($dto->cp);
+        $org->setLocalidad($dto->localidad);
+        $org->setDescripcion($dto->descripcion);
+        $org->setContacto($dto->contacto);
 
-        // 3. Encriptar contraseña y Guardar
+        if ($dto->sector) $org->setSector($dto->sector);
+
         $hashedPassword = $passwordHasher->hashPassword($org, $dto->password);
         $org->setPassword($hashedPassword);
 
-        $entityManager->persist($org);
-        $entityManager->flush();
+        try {
+            $entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
+            $entityManager->persist($org);
+            $entityManager->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al guardar organización', 'mensaje_tecnico' => $e->getMessage()], 500);
+        }
 
         return $this->json(['message' => 'Organización creada correctamente'], 201);
     }
 
     // =========================================================================
-    // 3. LOGIN UNIFICADO
+    // 3. LOGIN UNIFICADO (MEJORADO PARA DEBUG)
     // =========================================================================
     #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(
@@ -168,17 +205,21 @@ class AuthController extends AbstractController
             $tipoUsuario = 'organizacion';
         }
 
-        // C. Verificar usuario y contraseña
-        if (!$user || !$passwordHasher->isPasswordValid($user, $password)) {
-            return $this->json(['error' => 'Credenciales inválidas'], 401);
+        // Si no encontramos al usuario en ninguna tabla
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        // D. Éxito
+        // C. Verificar contraseña
+        if (!$passwordHasher->isPasswordValid($user, $password)) {
+            return $this->json(['error' => 'Contraseña incorrecta'], 401);
+        }
+
         return $this->json([
             'message' => 'Login correcto',
-            'id' => $user->getId(),
+            'id' => ($tipoUsuario === 'voluntario') ? $user->getDni() : $user->getCif(),
             'tipo' => $tipoUsuario,
-            'nombre' => $user->getNombre(), // Asegúrate de que ambas entidades tengan este getter
+            'nombre' => $user->getNombre(),
         ]);
     }
 }

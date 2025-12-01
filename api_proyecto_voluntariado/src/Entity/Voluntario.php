@@ -3,246 +3,128 @@
 namespace App\Entity;
 
 use App\Repository\VoluntarioRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
 
 #[ORM\Entity(repositoryClass: VoluntarioRepository::class)]
 #[ORM\Table(name: 'VOLUNTARIOS')]
 class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(name: 'DNI', type: Types::STRING, length: 9, options: ['fixed' => true])]
     private ?string $dni = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(name: 'NOMBRE', length: 40)]
     private ?string $nombre = null;
 
-    #[ORM\Column(length: 50, nullable: true)]
+    #[ORM\Column(name: 'APELLIDO1', length: 40)]
     private ?string $apellido1 = null;
 
-    #[ORM\Column(length: 50, nullable: true)]
+    #[ORM\Column(name: 'APELLIDO2', length: 40)]
     private ?string $apellido2 = null;
 
-    #[ORM\Column(length: 180, unique: true)]
+    #[ORM\Column(name: 'CORREO', length: 40, unique: true)]
     private ?string $correo = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: 'PASSWORD', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
     private ?string $password = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
+    #[ORM\Column(name: 'ZONA', length: 100, nullable: true)]
     private ?string $zona = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(name: 'FECHA_NACIMIENTO', type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fechaNacimiento = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(name: 'EXPERIENCIA', length: 200, nullable: true)]
     private ?string $experiencia = null;
 
-    #[ORM\Column(type: Types::BOOLEAN, nullable: true)]
+    #[ORM\Column(name: 'COCHE', type: Types::BOOLEAN)]
     private ?bool $coche = null;
 
-    #[ORM\Column(length: 100, nullable: true)]
-    private ?string $cursoCiclos = null;
+    #[ORM\ManyToOne(targetEntity: Ciclo::class)]
+    #[ORM\JoinColumn(name: 'CURSO_CICLOS', referencedColumnName: 'CURSO', nullable: true)]
+    #[ORM\JoinColumn(name: 'NOMBRE_CICLOS', referencedColumnName: 'NOMBRE', nullable: true)]
+    private ?Ciclo $ciclo = null;
 
-    // Guardaremos arrays como texto separado por comas (ej: "Inglés, Francés")
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(name: 'HABILIDADES', type: Types::TEXT, nullable: true)]
     private ?string $habilidades = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(name: 'INTERESES', type: Types::TEXT, nullable: true)]
     private ?string $intereses = null;
     
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(name: 'IDIOMAS', type: Types::TEXT, nullable: true)]
     private ?string $idiomas = null;
 
-    // ==========================================
-    // MÉTODOS DE USER INTERFACE (SEGURIDAD)
-    // ==========================================
+    // CONFIGURACIÓN MOVIDA AQUÍ PARA QUE EL ORDEN DE LA PK SEA (DNI, CODACTIVIDAD)
+    #[ORM\ManyToMany(targetEntity: Actividad::class, inversedBy: 'voluntariosInscritos')]
+    #[ORM\JoinTable(name: 'VOLUNTARIOS_ACTIVIDADES')]
+    #[ORM\JoinColumn(name: 'DNI_VOLUNTARIO', referencedColumnName: 'DNI', columnDefinition: 'NCHAR(9) NOT NULL')]
+    #[ORM\InverseJoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD', columnDefinition: 'SMALLINT NOT NULL')]
+    private Collection $actividades;
 
-    public function getUserIdentifier(): string
+    public function __construct()
     {
-        return (string) $this->correo;
+        $this->actividades = new ArrayCollection();
     }
 
-    public function getRoles(): array
+    // ... Resto de métodos de seguridad (getUserIdentifier, getRoles...) ...
+    public function getUserIdentifier(): string { return (string) $this->correo; }
+    public function getRoles(): array { return ['ROLE_VOLUNTARIO']; }
+    public function eraseCredentials(): void {}
+
+    // ... Getters y Setters básicos ...
+    public function getDni(): ?string { return $this->dni; }
+    public function setDni(string $dni): static { $this->dni = $dni; return $this; }
+    public function getNombre(): ?string { return $this->nombre; }
+    public function setNombre(string $nombre): static { $this->nombre = $nombre; return $this; }
+    // ... (añade el resto de getters básicos aquí) ...
+    public function getApellido1(): ?string { return $this->apellido1; }
+    public function setApellido1(?string $a): static { $this->apellido1 = $a; return $this; }
+    public function getApellido2(): ?string { return $this->apellido2; }
+    public function setApellido2(?string $a): static { $this->apellido2 = $a; return $this; }
+    public function getCorreo(): ?string { return $this->correo; }
+    public function setCorreo(string $c): static { $this->correo = $c; return $this; }
+    public function getPassword(): ?string { return $this->password; }
+    public function setPassword(string $p): static { $this->password = $p; return $this; }
+    public function getZona(): ?string { return $this->zona; }
+    public function setZona(?string $z): static { $this->zona = $z; return $this; }
+    public function getFechaNacimiento(): ?\DateTimeInterface { return $this->fechaNacimiento; }
+    public function setFechaNacimiento(?\DateTimeInterface $f): static { $this->fechaNacimiento = $f; return $this; }
+    public function getExperiencia(): ?string { return $this->experiencia; }
+    public function setExperiencia(?string $e): static { $this->experiencia = $e; return $this; }
+    public function isCoche(): ?bool { return $this->coche; }
+    public function setCoche(?bool $c): static { $this->coche = $c; return $this; }
+    public function getCiclo(): ?Ciclo { return $this->ciclo; }
+    public function setCiclo(?Ciclo $c): static { $this->ciclo = $c; return $this; }
+    public function getHabilidades(): ?string { return $this->habilidades; }
+    public function setHabilidades(?string $h): static { $this->habilidades = $h; return $this; }
+    public function getIntereses(): ?string { return $this->intereses; }
+    public function setIntereses(?string $i): static { $this->intereses = $i; return $this; }
+    public function getIdiomas(): ?string { return $this->idiomas; }
+    public function setIdiomas(?string $i): static { $this->idiomas = $i; return $this; }
+
+
+    // MÉTODOS DE LA RELACIÓN
+    public function getActividades(): Collection
     {
-        // Garantizamos que al menos tenga el rol de VOLUNTARIO
-        $roles = ['ROLE_VOLUNTARIO'];
-        return array_unique($roles);
+        return $this->actividades;
     }
 
-    public function eraseCredentials(): void
+    public function addActividad(Actividad $actividad): static
     {
-        // Si guardaras datos temporales sensibles, los borrarías aquí.
-    }
-
-    // ==========================================
-    // GETTERS Y SETTERS
-    // ==========================================
-
-    public function __toString(): string
-    {
-        return $this->nombre . ' ' . ($this->apellido1 ?? '') . ' ' . ($this->apellido2 ?? '');
-    }
-
-    public function getId(): ?string
-    {
-        return $this->dni;
-    }   
-
-    public function getDni(): ?string
-    {
-        return $this->dni;
-    }
-
-    public function setDni(string $dni): static
-    {
-        $this->dni = $dni;
+        if (!$this->actividades->contains($actividad)) {
+            $this->actividades->add($actividad);
+        }
         return $this;
     }
 
-    public function getNombre(): ?string
+    public function removeActividad(Actividad $actividad): static
     {
-        return $this->nombre;
-    }
-
-    public function setNombre(string $nombre): static
-    {
-        $this->nombre = $nombre;
-        return $this;
-    }
-
-    public function getApellido1(): ?string
-    {
-        return $this->apellido1;
-    }
-
-    public function setApellido1(?string $apellido1): static
-    {
-        $this->apellido1 = $apellido1;
-        return $this;
-    }
-
-    public function getApellido2(): ?string
-    {
-        return $this->apellido2;
-    }
-
-    public function setApellido2(?string $apellido2): static
-    {
-        $this->apellido2 = $apellido2;
-        return $this;
-    }
-
-    public function getCorreo(): ?string
-    {
-        return $this->correo;
-    }
-
-    public function setCorreo(string $correo): static
-    {
-        $this->correo = $correo;
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-        return $this;
-    }
-
-    public function getZona(): ?string
-    {
-        return $this->zona;
-    }
-
-    public function setZona(?string $zona): static
-    {
-        $this->zona = $zona;
-        return $this;
-    }
-
-    public function getFechaNacimiento(): ?\DateTimeInterface
-    {
-        return $this->fechaNacimiento;
-    }
-
-    public function setFechaNacimiento(?\DateTimeInterface $fechaNacimiento): static
-    {
-        $this->fechaNacimiento = $fechaNacimiento;
-        return $this;
-    }
-
-    public function getExperiencia(): ?string
-    {
-        return $this->experiencia;
-    }
-
-    public function setExperiencia(?string $experiencia): static
-    {
-        $this->experiencia = $experiencia;
-        return $this;
-    }
-
-    public function isCoche(): ?bool
-    {
-        return $this->coche;
-    }
-
-    public function setCoche(?bool $coche): static
-    {
-        $this->coche = $coche;
-        return $this;
-    }
-
-    public function getCursoCiclos(): ?string
-    {
-        return $this->cursoCiclos;
-    }
-
-    public function setCursoCiclos(?string $cursoCiclos): static
-    {
-        $this->cursoCiclos = $cursoCiclos;
-        return $this;
-    }
-
-    public function getHabilidades(): ?string
-    {
-        return $this->habilidades;
-    }
-
-    public function setHabilidades(?string $habilidades): static
-    {
-        $this->habilidades = $habilidades;
-        return $this;
-    }
-
-    public function getIntereses(): ?string
-    {
-        return $this->intereses;
-    }
-
-    public function setIntereses(?string $intereses): static
-    {
-        $this->intereses = $intereses;
-        return $this;
-    }
-
-    public function getIdiomas(): ?string
-    {
-        return $this->idiomas;
-    }
-
-    public function setIdiomas(?string $idiomas): static
-    {
-        $this->idiomas = $idiomas;
+        $this->actividades->removeElement($actividad);
         return $this;
     }
 }
