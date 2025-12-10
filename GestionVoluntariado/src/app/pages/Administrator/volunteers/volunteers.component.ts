@@ -12,10 +12,10 @@ import { VolunteerService } from '../../../services/volunteer.service';
   selector: 'app-volunteers',
   standalone: true,
   imports: [
-    CommonModule, 
-    NavbarComponent, 
-    SidebarComponent, 
-    StatusToggleComponent, 
+    CommonModule,
+    NavbarComponent,
+    SidebarComponent,
+    StatusToggleComponent,
     AddButtonComponent,
     VolunteerCardComponent,
     VolunteerFormComponent
@@ -48,5 +48,21 @@ export class VolunteersComponent {
 
   onReject(volunteer: any) {
     console.log('Rejected', volunteer);
+  }
+
+  handleCreateVolunteer(volunteerData: any) {
+    console.log('Parent received volunteer data:', volunteerData);
+    this.volunteerService.createVolunteer(volunteerData).subscribe({
+      next: (response) => {
+        console.log('Volunteer created successfully', response);
+        this.volunteerService.addVolunteerToSignal(volunteerData); // Optimistic update or use response
+        this.closeModal();
+        alert('Voluntario creado con éxito');
+      },
+      error: (error) => {
+        console.error('Error creating volunteer', error);
+        alert('Error al crear voluntario: ' + JSON.stringify(error));
+      }
+    });
   }
 }

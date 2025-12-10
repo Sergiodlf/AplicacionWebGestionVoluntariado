@@ -1,4 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Voluntario } from '../models/voluntario';
 
 export interface Volunteer {
   name: string;
@@ -12,6 +15,13 @@ export interface Volunteer {
   providedIn: 'root'
 })
 export class VolunteerService {
+
+  private apiUrl = '/api/auth/register/voluntario'; // Correct endpoint from debug:router
+
+  constructor(private http: HttpClient) { }
+
+  /** ---------- SIGNALS PARA EJEMPLOS LOCALES (ya existen) ---------- */
+
   private volunteersSignal = signal<Volunteer[]>([
     {
       name: 'María García',
@@ -47,11 +57,17 @@ export class VolunteerService {
     return this.volunteersSignal.asReadonly();
   }
 
-  addVolunteer(volunteer: Volunteer) {
+  addVolunteerToSignal(volunteer: Volunteer) {
     this.volunteersSignal.update(volunteers => [...volunteers, volunteer]);
   }
 
   removeVolunteer(email: string) {
     this.volunteersSignal.update(volunteers => volunteers.filter(v => v.email !== email));
+  }
+
+  /** ---------- AQUI VIENE LO IMPORTANTE: POST REAL A API ---------- */
+
+  createVolunteer(voluntario: any): Observable<any> {
+    return this.http.post(this.apiUrl, voluntario);
   }
 }

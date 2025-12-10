@@ -4,14 +4,11 @@
     <app-sidebar></app-sidebar>
     <div class="flex-grow-1 overflow-auto">
       <div class="container-fluid p-4">
-        
+
         <!-- Header Section -->
         <div class="d-flex flex-column align-items-center mb-5">
           <h2 class="text-custom-blue fw-bold mb-4">Voluntarios</h2>
-          <app-status-toggle 
-            leftLabel="Pendientes" 
-            rightLabel="Aprobados" 
-            [leftCount]="4" 
+          <app-status-toggle leftLabel="Pendientes" rightLabel="Aprobados" [leftCount]="4"
             (optionChanged)="onTabChange($event)">
           </app-status-toggle>
         </div>
@@ -29,17 +26,12 @@
 
         <div class="row g-4">
           @for (volunteer of volunteers(); track volunteer.email) {
-            <div class="col-12 col-md-6 col-xl-4">
-              <app-volunteer-card
-                [name]="volunteer.name"
-                [email]="volunteer.email"
-                [skills]="volunteer.skills"
-                [availability]="volunteer.availability"
-                [interests]="volunteer.interests"
-                (onAccept)="onAccept(volunteer)"
-                (onReject)="onReject(volunteer)">
-              </app-volunteer-card>
-            </div>
+          <div class="col-12 col-md-6">
+            <app-volunteer-card [name]="volunteer.name" [email]="volunteer.email" [skills]="volunteer.skills"
+              [availability]="volunteer.availability" [interests]="volunteer.interests" (onAccept)="onAccept(volunteer)"
+              (onReject)="onReject(volunteer)">
+            </app-volunteer-card>
+          </div>
           }
         </div>
 
@@ -60,7 +52,7 @@
           <h2 class="fw-bold text-custom-blue">Añadir Voluntario</h2>
         </div>
 
-        <app-volunteer-form submitLabel="Añadir" (onSubmit)="closeModal()"></app-volunteer-form>
+        <app-volunteer-form submitLabel="Añadir" (onSubmit)="handleCreateVolunteer($event)"></app-volunteer-form>
       </div>
     </div>
   </div>
