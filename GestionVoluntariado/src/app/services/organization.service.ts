@@ -1,43 +1,41 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http'; 
+import { Observable } from 'rxjs'; 
+import { Organization, OrganizationCreateData } from '../models/organizationModel'; 
 
-export interface Organization {
-  name: string;
-  type: string;
-  location: string;
-  description: string;
-  tags: string[];
-}
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrganizationService {
-  private organizationsSignal = signal<Organization[]>([
-    {
-      name: 'Fundación Ayuda',
-      type: 'ONG',
-      location: 'Madrid',
-      description: 'Ayuda a personas sin hogar',
-      tags: ['Cocina', 'Logística']
-    },
-    {
-      name: 'Centro Cultural',
-      type: 'Cultural',
-      location: 'Valencia',
-      description: 'Promoción de la cultura local',
-      tags: ['Arte', 'Música']
-    }
-  ]);
+  
+  private apiUrl = 'http://localhost:8000/api/organizations'; 
 
-  getOrganizations() {
-    return this.organizationsSignal.asReadonly();
+  constructor(private http: HttpClient) { }
+
+  /**
+   * Obtiene la lista completa de organizaciones desde la API de Symfony.
+   * @returns Un Observable de un array de objetos Organization.
+   */
+  getOrganizations(): Observable<Organization[]> {
+    return this.http.get<Organization[]>(this.apiUrl);
   }
 
-  addOrganization(org: Organization) {
-    this.organizationsSignal.update(orgs => [...orgs, org]);
+  /**
+   * Registra una nueva organización enviando todos los datos, incluyendo la contraseña.
+   * @param data Objeto OrganizationCreateData con todos los campos requeridos.
+   * @returns Un Observable del objeto Organization creado.
+   */
+  addOrganization(data: OrganizationCreateData): Observable<Organization> {
+    return this.http.post<Organization>(this.apiUrl, data);
   }
 
-  removeOrganization(name: string) {
-    this.organizationsSignal.update(orgs => orgs.filter(o => o.name !== name));
+  /**
+   * Elimina una organización por su CIF.
+   * @param cif El Código de Identificación Fiscal de la organización.
+   * @returns Un Observable que completa la petición (la respuesta suele ser vacía o un status 204).
+   */
+  removeOrganization(cif: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${cif}`);
   }
 }
