@@ -1,0 +1,127 @@
+<div class="modal-backdrop-custom">
+  <div class="modal-dialog-custom">
+    <div class="card border-0 shadow-sm rounded-4 p-4 position-relative modal-card">
+
+      <!-- Botón cerrar -->
+      <button type="button" class="btn-close custom-close" aria-label="Close" (click)="onClose()"></button>
+
+      <h3 class="text-center text-custom-blue mb-4">Crear Voluntariado</h3>
+
+      <form (ngSubmit)="crear()">
+
+        <div class="row g-3 mb-3">
+          <!-- Nombre -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input type="text" class="form-control rounded-pill" [(ngModel)]="form.title" name="title"
+              placeholder="Ayuda en casas">
+          </div>
+
+          <!-- Organización -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Organización</label>
+            <input type="text" class="form-control rounded-pill" [(ngModel)]="form.organization" name="organization"
+              placeholder="ORG Vivienda">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <!-- Sector -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Sector</label>
+            <select class="form-select rounded-pill" [(ngModel)]="form.sector" name="sector">
+              <option value="">Selecciona sector</option>
+              <option>Educación</option>
+              <option>Social</option>
+              <option>Sanitario</option>
+            </select>
+          </div>
+
+          <!-- Zona -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Zona</label>
+            <select class="form-select rounded-pill" [(ngModel)]="form.zone" name="zone">
+              <option value="">Selecciona zona</option>
+              <option>Pamplona</option>
+              <option>Tudela</option>
+              <option>Estella</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Descripción</label>
+          <textarea class="form-control rounded-4" rows="3" [(ngModel)]="form.description" name="description"
+            placeholder="Cuéntanos acerca de tus actividades y objetivos...">
+          </textarea>
+        </div>
+
+        <!-- FECHA INICIO / FECHA FIN -->
+        <div class="row g-3 mb-4">
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha y hora de inicio</label>
+            <input type="datetime-local" class="form-control rounded-pill" [(ngModel)]="form.startDate"
+              name="startDate">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Fecha y hora de fin</label>
+            <input type="datetime-local" class="form-control rounded-pill" [(ngModel)]="form.endDate" name="endDate">
+          </div>
+
+        </div>
+
+        <!-- Añadir habilidad -->
+        <div class="row g-3 mb-3 align-items-center">
+          <div class="col-md-6">
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control rounded-pill" [(ngModel)]="form.skillInput" name="skillInput"
+                placeholder="Nueva habilidad">
+              <button type="button" class="btn btn-custom-blue text-white rounded-pill px-3" (click)="addSkill()">
+                + Añadir Habilidades
+              </button>
+            </div>
+          </div>
+
+          <!-- Añadir ODS -->
+          <div class="col-md-6">
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control rounded-pill" [(ngModel)]="form.odsInput" name="odsInput"
+                placeholder="Nuevo ODS o Meta">
+              <button type="button" class="btn btn-custom-blue text-white rounded-pill px-3" (click)="addOds()">
+                + Añadir ODS
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Datos Añadidos -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Datos Añadidos</label>
+          <div class="added-data-box rounded-4 p-2">
+            <ng-container *ngFor="let skill of form.skills">
+              <span class="tag-pill skill" (click)="removeSkill(skill)">
+                {{ skill }}
+              </span>
+            </ng-container>
+
+            <ng-container *ngFor="let od of form.ods">
+              <span class="tag-pill ods" (click)="removeOds(od)">
+                {{ od.name }}
+              </span>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Botón Crear -->
+        <button type="submit" class="btn btn-custom-blue w-100 rounded-pill py-2">
+          Crear
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>

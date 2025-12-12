@@ -11,6 +11,11 @@ import { RegisterVolunteerComponent } from './pages/Auth/register-volunteer/regi
 import { RegisterOrganizationComponent } from './pages/Auth/register-organization/register-organization.component';
 import { LandingPageComponent } from './pages/Landing/landing-page.component';
 
+import { Voluntariados } from './pages/Volunteer/voluntariados/voluntariados';
+import { MisVoluntariados } from './pages/Volunteer/mis-voluntariados/mis-voluntariados';
+
+import { MisVoluntariadosOrganizacion } from './pages/Organization/mis-voluntariados-organizacion/mis-voluntariados-organizacion';
+
 export const routes: Routes = [
     { path: '', component: LandingPageComponent },
     { path: 'login', component: LoginComponent },
@@ -21,5 +26,9 @@ export const routes: Routes = [
     { path: 'admin/volunteers', component: VolunteersComponent },
     { path: 'admin/organizations', component: OrganizationsComponent },
     { path: 'admin/volunteers-list', component: VolunteersListComponent },
-    { path: 'admin/matches', component: Matches }
+    { path: 'admin/matches', component: Matches },
+    { path: 'volunteer/voluntariados', component: Voluntariados},
+    { path: 'volunteer/mis-voluntariados', component: MisVoluntariados},
+    { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion}
+
 ];

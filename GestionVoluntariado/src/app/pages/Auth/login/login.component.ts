@@ -20,6 +20,10 @@ export class LoginComponent {
   login() {
     if (this.email === 'test@example.com' && this.password === 'password') {
       this.router.navigate(['/admin/dashboard']);
+    } else if (this.email === 'voluntario@example.com' && this.password === 'password'){
+      this.router.navigate(['/volunteer/voluntariados']);
+    } else if(this.email === 'organizacion@example.com' && this.password === 'password'){
+      this.router.navigate(['organization/mis-voluntariados-organizacion']);
     } else {
       this.errorMessage = 'Credenciales incorrectas. Prueba con test@example.com / password';
     }

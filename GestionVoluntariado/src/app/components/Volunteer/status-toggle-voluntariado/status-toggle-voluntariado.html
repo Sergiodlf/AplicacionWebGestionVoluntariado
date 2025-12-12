@@ -1,0 +1,30 @@
+<div class="toggle-container">
+  
+  <!-- Left Option -->
+  <div 
+    class="toggle-option"
+    [class.active]="active === 'left'"
+    (click)="setOption('left')">
+    {{ leftLabel }}
+    <span class="badge">{{ leftCount }}</span>
+  </div>
+
+  <!-- Middle Option -->
+  <div 
+    class="toggle-option"
+    [class.active]="active === 'middle'"
+    (click)="setOption('middle')">
+    {{ middleLabel }}
+    <span class="badge">{{ middleCount }}</span>
+  </div>
+
+  <!-- Right Option -->
+  <div 
+    class="toggle-option"
+    [class.active]="active === 'right'"
+    (click)="setOption('right')">
+    {{ rightLabel }}
+    <span class="badge">{{ rightCount }}</span>
+  </div>
+
+</div>
