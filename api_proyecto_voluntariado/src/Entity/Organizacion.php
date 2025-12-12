@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use Symfony\Component\Serializer\Annotation\Groups; // 👈 Importación esencial
+use Symfony\Component\Serializer\Annotation\Groups; 
 use App\Repository\OrganizacionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,54 +20,49 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
     // 'org:write' -> Para deserializar (recibir de Angular en POST/PUT).
 
     #[ORM\Id]
-    #[ORM\Column(name: 'CIF', type: Types::STRING, length: 9, options: ['fixed' => true])] 
+    #[ORM\Column(name: 'cif', type: Types::STRING, length: 9, options: ['fixed' => true])]
     #[Groups(['org:read', 'org:write'])]
-    private ?string $cif = null; 
+    private ?string $cif = null;
 
-    #[ORM\Column(name: 'NOMBRE', length: 40)]
+    #[ORM\Column(name: 'nombre', length: 40)]
     #[Groups(['org:read', 'org:write'])]
     private ?string $nombre = null;
 
     // Usamos columnDefinition para evitar que intente cambiar VARCHAR a NVARCHAR
-    #[ORM\Column(name: 'EMAIL', length: 100, unique: true, columnDefinition: 'VARCHAR(100) NOT NULL UNIQUE')]
+    #[ORM\Column(name: 'email', length: 100, unique: true, columnDefinition: 'VARCHAR(100) NOT NULL UNIQUE')]
     #[Groups(['org:read', 'org:write'])]
     private ?string $email = null;
 
-    #[ORM\Column(name: 'PASSWORD', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
+    #[ORM\Column(name: 'password', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
     // ATENCIÓN: Solo 'org:write'. Se debe recibir, pero NUNCA enviar de vuelta.
-    #[Groups(['org:write'])] 
+    #[Groups(['org:write'])]
     private ?string $password = null;
 
-    #[ORM\Column(name: 'SECTOR', length: 100, nullable: true)]
+    #[ORM\Column(name: 'sector', length: 100, nullable: true)]
     #[Groups(['org:read', 'org:write'])]
     private ?string $sector = null;
 
     // Quitamos nullable: true porque en SQL es NOT NULL
-    #[ORM\Column(name: 'DIRECCION', length: 40)]
+    #[ORM\Column(name: 'direccion', length: 40)]
     #[Groups(['org:read', 'org:write'])]
     private ?string $direccion = null;
 
-    #[ORM\Column(name: 'LOCALIDAD', length: 40)]
+    #[ORM\Column(name: 'localidad', length: 40)]
     #[Groups(['org:read', 'org:write'])]
     private ?string $localidad = null;
 
-    // MARTILLAZO AQUÍ: Definimos CHAR(5) explícitamente para que no choque con la Constraint
-    #[ORM\Column(name: 'CP', type: Types::STRING, length: 5, columnDefinition: 'CHAR(5) NOT NULL')] 
-    #[Groups(['org:read', 'org:write'])]
-    private ?string $cp = null;
-
-    #[ORM\Column(name: 'DESCRIPCION', length: 200)]
+    #[ORM\Column(name: 'descripcion', length: 200)]
     #[Groups(['org:read', 'org:write'])]
     private ?string $descripcion = null;
-    
-    #[ORM\Column(name: 'CONTACTO', length: 40)]
-    #[Groups(['org:read', 'org:write'])]
-    private ?string $contacto = null;
 
     #[ORM\OneToMany(mappedBy: 'organizacion', targetEntity: Actividad::class)]
     // Solo 'org:read' para que las actividades relacionadas se incluyan al obtener la organización.
-    #[Groups(['org:read'])] 
+    #[Groups(['org:read'])]
     private Collection $actividades;
+
+    #[ORM\Column(name: 'ESTADO', length: 20, options: ['default' => 'Pendiente'])]
+    #[Groups(['org:read', 'org:write'])] // Debe ser legible y posiblemente escribible (por un administrador)
+    private ?string $estado = 'Pendiente';
 
     public function __construct()
     {
@@ -180,12 +175,19 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
         $this->descripcion = $descripcion;
         return $this;
     }
-    
-    public function getCp(): ?string { return $this->cp; }
-    public function setCp(string $cp): static { $this->cp = $cp; return $this; }
-    
-    public function getContacto(): ?string { return $this->contacto; }
-    public function setContacto(string $contacto): static { $this->contacto = $contacto; return $this; }
 
-    public function getActividades(): Collection { return $this->actividades; }
+    public function getActividades(): Collection
+    {
+        return $this->actividades;
+    }
+    public function getEstado(): ?string
+    {
+        return $this->estado;
+    }
+
+    public function setEstado(string $estado): static
+    {
+        $this->estado = $estado;
+        return $this;
+    }
 }

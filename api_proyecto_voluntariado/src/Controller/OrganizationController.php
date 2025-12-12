@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Controlador REST para la gestión de la entidad Organizacion.
  */
-class OrganizacionController extends AbstractController
+class OrganizationController extends AbstractController
 {
 
     /**
@@ -73,6 +73,8 @@ class OrganizacionController extends AbstractController
             return $this->json(['error' => 'Formato JSON inválido.'], Response::HTTP_BAD_REQUEST);
         }
 
+        $organizacion->setEstado('Pendiente'); 
+        
         // 2. HASH DE CONTRASEÑA: Codifica la contraseña antes de guardar.
         $hashedPassword = $passwordHasher->hashPassword(
             $organizacion,
@@ -127,5 +129,45 @@ class OrganizacionController extends AbstractController
 
         // 2. Devuelve 204 No Content, que indica éxito sin necesidad de cuerpo de respuesta.
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Endpoint para actualizar parcialmente (ej. cambiar el estado) una organización por CIF.
+     * * CORRECCIÓN: Se ajustan las inyecciones para usar $organizacionRepository y $entityManager,
+     * y se asegura que el método sea ['PATCH'].
+     */
+    #[Route('/api/organizations/{cif}', name: 'organization_patch', methods: ['PATCH'])]
+    public function updateOrganizationStatus(
+        string $cif, 
+        Request $request, 
+        OrganizacionRepository $organizacionRepository, // Usa el repositorio disponible
+        EntityManagerInterface $entityManager // Usa el gestor de entidades disponible
+    ): JsonResponse {
+        // 1. Buscar la organización por CIF (usamos findOneBy con el campo cif)
+        $organizacion = $organizacionRepository->findOneBy(['cif' => $cif]);
+
+        if (!$organizacion) {
+            return $this->json(['message' => 'Organización no encontrada'], Response::HTTP_NOT_FOUND);
+        }
+
+        // 2. Obtener y decodificar el cuerpo JSON (ej. {'estado': 'Aprobado'})
+        $data = json_decode($request->getContent(), true);
+
+        // 3. Aplicar el cambio de estado si el campo 'estado' está presente en el JSON
+        if (isset($data['estado'])) {
+            // Asumiendo que existe el método setEstado() en tu entidad Organizacion
+            $organizacion->setEstado($data['estado']);
+        }
+        
+        // 4. Persistir los cambios (flush)
+        $entityManager->flush();
+
+        // 5. Devolver la organización actualizada (confirmación a Angular)
+        return $this->json(
+            $organizacion, 
+            Response::HTTP_OK, 
+            [], 
+            ['groups' => ['org:read']] // Usa el grupo de serialización correcto
+        );
     }
 }

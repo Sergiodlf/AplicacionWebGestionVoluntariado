@@ -1,36 +1,121 @@
-<form (ngSubmit)="submit()">
-  <div class="row g-4 mb-4">
-    <div class="col-md-6">
-      <label class="form-label fw-bold text-dark">Nombre</label>
-      <input type="text" class="form-control bg-white border-light-gray" placeholder="ONG Ejemplo">
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold text-dark">Correo Electrónico</label>
-      <input type="email" class="form-control bg-white border-light-gray" placeholder="contacto@gmail.com">
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold text-dark">Sector</label>
-      <select class="form-select bg-white border-light-gray">
-        <option selected>Educación</option>
-        <option value="1">Salud</option>
-        <option value="2">Medio Ambiente</option>
-      </select>
-    </div>
-    <div class="col-md-6">
-      <label class="form-label fw-bold text-dark">Zona</label>
-      <select class="form-select bg-white border-light-gray">
-        <option selected>Pamplona</option>
-        <option value="1">Tudela</option>
-      </select>
-    </div>
-    
-    <div class="col-12">
-      <label class="form-label fw-bold text-dark">Descripción</label>
-      <textarea class="form-control bg-white border-light-gray" rows="4" placeholder="Cuéntanos acerca de tu organización..."></textarea>
-    </div>
-  </div>
+<form [formGroup]="organizationForm" (ngSubmit)="submit()">
+    <div class="row g-4 mb-4">
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">CIF</label>
+            <input type="text" class="form-control bg-white border-light-gray" 
+                    placeholder="Ej. A12345678" 
+                    formControlName="cif"
+                    [ngClass]="{'is-invalid': f['cif'].invalid && f['cif'].touched}">
+            @if (f['cif'].invalid && f['cif'].touched) {
+                <div class="invalid-feedback">
+                    @if (f['cif'].errors?.['required']) { <span>El CIF es obligatorio.</span> }
+                    @if (f['cif'].errors?.['pattern']) { <span>Formato CIF/NIF inválido.</span> }
+                </div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Nombre</label>
+            <input type="text" class="form-control bg-white border-light-gray" 
+                    placeholder="ONG Ejemplo" 
+                    formControlName="nombre"
+                    [ngClass]="{'is-invalid': f['nombre'].invalid && f['nombre'].touched}">
+            @if (f['nombre'].invalid && f['nombre'].touched) {
+                <div class="invalid-feedback">
+                    @if (f['nombre'].errors?.['required']) { <span>El nombre es obligatorio.</span> }
+                    @if (f['nombre'].errors?.['minlength']) { <span>Debe tener al menos 3 caracteres.</span> }
+                </div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Correo Electrónico</label>
+            <input type="email" class="form-control bg-white border-light-gray" 
+                    placeholder="contacto@gmail.com" 
+                    formControlName="email"
+                    [ngClass]="{'is-invalid': f['email'].invalid && f['email'].touched}">
+            @if (f['email'].invalid && f['email'].touched) {
+                <div class="invalid-feedback">
+                    @if (f['email'].errors?.['required']) { <span>El email es obligatorio.</span> }
+                    @if (f['email'].errors?.['email']) { <span>Debe ser un formato de email válido.</span> }
+                </div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Contraseña</label>
+            <input type="password" class="form-control bg-white border-light-gray" 
+                    placeholder="Mínimo 8 caracteres, 1 Mayús, 1 Núm" 
+                    formControlName="password"
+                    [ngClass]="{'is-invalid': f['password'].invalid && f['password'].touched}">
+            @if (f['password'].invalid && f['password'].touched) {
+                <div class="invalid-feedback">
+                    @if (f['password'].errors?.['required']) { <span>La contraseña es obligatoria.</span> }
+                    @if (f['password'].errors?.['minlength']) { <span>Mínimo 8 caracteres.</span> }
+                    @if (f['password'].errors?.['pattern']) { <span>Debe contener al menos una mayúscula y un número.</span> }
+                </div>
+            }
+        </div>
+        
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Zona</label>
+            <select class="form-select bg-white border-light-gray" 
+                    formControlName="localidad"
+                    [ngClass]="{'is-invalid': f['localidad'].invalid && f['localidad'].touched}">
+                <option value="Pamplona">Pamplona</option>
+                <option value="Tudela">Tudela</option>
+            </select>
+            @if (f['localidad'].errors?.['required'] && f['localidad'].touched) {
+                <div class="invalid-feedback"><span>Debe seleccionar una zona.</span></div>
+            }
+        </div>
 
-  <div class="text-center mt-5">
-    <button type="submit" class="btn btn-custom-blue px-5 py-2 fs-5 rounded-3 text-white">{{ submitLabel }}</button>
-  </div>
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Dirección</label>
+            <input type="text" class="form-control bg-white border-light-gray" 
+                    placeholder="Ej. Calle Mayor, 10" 
+                    formControlName="direccion"
+                    [ngClass]="{'is-invalid': f['direccion'].invalid && f['direccion'].touched}">
+            @if (f['direccion'].errors?.['required'] && f['direccion'].touched) {
+                <div class="invalid-feedback"><span>La dirección es obligatoria.</span></div>
+            }
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-bold text-dark">Sector</label>
+            <select class="form-select bg-white border-light-gray" 
+                    formControlName="sector"
+                    [ngClass]="{'is-invalid': f['sector'].invalid && f['sector'].touched}">
+                <option value="Educación">Educación</option>
+                <option value="Salud">Salud</option>
+                <option value="Medio Ambiente">Medio Ambiente</option>
+                <option value="Comunitario">Comunitario</option>
+            </select>
+            @if (f['sector'].errors?.['required'] && f['sector'].touched) {
+                <div class="invalid-feedback"><span>Debe seleccionar un sector.</span></div>
+            }
+        </div>
+        
+        <div class="col-12">
+            <label class="form-label fw-bold text-dark">Descripción</label>
+            <textarea class="form-control bg-white border-light-gray" rows="4" 
+                        placeholder="Cuéntanos acerca de tu organización..." 
+                        formControlName="descripcion"
+                        [ngClass]="{'is-invalid': f['descripcion'].invalid && f['descripcion'].touched}"></textarea>
+            @if (f['descripcion'].invalid && f['descripcion'].touched) {
+                <div class="invalid-feedback">
+                    @if (f['descripcion'].errors?.['required']) { <span>La descripción es obligatoria.</span> }
+                    @if (f['descripcion'].errors?.['minlength']) { <span>Mínimo 20 caracteres para una descripción útil.</span> }
+                    @if (f['descripcion'].errors?.['maxlength']) { <span>La descripción es demasiado larga (máx. 500).</span> }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <button type="submit" 
+                class="btn btn-custom-blue px-5 py-2 fs-5 rounded-3 text-white"> {{ submitLabel }} 
+        </button>
+    </div>
 </form>

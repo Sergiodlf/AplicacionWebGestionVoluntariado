@@ -60,10 +60,16 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $idiomas = null;
 
     // CONFIGURACIÓN MOVIDA AQUÍ PARA QUE EL ORDEN DE LA PK SEA (DNI, CODACTIVIDAD)
-    #[ORM\ManyToMany(targetEntity: Actividad::class, inversedBy: 'voluntariosInscritos')]
+   /* #[ORM\ManyToMany(targetEntity: Actividad::class, inversedBy: 'voluntariosInscritos')]
     #[ORM\JoinTable(name: 'VOLUNTARIOS_ACTIVIDADES')]
     #[ORM\JoinColumn(name: 'DNI_VOLUNTARIO', referencedColumnName: 'DNI', columnDefinition: 'NCHAR(9) NOT NULL')]
     #[ORM\InverseJoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD', columnDefinition: 'SMALLINT NOT NULL')]
+    private Collection $actividades;*/
+
+   #[ORM\ManyToMany(targetEntity: Actividad::class, inversedBy: 'voluntariosInscritos')]
+    #[ORM\JoinTable(name: 'VOLUNTARIOS_ACTIVIDADES')] // O el nombre de tu tabla intermedia
+    #[ORM\JoinColumn(name: 'voluntario_dni', referencedColumnName: 'dni')] // La clave primaria de Voluntario es 'dni'
+    #[ORM\InverseJoinColumn(name: 'actividad_cod', referencedColumnName: 'cod_actividad')] // <-- ¡CORRECCIÓN CLAVE!
     private Collection $actividades;
 
     public function __construct()

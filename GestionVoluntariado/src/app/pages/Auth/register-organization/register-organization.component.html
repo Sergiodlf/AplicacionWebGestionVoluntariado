@@ -4,6 +4,9 @@
       <h1 class="fw-bold text-custom-blue display-4">Registrarse</h1>
     </div>
 
-    <app-organization-form submitLabel="Registrarme"></app-organization-form>
+    <app-organization-form 
+        submitLabel="Registrarme"
+        (onSubmit)="onRegistrationSuccess($event)">
+    </app-organization-form>
   </div>
 </div>

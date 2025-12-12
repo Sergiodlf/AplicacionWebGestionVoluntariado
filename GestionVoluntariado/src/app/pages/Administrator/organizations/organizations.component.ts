@@ -1,52 +1,112 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Renderer2, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
-import { AddButtonComponent } from '../../../components/Global-Components/add-button/add-button.component';
 import { OrganizationCardComponent } from '../../../components/Administrator/Organizations/organization-card/organization-card.component';
 import { OrganizationFormComponent } from '../../../components/Global-Components/organization-form/organization-form.component';
 import { OrganizationService } from '../../../services/organization.service';
+import { Organization, OrganizationCreateData } from '../../../models/organizationModel';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-organizations',
   standalone: true,
   imports: [
-    CommonModule, 
-    NavbarComponent, 
-    SidebarComponent, 
-    StatusToggleComponent, 
-    AddButtonComponent,
-    OrganizationCardComponent,
-    OrganizationFormComponent
+    CommonModule,
+    NavbarComponent,
+    SidebarComponent,
+    StatusToggleComponent,
+    OrganizationCardComponent, 
+    OrganizationFormComponent,
   ],
   templateUrl: './organizations.component.html',
-  styleUrl: './organizations.component.css'
+  styleUrl: './organizations.component.css',
 })
-export class OrganizationsComponent {
-  private organizationService = inject(OrganizationService);
-  organizations = this.organizationService.getOrganizations();
-  activeTab: 'left' | 'right' = 'left';
+export class OrganizationsComponent implements OnInit, OnDestroy {
+  constructor(
+        private organizationService: OrganizationService
+    ) {}
 
-  showModal = false;
-
-  onTabChange(tab: 'left' | 'right') {
-    this.activeTab = tab;
+  organizations = signal<Organization[]>([]);
+  private organizationsSubscription: Subscription | undefined;
+  private updateSubscription: Subscription | undefined; // Suscripción para notificaciones del servicio
+  currentTab: 'pending' | 'approved' = 'pending';
+  showModal = signal(false);
+  pendingCount = signal(0);
+  approvedCount = signal(0);
+  
+  ngOnInit(): void {
+    this.loadOrganizations();
+    this.setupUpdateSubscription(); // Inicia la escucha de notificaciones
   }
 
-  onAddOrganization() {
-    this.showModal = true;
+  ngOnDestroy(): void {
+    if (this.organizationsSubscription) {
+      this.organizationsSubscription.unsubscribe();
+    }
+    if (this.updateSubscription) {
+      this.updateSubscription.unsubscribe();
+    }
   }
 
-  closeModal() {
-    this.showModal = false;
+  /**
+   * Se suscribe al Subject del servicio para recargar la lista si un hijo
+   * llama a notifyOrganizationUpdate().
+   */
+  setupUpdateSubscription(): void {
+    this.updateSubscription = this.organizationService.organizationUpdated$.subscribe(() => {
+      this.loadOrganizations();
+    });
   }
 
-  onAccept(org: any) {
-    console.log('Accepted', org);
+  loadOrganizations(): void {
+    if (this.organizationsSubscription) {
+      this.organizationsSubscription.unsubscribe();
+    }
+    this.organizationsSubscription = this.organizationService.getOrganizations().subscribe({
+      next: (data) => {
+        const allOrgs = data; // Filtrado y actualización de la lista 
+        this.filterAndSetOrganizations(allOrgs); // Actualizar contadores
+
+        const pending = data.filter((org) => org.estado === 'Pendiente');
+        const approved = data.filter((org) => org.estado === 'Aprobado');
+        this.pendingCount.set(pending.length);
+        this.approvedCount.set(approved.length);
+      },
+      error: (error) => {
+        console.error('Error al obtener organizaciones de la API:', error);
+      },
+    });
+  }
+  filterAndSetOrganizations(allOrgs: Organization[]): void {
+    const filtered = allOrgs.filter((org) => {
+      if (this.currentTab === 'pending') {
+        return org.estado === 'Pendiente';
+      }
+      return org.estado === 'Aprobado';
+    });
+    this.organizations.set(filtered);
+  } 
+  
+  // LÓGICA DE INTERFAZ Y ACCIONES //
+
+  onTabChange(tab: 'left' | 'right'): void {
+    this.currentTab = tab === 'left' ? 'pending' : 'approved';
+    this.loadOrganizations();
   }
 
-  onReject(org: any) {
-    console.log('Rejected', org);
+  onAddOrganization(): void {
+    this.showModal.set(true);
   }
+
+  closeModal(): void {
+    this.showModal.set(false);
+  }
+
+  onFormSubmit(data: Organization): void { 
+    console.log('Nueva organización añadida:', data);
+    this.closeModal(); 
+    this.organizationService.notifyOrganizationUpdate(); 
+  }
 }

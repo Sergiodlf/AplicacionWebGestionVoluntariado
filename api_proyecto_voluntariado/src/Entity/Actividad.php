@@ -16,37 +16,34 @@ class Actividad
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
-    #[ORM\Column(name: 'CODACTIVIDAD', type: Types::SMALLINT)]
+    #[ORM\Column(name: 'cod_actividad', type: Types::SMALLINT)]
     private ?int $codActividad = null;
 
-    #[ORM\Column(name: 'NOMBRE', length: 40)]
+    #[ORM\Column(name: 'nombre', length: 40)]
     private ?string $nombre = null;
 
-    #[ORM\Column(name: 'ESTADO', length: 40)]
+    #[ORM\Column(name: 'estado', length: 40)]
     private ?string $estado = 'En Curso';
 
-    #[ORM\Column(name: 'DIRECCION', type: Types::STRING, length: 40)]
-    private ?string $direccion = null;
+    #[ORM\Column( name: 'descripcion', type: Types::TEXT, nullable: true)]
+    private ?string $descripcion = null;
 
-    // #[ORM\Column(type: Types::TEXT, nullable: true)]
-    // private ?string $descripcion = null;
-
-    #[ORM\Column(name: 'FECHA_INICIO', type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(name: 'fecha_inicio', type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fechaInicio = null;
     
-    #[ORM\Column(name: 'FECHA_FIN', type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(name: 'fecha_fin', type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $fechaFin = null;
 
-    #[ORM\Column(name: 'MAX_PARTICIPANTES', type: Types::SMALLINT)]
+    #[ORM\Column(name: 'max_participantes', type: Types::SMALLINT)]
     private ?int $maxParticipantes = null;
 
-    // #[ORM\Column(type: Types::TEXT, nullable: true)]
-    // private ?string $ods = null;
+    #[ORM\Column(name: 'ods', type: Types::TEXT, nullable: true)]
+    private ?string $ods = null;
 
     // --- RELACIONES ---
 
     #[ORM\ManyToOne(targetEntity: Organizacion::class, inversedBy: 'actividades')]
-    #[ORM\JoinColumn(name: 'CIF_EMPRESA', referencedColumnName: 'CIF', nullable: true, columnDefinition: 'NCHAR(9)')]
+    #[ORM\JoinColumn(name: 'cif_organizacion', referencedColumnName: 'cif', nullable: true, columnDefinition: 'NCHAR(9)')]
     #[Ignore] // <--- AÑADIDO: Evita que al pedir una actividad, intente serializar toda la organización y sus infinitas actividades
     private ?Organizacion $organizacion = null;
 
@@ -91,18 +88,9 @@ class Actividad
         return $this;
     }
 
-    public function getDireccion(): ?string
-    {
-        return $this->direccion;
-    }
 
-    public function setDireccion(string $direccion): static
-    {
-        $this->direccion = $direccion;
-        return $this;
-    }
 
-    /*
+    
     public function getDescripcion(): ?string
     {
         return $this->descripcion;
@@ -113,7 +101,7 @@ class Actividad
         $this->descripcion = $descripcion;
         return $this;
     }
-    */
+    
 
     public function getFechaInicio(): ?\DateTimeInterface
     {
@@ -148,7 +136,7 @@ class Actividad
         return $this;
     }
 
-    /*
+    
     public function getOds(): ?string
     {
         return $this->ods;
@@ -159,7 +147,7 @@ class Actividad
         $this->ods = $ods;
         return $this;
     }
-    */
+    
 
     public function getOrganizacion(): ?Organizacion
     {

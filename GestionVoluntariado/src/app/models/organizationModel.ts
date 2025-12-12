@@ -6,11 +6,13 @@ export interface Organization {
   cif: string; 
   nombre: string;
   email: string;
-  sector: string | null; 
+  sector: string; 
   direccion: string;
   localidad: string;
   descripcion: string;
-  actividades?: any[]; 
+  actividades?: any[];
+  // Vista Dashboard: Campo necesario para filtrar
+  estado: 'Pendiente' | 'Aprobado' | 'Rechazado'; 
 }
 
 /**

@@ -20,3 +20,15 @@
 .modal-backdrop-custom {
     background-color: rgba(0, 0, 0, 0.5);
 }
+
+.btn-custom-blue {
+    /* Asegúrate de que el color de fondo sea visible */
+     background-color: #004085; /* Color azul estándar de ejemplo */
+     border-color: #004085;
+    /* Sobrescribe el color del texto si lo necesitas, aunque 'text-white' ya lo hace */
+    color: white; 
+}
+.btn-custom-blue:hover {
+    background-color: #003366; /* Color azul más oscuro para el hover */
+    border-color: #003366;
+}
