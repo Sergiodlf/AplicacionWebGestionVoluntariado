@@ -12,6 +12,8 @@ class CrearActividadDTO
         public ?string $zona = null,
         public ?string $fechaInicio = null, // "YYYY-MM-DD"
         public ?string $fechaFin = null,
+        public ?int $maxParticipantes = null, // <--- AÑADIDO
+        public ?string $direccion = null,     // <--- AÑADIDO
         public array $ods = [], // ["Salud", "Educación"]
         public array $habilidades = []
     ) {}

@@ -37,18 +37,25 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Datos JSON inválidos'], 400);
         }
 
+
+
+        // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS ---
+        if (!$dto->dni || !$dto->email || !$dto->nombre || !$dto->password) {
+            return $this->json(['error' => 'Faltan campos obligatorios (dni, email, nombre, password)'], 400);
+        }
+
         $repo = $entityManager->getRepository(Voluntario::class);
         if ($repo->findOneBy(['dni' => $dto->dni])) {
             return $this->json(['error' => 'El DNI ya existe'], 409);
         }
-        if ($repo->findOneBy(['correo' => $dto->correo])) {
+        if ($repo->findOneBy(['correo' => $dto->email])) {
             return $this->json(['error' => 'El correo ya existe'], 409);
         }
 
         // --- PREPARACIÓN DE DATOS ---
 
         // 1. Nombres
-        $partes = explode(' ', trim($dto->nombreCompleto));
+        $partes = explode(' ', trim($dto->nombre));
         $nombre = $partes[0] ?? '';
         $apellido1 = $partes[1] ?? '';
         $apellido2 = (count($partes) > 2) ? implode(' ', array_slice($partes, 2)) : '';
@@ -75,7 +82,7 @@ class AuthController extends AbstractController
         // Usamos un objeto Voluntario "lleno" para generar el hash.
         // Esto asegura que si el hasher usa el email/dni como salt, coincida con el login.
         $userParaHash = new Voluntario();
-        $userParaHash->setCorreo($dto->correo); // Clave para el UserIdentifier
+        $userParaHash->setCorreo($dto->email); // Clave para el UserIdentifier
         $userParaHash->setDni($dto->dni);
         
         $hashedPassword = $passwordHasher->hashPassword($userParaHash, $dto->password);
@@ -101,7 +108,7 @@ class AuthController extends AbstractController
                 'nombre' => $nombre,
                 'ap1' => $apellido1,
                 'ap2' => $apellido2,
-                'correo' => $dto->correo,
+                'correo' => $dto->email,
                 'pass' => $hashedPassword,
                 'coche' => $cocheBit,
                 'fecha' => $fechaSql,

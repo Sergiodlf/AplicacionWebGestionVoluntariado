@@ -1,6 +1,6 @@
 [33mÔØ»[39m Building...
 [32mÔ£ö[39m Building...
-Application bundle generation failed. [8.397 seconds] - 2025-12-11T08:59:42.775Z
+Application bundle generation failed. [3.777 seconds] - 2025-12-11T12:06:31.021Z
 
 Ôû▓ [WARNING] NG8113: All imports are unused [plugin angular-compiler]
 
@@ -25,22 +25,22 @@ Application bundle generation failed. [8.397 seconds] - 2025-12-11T08:59:42.775Z
 
 Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of VolunteersComponent [plugin angular-compiler]
 
-    src/app/pages/Administrator/volunteers/volunteers.component.ts:19:4:
-      19 Ôöé     AddButtonComponent,
+    src/app/pages/Administrator/volunteers/volunteers.component.ts:21:4:
+      21 Ôöé     AddButtonComponent,
          ÔòÁ     ~~~~~~~~~~~~~~~~~~
 
 
-X [ERROR] TS2349: This expression is not callable.
-  Type 'Observable<Organization[]>' has no call signatures. [plugin angular-compiler]
+X [ERROR] TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'. [plugin angular-compiler]
 
-    src/app/pages/Administrator/organizations/organizations.component.html:31:23:
-      31 Ôöé           @for (org of organizations(); track org.name) {
-         ÔòÁ                        ~~~~~~~~~~~~~
+    src/app/pages/Administrator/volunteers/volunteers.component.html:32:89:
+      32 Ôöé ...ity" [interests]="volunteer.interests" [status]="volunteer.status"
+         ÔòÁ                                            ~~~~~~
 
-  Error occurs in the template of component OrganizationsComponent.
+  Error occurs in the template of component VolunteersComponent.
 
-    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
-      23 Ôöé   templateUrl: './organizations.component.html',
-         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    src/app/pages/Administrator/volunteers/volunteers.component.ts:25:15:
+      25 Ôöé   templateUrl: './volunteers.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

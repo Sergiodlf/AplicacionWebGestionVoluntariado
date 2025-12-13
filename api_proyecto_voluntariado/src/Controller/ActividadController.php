@@ -80,6 +80,18 @@ class ActividadController extends AbstractController
         $direccion = $dto->direccion ?? 'Sede Principal';
         $estado = 'En Curso';
 
+        // ODS (Array -> JSON)
+        $odsJson = null;
+        if (!empty($dto->ods)) {
+            $odsJson = json_encode($dto->ods);
+        }
+
+        // Habilidades (Array -> JSON)
+        $habilidadesJson = '[]';
+        if (!empty($dto->habilidades)) {
+            $habilidadesJson = json_encode($dto->habilidades);
+        }
+
         // 4. INSERT MANUAL (Raw SQL)
         try {
             $conn = $em->getConnection();
@@ -87,10 +99,10 @@ class ActividadController extends AbstractController
             $sql = "
                 INSERT INTO ACTIVIDADES (
                     NOMBRE, ESTADO, DIRECCION, MAX_PARTICIPANTES, 
-                    FECHA_INICIO, FECHA_FIN, CIF_EMPRESA
+                    FECHA_INICIO, FECHA_FIN, CIF_EMPRESA, ODS, HABILIDADES
                 ) VALUES (
                     :nombre, :estado, :direccion, :max, 
-                    :inicio, :fin, :cif
+                    :inicio, :fin, :cif, :ods, :habilidades
                 )
             ";
             
@@ -101,7 +113,9 @@ class ActividadController extends AbstractController
                 'max' => $maxParticipantes,
                 'inicio' => $fechaInicioSql, // Enviamos string '20251201'
                 'fin' => $fechaFinSql,       // Enviamos string '20251231'
-                'cif' => $organizacion->getCif()
+                'cif' => $organizacion->getCif(),
+                'ods' => $odsJson,
+                'habilidades' => $habilidadesJson
             ];
 
             $conn->executeStatement($sql, $params);
@@ -124,10 +138,29 @@ class ActividadController extends AbstractController
     public function list(EntityManagerInterface $em): JsonResponse
     {
         $actividades = $em->getRepository(Actividad::class)->findAll();
-        return $this->json($actividades);
+        
+        $data = [];
+        foreach ($actividades as $actividad) {
+            $data[] = [
+                'codActividad' => $actividad->getCodActividad(),
+                'nombre' => $actividad->getNombre(),
+                'estado' => $actividad->getEstado(),
+                'direccion' => $actividad->getDireccion(),
+                'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
+                'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i:s') : null,
+                'maxParticipantes' => $actividad->getMaxParticipantes(),
+                'ods' => $actividad->getOds(), // Devolvemos el string guardado
+                'habilidades' => $actividad->getHabilidades(),
+                // 'organizacion' => ... (podríamos poner el objeto entero, pero evitamos recursión)
+                'nombre_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getNombre() : 'Organización Desconocida',
+                'cif_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getCif() : null,
+            ];
+        }
+
+        return $this->json($data);
     }
 
-    // INSCRIBIR VOLUNTARIO (Mantenemos Doctrine aquí, suele dar menos guerra porque no hay fechas)
+    // INSCRIBIR VOLUNTARIO (Actualizado para usar la entidad Inscripcion)
     #[Route('/{id}/inscribir', name: 'inscribir', methods: ['POST'])]
     public function inscribir(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -150,10 +183,23 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
         }
 
-        $actividad->addVoluntario($voluntario);
+        // Comprobar si ya existe la inscripción
+        $inscripcionRepo = $em->getRepository(\App\Entity\Inscripcion::class);
+        $existe = $inscripcionRepo->findOneBy(['actividad' => $actividad, 'voluntario' => $voluntario]);
+
+        if ($existe) {
+            return $this->json(['error' => 'El voluntario ya está inscrito en esta actividad'], 409);
+        }
+
+        // Crear nueva inscripción
+        $inscripcion = new \App\Entity\Inscripcion();
+        $inscripcion->setActividad($actividad);
+        $inscripcion->setVoluntario($voluntario);
+        $inscripcion->setEstado('PENDIENTE');
+        // $inscripcion->setFechaInscripcion(new \DateTime()); // Ya se pone en el constructor
 
         try {
-            $em->persist($actividad);
+            $em->persist($inscripcion);
             $em->flush();
         } catch (\Exception $e) {
              return $this->json([
@@ -162,6 +208,6 @@ class ActividadController extends AbstractController
             ], 500);
         }
 
-        return $this->json(['message' => 'Inscripción realizada con éxito'], 200);
+        return $this->json(['message' => 'Solicitud de inscripción enviada con estado PENDIENTE'], 201);
     }
 }

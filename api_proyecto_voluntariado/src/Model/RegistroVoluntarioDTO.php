@@ -4,10 +4,10 @@ namespace App\Model;
 
 class RegistroVoluntarioDTO
 {
-    public string $dni;
-    public string $nombreCompleto;
-    public string $correo;
-    public string $password;
+    public ?string $dni = null;
+    public ?string $nombre = null;
+    public ?string $email = null;
+    public ?string $password = null;
     
     public ?string $fechaNacimiento = null;
     public ?string $zona = null;

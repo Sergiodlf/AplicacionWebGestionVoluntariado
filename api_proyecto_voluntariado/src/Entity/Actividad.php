@@ -40,8 +40,8 @@ class Actividad
     #[ORM\Column(name: 'MAX_PARTICIPANTES', type: Types::SMALLINT)]
     private ?int $maxParticipantes = null;
 
-    // #[ORM\Column(type: Types::TEXT, nullable: true)]
-    // private ?string $ods = null;
+    #[ORM\Column(name: 'ODS', type: Types::TEXT, nullable: true)]
+    private ?string $ods = null;
 
     // --- RELACIONES ---
 
@@ -50,16 +50,14 @@ class Actividad
     #[Ignore] // <--- AÑADIDO: Evita que al pedir una actividad, intente serializar toda la organización y sus infinitas actividades
     private ?Organizacion $organizacion = null;
 
-    // CAMBIO REALIZADO:
-    // Hemos eliminado la configuración de JoinTable de aquí y la hemos movido a Voluntario.php
-    // Ahora Actividad es el lado "pasivo" (mappedBy), lo que evita el conflicto de orden en la PK.
-    #[ORM\ManyToMany(targetEntity: Voluntario::class, mappedBy: 'actividades')]
-    #[Ignore] // <--- AÑADIDO: Evita que al pedir una actividad, descargue todos los voluntarios y sus datos completos
-    private Collection $voluntariosInscritos;
+    // CAMBIO REALIZADO: RELACIÓN ONE-TO-MANY (Sustituye a ManyToMany)
+    #[ORM\OneToMany(mappedBy: 'actividad', targetEntity: Inscripcion::class, orphanRemoval: true)]
+    #[Ignore] 
+    private Collection $inscripciones;
 
     public function __construct()
     {
-        $this->voluntariosInscritos = new ArrayCollection();
+        $this->inscripciones = new ArrayCollection();
     }
 
     // --- GETTERS Y SETTERS ---
@@ -148,18 +146,73 @@ class Actividad
         return $this;
     }
 
-    /*
-    public function getOds(): ?string
+    public function getOds(): array
     {
-        return $this->ods;
+        if ($this->ods === null) {
+            return [];
+        }
+
+        // 1. Intentar JSON
+        $decoded = json_decode($this->ods, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // 2. Fallback: CSV (Legacy "ODS1, ODS2")
+        if (str_contains($this->ods, ',')) {
+            return array_map('trim', explode(',', $this->ods));
+        }
+
+        // 3. Fallback: String simple
+        $raw = trim($this->ods, '"\'');
+        return empty($raw) ? [] : [$raw];
     }
 
-    public function setOds(?string $ods): static
+    public function setOds(?array $ods): static
     {
-        $this->ods = $ods;
+        if (empty($ods)) {
+            $this->ods = null;
+        } else {
+            $this->ods = json_encode($ods);
+        }
         return $this;
     }
-    */
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $habilidades = null;
+
+    public function getHabilidades(): array
+    {
+        if ($this->habilidades === null) {
+            return [];
+        }
+
+        // Intentar decodificar JSON
+        $decoded = json_decode($this->habilidades, true);
+
+        // Si es JSON válido y es un array, devolverlo
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // FALLBACK: Si falla (por ejemplo, el usuario editó la BD a mano y puso "Cocina"),
+        // devolvemos el valor crudo como un único elemento del array.
+        // Limpiamos comillas extra si las hubiera.
+        $raw = trim($this->habilidades, '"\'');
+        
+        return empty($raw) ? [] : [$raw];
+    }
+
+    public function setHabilidades(?array $habilidades): static
+    {
+        if (empty($habilidades)) {
+            $this->habilidades = null;
+        } else {
+            // Guardamos siempre como JSON válido
+            $this->habilidades = json_encode($habilidades);
+        }
+        return $this;
+    }
 
     public function getOrganizacion(): ?Organizacion
     {
@@ -173,27 +226,30 @@ class Actividad
     }
 
     /**
-     * @return Collection<int, Voluntario>
+     * @return Collection<int, Inscripcion>
      */
-    public function getVoluntariosInscritos(): Collection
+    public function getInscripciones(): Collection
     {
-        return $this->voluntariosInscritos;
+        return $this->inscripciones;
     }
 
-    public function addVoluntario(Voluntario $voluntario): static
+    public function addInscripcion(Inscripcion $inscripcion): static
     {
-        if (!$this->voluntariosInscritos->contains($voluntario)) {
-            $this->voluntariosInscritos->add($voluntario);
-            $voluntario->addActividad($this);
+        if (!$this->inscripciones->contains($inscripcion)) {
+            $this->inscripciones->add($inscripcion);
+            $inscripcion->setActividad($this);
         }
 
         return $this;
     }
 
-    public function removeVoluntario(Voluntario $voluntario): static
+    public function removeInscripcion(Inscripcion $inscripcion): static
     {
-        if ($this->voluntariosInscritos->removeElement($voluntario)) {
-            $voluntario->removeActividad($this);
+        if ($this->inscripciones->removeElement($inscripcion)) {
+            // set the owning side to null (unless already changed)
+            if ($inscripcion->getActividad() === $this) {
+                $inscripcion->setActividad(null);
+            }
         }
 
         return $this;

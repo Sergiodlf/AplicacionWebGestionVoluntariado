@@ -1,0 +1,110 @@
+[33mÔØ»[39m Building...
+[32mÔ£ö[39m Building...
+Application bundle generation failed. [8.604 seconds] - 2025-12-11T09:00:49.170Z
+
+Ôû▓ [WARNING] NG8113: All imports are unused [plugin angular-compiler]
+
+    src/app/components/Global-Components/navbar/navbar.component.ts:7:2:
+      7 Ôöé   imports: [RouterLink],
+        ÔòÁ   ~~~~~~~
+
+
+Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of Matches [plugin angular-compiler]
+
+    src/app/pages/Administrator/matches/matches.ts:18:4:
+      18 Ôöé     AddButtonComponent
+         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+
+
+Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of OrganizationsComponent [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:19:4:
+      19 Ôöé     AddButtonComponent,
+         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+
+
+Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of VolunteersComponent [plugin angular-compiler]
+
+    src/app/pages/Administrator/volunteers/volunteers.component.ts:19:4:
+      19 Ôöé     AddButtonComponent,
+         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2339: Property 'name' does not exist on type 'Organization'. [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:31:58:
+      31 Ôöé           @for (org of (organizations | async); track org.name) {
+         ÔòÁ                                                           ~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2339: Property 'name' does not exist on type 'Organization'. [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:34:28:
+      34 Ôöé                 [name]="org.name"
+         ÔòÁ                             ~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2339: Property 'type' does not exist on type 'Organization'. [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:35:28:
+      35 Ôöé                 [type]="org.type"
+         ÔòÁ                             ~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2339: Property 'location' does not exist on type 'Organization'. [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:36:32:
+      36 Ôöé                 [location]="org.location"
+         ÔòÁ                                 ~~~~~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2551: Property 'description' does not exist on type 'Organization'. Did you mean 'descripcion'? [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:37:35:
+      37 Ôöé                 [description]="org.description"
+         ÔòÁ                                    ~~~~~~~~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] TS2339: Property 'tags' does not exist on type 'Organization'. [plugin angular-compiler]
+
+    src/app/pages/Administrator/organizations/organizations.component.html:38:28:
+      38 Ôöé                 [tags]="org.tags"
+         ÔòÁ                             ~~~~
+
+  Error occurs in the template of component OrganizationsComponent.
+
+    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
+      23 Ôöé   templateUrl: './organizations.component.html',
+         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

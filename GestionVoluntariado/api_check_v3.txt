@@ -1,0 +1,43 @@
+* Host localhost:8000 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8000...
+*   Trying 127.0.0.1:8000...
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Established connection to localhost (127.0.0.1 port 8000) from 127.0.0.1 port 56497 
+* using HTTP/1.x
+> GET /api/voluntarios HTTP/1.1
+
+> Host: localhost:8000
+
+> User-Agent: curl/8.16.0
+
+> Accept: */*
+
+> 
+
+* Request completely sent off
+< HTTP/1.1 200 OK
+
+< Cache-Control: no-cache, private
+
+< Content-Type: application/json
+
+< Date: Thu, 11 Dec 2025 11:28:27 GMT
+
+< X-Powered-By: PHP/8.2.12
+
+< X-Robots-Tag: noindex
+
+< Transfer-Encoding: chunked
+
+< 
+
+{ [3897 bytes data]
+
+100  7053    0  7053    0     0   9045      0 --:--:-- --:--:-- --:--:--  9042
+* Connection #0 to host localhost:8000 left intact
+[{"dni":"11111111A","nombre":"Ana","apellido1":"L\u00f3pez","apellido2":"Santos","correo":"ana.lopez@mail.com","zona":null,"fechaNacimiento":"1998-04-12","experiencia":"Experiencia b\u00e1sica","coche":true,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[{"id_inscripcion":1,"actividad":"Reparto de alimentos","estado":"CONFIRMADO"}]},{"dni":"12312312F","nombre":"max","apellido1":"perez","apellido2":"","correo":"mape@gmail.com","zona":"Pamplona","fechaNacimiento":"2006-02-15","experiencia":"Sin experiencia","coche":true,"habilidades":"Dise\u00f1o Gr\u00e1fico","intereses":"Educaci\u00f3n","idiomas":"Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12341234A","nombre":"Luis","apellido1":"Martinez","apellido2":"Pere","correo":"luismaPe@gmail.com","zona":"Norte","fechaNacimiento":"1990-05-20","experiencia":"He participado en recogidas de alimentos anteriormente.","coche":true,"habilidades":"Primeros Auxilios, Trabajo en equipo","intereses":"Social, Medio Ambiente","idiomas":"Ingl\u00e9s, Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345123G","nombre":"mikel","apellido1":"martinez","apellido2":"","correo":"mikmar@gmail.com","zona":"Pamplona","fechaNacimiento":"2006-01-01","experiencia":"\u003C 1 a\u00f1o","coche":true,"habilidades":"Dise\u00f1o Gr\u00e1fico","intereses":"Educaci\u00f3n","idiomas":"Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345638Z","nombre":"Juan","apellido1":"P\u00e9rez","apellido2":"Garc\u00eda","correo":"juan@gmail.com","zona":"Pamplona","fechaNacimiento":"1998-05-20","experiencia":"Voluntariado previo en Cruz Roja","coche":true,"habilidades":"Primeros Auxilios, Conducci\u00f3n","intereses":"Medio Ambiente, Social","idiomas":"Ingl\u00e9s, Euskera","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345671Q","nombre":"lucas","apellido1":"dani","apellido2":"","correo":"dudani@gmail.com","zona":"Pamplona","fechaNacimiento":"2006-11-11","experiencia":"1-3 a\u00f1os","coche":false,"habilidades":"Redes Sociales","intereses":"Salud","idiomas":"Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345674G","nombre":"sasd","apellido1":"fred","apellido2":"","correo":"fer@gmail.com","zona":"Pamplona","fechaNacimiento":"2006-02-02","experiencia":"\u003C 1 a\u00f1o","coche":false,"habilidades":"Dise\u00f1o Gr\u00e1fico","intereses":"Educaci\u00f3n","idiomas":"Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345678A","nombre":"Laura","apellido1":"Gomez","apellido2":"Mart\u00ednez","correo":"laura.gomez@mail.com","zona":null,"fechaNacimiento":"2000-12-05","experiencia":"Experiencia con personas mayores","coche":true,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12345678Z","nombre":"Pepe","apellido1":"Ramirez","apellido2":"","correo":"peperami@si.com","zona":"Norte","fechaNacimiento":"1990-05-20","experiencia":"He participado en recogidas de alimentos anteriormente.","coche":true,"habilidades":"Primeros Auxilios, Trabajo en equipo","intereses":"Social, Medio Ambiente","idiomas":"Ingl\u00e9s, Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"12987654G","nombre":"gair","apellido1":"riga","apellido2":"","correo":"rigagari@gmail.com","zona":"Pamplona","fechaNacimiento":"2006-01-01","experiencia":"\u003E 3 a\u00f1os","coche":true,"habilidades":"Dise\u00f1o Gr\u00e1fico","intereses":"Educaci\u00f3n","idiomas":"Alem\u00e1n","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"22222222B","nombre":"Jorge","apellido1":"Mart\u00edn","apellido2":"Torres","correo":"jorge.martin@mail.com","zona":null,"fechaNacimiento":"1997-08-22","experiencia":"Voluntariado juvenil","coche":false,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"33333333C","nombre":"Luc\u00eda","apellido1":"Navarro","apellido2":"Gil","correo":"lucia.navarro@mail.com","zona":null,"fechaNacimiento":"2001-12-01","experiencia":"Atenci\u00f3n al p\u00fablico","coche":true,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"44444444D","nombre":"Mario","apellido1":"Serrano","apellido2":"Iglesias","correo":"mario.serrano@mail.com","zona":null,"fechaNacimiento":"2000-02-19","experiencia":"Log\u00edstica b\u00e1sica","coche":false,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"55555555E","nombre":"Elena","apellido1":"Ruiz","apellido2":"Campos","correo":"elena.ruiz@mail.com","zona":null,"fechaNacimiento":"1999-06-30","experiencia":"Atenci\u00f3n infantil","coche":true,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"66666666F","nombre":"Tom\u00e1s","apellido1":"Morales","apellido2":"Vega","correo":"tomas.morales@mail.com","zona":null,"fechaNacimiento":"1996-11-10","experiencia":"Primeros auxilios","coche":false,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"77777777G","nombre":"Sara","apellido1":"Castro","apellido2":"Barrios","correo":"sara.castro@mail.com","zona":null,"fechaNacimiento":"2002-03-05","experiencia":"Trabajo en equipo","coche":true,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"87654321B","nombre":"Carlos","apellido1":"P\u00e9rez","apellido2":"L\u00f3pez","correo":"carlos.perez@mail.com","zona":null,"fechaNacimiento":"1999-08-10","experiencia":"Carnet de conducir B","coche":false,"habilidades":null,"intereses":null,"idiomas":null,"estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"88888888A","nombre":"Marcos","apellido1":"Vidan","apellido2":"Santesteban","correo":"mark@gmail.com","zona":"Norte","fechaNacimiento":"1990-05-20","experiencia":"He participado en recogidas de alimentos anteriormente.","coche":true,"habilidades":"Primeros Auxilios, Trabajo en equipo","intereses":"Social, Medio Ambiente","idiomas":"Ingl\u00e9s, Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"88888888F","nombre":"Marcos","apellido1":"Vidan","apellido2":"Santesteban","correo":"mark3@gmail.com","zona":"Norte","fechaNacimiento":"1990-07-20","experiencia":"He participado en recogidas de alimentos anteriormente.","coche":true,"habilidades":"Primeros Auxilios, Trabajo en equipo","intereses":"Social, Medio Ambiente","idiomas":"Ingl\u00e9s, Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]},{"dni":"88888888X","nombre":"Marcos","apellido1":"Vidan","apellido2":"Santesteban","correo":"markm","zona":"Norte","fechaNacimiento":"1990-05-20","experiencia":"He participado en recogidas de alimentos anteriormente.","coche":true,"habilidades":"Primeros Auxilios, Trabajo en equipo","intereses":"Social, Medio Ambiente","idiomas":"Ingl\u00e9s, Franc\u00e9s","estado_voluntario":"PENDIENTE","inscripciones":[]}]

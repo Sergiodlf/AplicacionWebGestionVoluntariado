@@ -130,6 +130,89 @@ paths:
         '409':
           description: El voluntario ya está inscrito o no hay plazas
 
+  # ==========================================
+  # INSCRIPCIONES
+  # ==========================================
+  /inscripciones/{id}/estado:
+    patch:
+      tags:
+        - Inscripciones
+      summary: Actualizar estado de inscripción
+      description: Cambia el estado de una inscripción (ej. Confirmar, Rechazar).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID numérico de la inscripción
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEstadoRequest'
+      responses:
+        '200':
+          description: Estado actualizado correctamente
+          content:
+            application/json:
+              example:
+                message: "Estado actualizado correctamente"
+                nuevo_estado: "CONFIRMADO"
+        '400':
+          description: Estado inválido o falta campo
+        '404':
+          description: Inscripción no encontrada
+
+  /voluntarios:
+    get:
+      tags:
+        - Voluntarios
+      summary: Listar todos los voluntarios
+      description: Devuelve la lista completa de voluntarios registrados.
+      responses:
+        '200':
+          description: Lista recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VoluntarioDetalle'
+
+  /voluntarios/{dni}/estado:
+    patch:
+      tags:
+        - Voluntarios
+      summary: Actualizar estado global del voluntario (PLATAFORMA)
+      description: Cambia el estado del voluntario en la plataforma (PENDIENTE, ACEPTADO, RECHAZADO).
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          description: DNI del voluntario
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEstadoRequest'
+      responses:
+        '200':
+          description: Estado actualizado correctamente
+          content:
+            application/json:
+              example:
+                message: "Estado del voluntario actualizado correctamente"
+                nuevo_estado: "ACEPTADO"
+        '400':
+          description: Estado inválido
+        '404':
+          description: Voluntario no encontrado
+
 components:
   securitySchemes:
     bearerAuth:
@@ -221,6 +304,36 @@ components:
             type: string
           example: ["Lunes Mañana", "Fines de Semana"]
 
+    # --- MODELO DETALLE VOLUNTARIO ---
+    VoluntarioDetalle:
+      type: object
+      properties:
+        dni:
+          type: string
+        nombre:
+          type: string
+        apellido1:
+          type: string
+        apellido2:
+          type: string
+        correo:
+          type: string
+        zona:
+          type: string
+        fechaNacimiento:
+          type: string
+          format: date
+        experiencia:
+          type: string
+        coche:
+          type: boolean
+        habilidades:
+          type: string
+        intereses:
+          type: string
+        idiomas:
+          type: string
+
     # --- MODELO REGISTRO ORGANIZACIÓN ---
     OrganizacionRegistro:
       type: object
@@ -303,3 +416,14 @@ components:
         dni_voluntario:
           type: string
           example: "12345678Z"
+
+    # --- MODELO ACTUALIZAR ESTADO ---
+    UpdateEstadoRequest:
+      type: object
+      required: [estado]
+      properties:
+        estado:
+          type: string
+          description: "Nuevo estado (PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO)"
+          example: "CONFIRMADO"
+

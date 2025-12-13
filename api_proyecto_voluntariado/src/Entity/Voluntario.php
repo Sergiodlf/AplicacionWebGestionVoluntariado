@@ -59,16 +59,16 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'IDIOMAS', type: Types::TEXT, nullable: true)]
     private ?string $idiomas = null;
 
-    // CONFIGURACIÓN MOVIDA AQUÍ PARA QUE EL ORDEN DE LA PK SEA (DNI, CODACTIVIDAD)
-    #[ORM\ManyToMany(targetEntity: Actividad::class, inversedBy: 'voluntariosInscritos')]
-    #[ORM\JoinTable(name: 'VOLUNTARIOS_ACTIVIDADES')]
-    #[ORM\JoinColumn(name: 'DNI_VOLUNTARIO', referencedColumnName: 'DNI', columnDefinition: 'NCHAR(9) NOT NULL')]
-    #[ORM\InverseJoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD', columnDefinition: 'SMALLINT NOT NULL')]
-    private Collection $actividades;
+    #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20)]
+    private ?string $estadoVoluntario = 'PENDIENTE';
+
+    // RELACIÓN ONE-TO-MANY (Sustituye a ManyToMany)
+    #[ORM\OneToMany(mappedBy: 'voluntario', targetEntity: Inscripcion::class, orphanRemoval: true)]
+    private Collection $inscripciones;
 
     public function __construct()
     {
-        $this->actividades = new ArrayCollection();
+        $this->inscripciones = new ArrayCollection();
     }
 
     // ... Resto de métodos de seguridad (getUserIdentifier, getRoles...) ...
@@ -107,24 +107,38 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     public function getIdiomas(): ?string { return $this->idiomas; }
     public function setIdiomas(?string $i): static { $this->idiomas = $i; return $this; }
 
+    public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
+    public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }
+
 
     // MÉTODOS DE LA RELACIÓN
-    public function getActividades(): Collection
+    /**
+     * @return Collection<int, Inscripcion>
+     */
+    public function getInscripciones(): Collection
     {
-        return $this->actividades;
+        return $this->inscripciones;
     }
 
-    public function addActividad(Actividad $actividad): static
+    public function addInscripcion(Inscripcion $inscripcion): static
     {
-        if (!$this->actividades->contains($actividad)) {
-            $this->actividades->add($actividad);
+        if (!$this->inscripciones->contains($inscripcion)) {
+            $this->inscripciones->add($inscripcion);
+            $inscripcion->setVoluntario($this);
         }
+
         return $this;
     }
 
-    public function removeActividad(Actividad $actividad): static
+    public function removeInscripcion(Inscripcion $inscripcion): static
     {
-        $this->actividades->removeElement($actividad);
+        if ($this->inscripciones->removeElement($inscripcion)) {
+            // set the owning side to null (unless already changed)
+            if ($inscripcion->getVoluntario() === $this) {
+                $inscripcion->setVoluntario(null);
+            }
+        }
+
         return $this;
     }
 }
