@@ -1,0 +1,33 @@
+.text-custom-blue {
+    color: #1e3a8a;
+}
+
+.bg-light {
+    background-color: #ffffff !important;
+    /* Input background seems white in image, but let's check */
+}
+
+/* Actually inputs in image look white with a light gray border */
+.form-control {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem 1rem;
+}
+
+.form-control::placeholder {
+    color: #bdbdbd;
+}
+
+.btn-custom-blue {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-custom-blue:hover {
+    background-color: #172e6e;
+    border-color: #172e6e;
+}
+
+.text-decoration-underline {
+    text-decoration: underline !important;
+}

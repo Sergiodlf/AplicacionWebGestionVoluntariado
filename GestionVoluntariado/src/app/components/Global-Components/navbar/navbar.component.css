@@ -1,0 +1,24 @@
+.navbar {
+    background-color: #ffffff;
+}
+
+.text-primary {
+    color: #1e3a8a !important;
+    /* Dark blue from reference */
+}
+
+.btn-primary {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-primary:hover {
+    background-color: #162c6b;
+    border-color: #162c6b;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

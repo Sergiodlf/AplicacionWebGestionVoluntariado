@@ -1,0 +1,146 @@
+<form [formGroup]="volunteerForm">
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Nombre y Apellidos</label>
+      <input type="text" class="form-control bg-white border-light-gray" placeholder="Juan Pérez Rodriguez"
+        formControlName="nombreCompleto">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Correo Electrónico</label>
+      <input type="email" class="form-control bg-white border-light-gray" placeholder="juan@gmail.com"
+        formControlName="correo">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">DNI</label>
+      <input type="text" class="form-control bg-white border-light-gray" placeholder="12345678M" formControlName="dni">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Contraseña</label>
+      <input type="password" class="form-control bg-white border-light-gray" placeholder="Contraseña"
+        formControlName="password">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Zona</label>
+      <input type="text" class="form-control bg-white border-light-gray" placeholder="Pamplona" formControlName="zona">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label fw-bold text-dark">Idiomas</label>
+      <select class="form-select bg-white border-light-gray" formControlName="idiomas" multiple>
+        <option value="Inglés">Inglés</option>
+        <option value="Francés">Francés</option>
+        <option value="Alemán">Alemán</option>
+      </select>
+    </div>
+
+    <div class="col-12">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Experiencia</label>
+          <select class="form-select bg-white border-light-gray" formControlName="experiencia">
+            <option value="Sin experiencia">Sin experiencia</option>
+            <option value="< 1 año">Menos de 1 año</option>
+            <option value="1-3 años">1-3 años</option>
+            <option value="> 3 años">Más de 3 años</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Fecha de Nacimiento</label>
+          <input type="date" class="form-control bg-white border-light-gray" formControlName="fechaNacimiento">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Coche</label>
+          <select class="form-select bg-white border-light-gray" formControlName="coche">
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold text-dark">Ciclo</label>
+          <select class="form-select bg-white border-light-gray" formControlName="ciclo">
+            <option value="DAM">DAM</option>
+            <option value="DAW">DAW</option>
+            <option value="ASIR">ASIR</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full width for Skills, Interests, and Availability at the bottom -->
+    <div class="col-12">
+      <label class="form-label fw-bold text-dark">Habilidades</label>
+      <div class="d-flex flex-wrap gap-2">
+        <span *ngFor="let skill of availableSkills"
+          class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          [ngClass]="{'bg-custom-blue text-white': isSkillSelected(skill), 'badge-unselected': !isSkillSelected(skill)}"
+          style="cursor: pointer;" (click)="toggleSkill(skill)">
+          {{ skill }}
+          <i class="bi" [ngClass]="{'bi-check-lg': isSkillSelected(skill), 'bi-plus-lg': !isSkillSelected(skill)}"></i>
+        </span>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label fw-bold text-dark">Intereses</label>
+      <div class="d-flex flex-wrap gap-2">
+        <span *ngFor="let interest of availableInterests"
+          class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          [ngClass]="{'bg-warning text-dark': isInterestSelected(interest), 'badge-unselected': !isInterestSelected(interest)}"
+          style="cursor: pointer;" (click)="toggleInterest(interest)">
+          {{ interest }}
+          <i class="bi"
+            [ngClass]="{'bi-check-lg': isInterestSelected(interest), 'bi-plus-lg': !isInterestSelected(interest)}"></i>
+        </span>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label fw-bold text-dark">Disponibilidad</label>
+      <div class="d-flex flex-wrap gap-2">
+        <span *ngFor="let availability of availableAvailability"
+          class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          [ngClass]="{'bg-success text-white': isAvailabilitySelected(availability), 'badge-unselected': !isAvailabilitySelected(availability)}"
+          style="cursor: pointer;" (click)="toggleAvailability(availability)">
+          {{ availability }}
+          <i class="bi"
+            [ngClass]="{'bi-check-lg': isAvailabilitySelected(availability), 'bi-plus-lg': !isAvailabilitySelected(availability)}"></i>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <label class="form-label fw-bold text-dark">Datos Añadidos</label>
+    <div class="border rounded-3 p-3 bg-white border-light-gray" style="min-height: 100px;">
+      <div class="d-flex gap-2 flex-wrap">
+        <span *ngFor="let skill of addedSkills"
+          class="badge bg-custom-blue text-white border border-0 px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          style="cursor: pointer;" (click)="toggleSkill(skill)" title="Click para eliminar">
+          {{ skill }} <i class="bi bi-x"></i>
+        </span>
+        <span *ngFor="let interest of addedInterests"
+          class="badge bg-warning text-dark border border-0 px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          style="cursor: pointer;" (click)="toggleInterest(interest)" title="Click para eliminar">
+          {{ interest }} <i class="bi bi-x"></i>
+        </span>
+        <span *ngFor="let availability of addedAvailability"
+          class="badge bg-success text-white border border-0 px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2"
+          style="cursor: pointer;" (click)="toggleAvailability(availability)" title="Click para eliminar">
+          {{ availability }} <i class="bi bi-x"></i>
+        </span>
+        <span *ngIf="addedSkills.length === 0 && addedInterests.length === 0 && addedAvailability.length === 0"
+          class="text-muted fst-italic">
+          Selecciona habilidades, intereses y disponibilidad de las listas de arriba.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger mb-3" role="alert">
+    <div style="white-space: pre-line;">{{ errorMessage }}</div>
+  </div>
+
+  <div class="text-center">
+    <button type="button" (click)="onRegister()" class="btn btn-custom-blue px-5 py-2 fs-5 rounded-3 text-white">{{
+      submitLabel }}</button>
+  </div>
+</form>

@@ -1,0 +1,24 @@
+.text-custom-blue {
+    color: #1e3a8a;
+}
+
+.btn-custom-blue {
+    background-color: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+.btn-custom-blue:hover {
+    background-color: #172e6e;
+    border-color: #172e6e;
+}
+
+.btn-outline-custom-blue {
+    color: #1e3a8a;
+    border-color: #1e3a8a;
+    background-color: transparent;
+}
+
+.btn-outline-custom-blue:hover {
+    background-color: #1e3a8a;
+    color: white;
+}
