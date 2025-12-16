@@ -1,0 +1,12 @@
+{
+    "cif": "C12345678",
+    "nombre": "Fundación Valid CIF",
+    "email": "validcif@codigosolidario.org",
+    "password": "miPasswordSeguro123!",
+    "sector": "Tecnología",
+    "direccion": "Calle Test 1",
+    "localidad": "Madrid",
+    "cp": "28050",
+    "descripcion": "Descripcion test",
+    "contacto": "Test Contact"
+}

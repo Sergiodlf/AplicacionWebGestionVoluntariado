@@ -128,4 +128,43 @@ class OrganizacionController extends AbstractController
         // 2. Devuelve 204 No Content, que indica éxito sin necesidad de cuerpo de respuesta.
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
+
+    /**
+     * Actualiza el estado de una organización (PATCH /api/organizations/{cif}/state).
+     *
+     * @param string $cif
+     * @param Request $request
+     * @param OrganizacionRepository $organizacionRepository
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
+    #[Route('/api/organizations/{cif}/state', name: 'api_organizations_update_state', methods: ['PATCH'])]
+    public function updateState(
+        string $cif, 
+        Request $request, 
+        OrganizacionRepository $organizacionRepository, 
+        EntityManagerInterface $entityManager
+    ): JsonResponse
+    {
+        $organizacion = $organizacionRepository->find($cif);
+        if (!$organizacion) {
+            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $nuevoEstado = $data['estado'] ?? null;
+        $estadosValidos = ['pendiente', 'aprobado', 'rechazado'];
+
+        if (!$nuevoEstado || !in_array($nuevoEstado, $estadosValidos)) {
+            return $this->json(
+                ['message' => 'Estado inválido. Valores permitidos: ' . implode(', ', $estadosValidos)], 
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $organizacion->setEstado($nuevoEstado);
+        $entityManager->flush();
+
+        return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
+    }
 }

@@ -1,0 +1,12 @@
+{
+    "cif": "Q1122334K",
+    "nombre": "Fundación Nueva Prueba",
+    "email": "test_unique_1@codigosolidario.org",
+    "password": "miPasswordSeguro123!",
+    "sector": "Tecnología",
+    "direccion": "Calle Test 1",
+    "localidad": "Madrid",
+    "cp": "28050",
+    "descripcion": "Descripcion test",
+    "contacto": "Test Contact"
+}

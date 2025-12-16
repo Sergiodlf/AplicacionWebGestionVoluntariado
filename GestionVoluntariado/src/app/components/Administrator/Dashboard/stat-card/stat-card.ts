@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class StatCard {
   @Input() title: string = '';
-  @Input() value: string = '';
+  @Input() value: string | number = '';
   @Input() subtext: string = '';
   @Input() icon: string = '';
   @Input() iconBgColor: string = 'bg-primary';

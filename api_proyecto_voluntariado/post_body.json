@@ -1,0 +1,12 @@
+{
+    "cif": "Q9876543J",
+    "nombre": "Fundación Código Solidario",
+    "email": "contacto@codigosolidario.org",
+    "password": "miPasswordSeguro123!",
+    "sector": "Tecnología y Educación",
+    "direccion": "Av. de la Innovación 42",
+    "localidad": "Madrid",
+    "cp": "28050",
+    "descripcion": "Promovemos la educación tecnológica en sectores desfavorecidos.",
+    "contacto": "Maria Directora"
+}

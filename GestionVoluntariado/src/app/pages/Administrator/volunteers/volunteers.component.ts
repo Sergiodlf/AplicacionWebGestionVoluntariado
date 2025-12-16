@@ -1,7 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
-import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { AddButtonComponent } from '../../../components/Global-Components/add-button/add-button.component';
 import { VolunteerCardComponent } from '../../../components/Administrator/Volunteers/volunteer-card/volunteer-card.component';
@@ -15,8 +13,6 @@ import { VolunteerService } from '../../../services/volunteer.service';
   standalone: true,
   imports: [
     CommonModule,
-    NavbarComponent,
-    SidebarComponent,
     StatusToggleComponent,
     AddButtonComponent,
     VolunteerCardComponent,

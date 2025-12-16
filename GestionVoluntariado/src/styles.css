@@ -1,0 +1,39 @@
+/* Global Styles */
+:root {
+    --custom-blue: #002B5B;
+    /* Deep Blue */
+    --custom-blue-hover: #001f42;
+    --sidebar-bg: #1a1a1a;
+    /* Dark Sidebar */
+}
+
+.text-custom-blue {
+    color: var(--custom-blue) !important;
+}
+
+.bg-custom-blue {
+    background-color: var(--custom-blue) !important;
+}
+
+.bg-custom-sidebar {
+    background-color: var(--custom-blue) !important;
+    /* Using blue for sidebar based on class name */
+}
+
+.btn-custom-blue {
+    background-color: var(--custom-blue) !important;
+    border-color: var(--custom-blue) !important;
+    color: white !important;
+}
+
+.btn-custom-blue:hover {
+    background-color: var(--custom-blue-hover) !important;
+    border-color: var(--custom-blue-hover) !important;
+    color: white !important;
+}
+
+/* Ensure sidebar links look good */
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}

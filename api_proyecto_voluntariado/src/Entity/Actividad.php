@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 // IMPORTANTE: Importamos Ignore para romper el bucle infinito
 use Symfony\Component\Serializer\Annotation\Ignore;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ActividadRepository::class)]
 #[ORM\Table(name: 'ACTIVIDADES')]
@@ -17,30 +18,38 @@ class Actividad
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: "IDENTITY")]
     #[ORM\Column(name: 'CODACTIVIDAD', type: Types::SMALLINT)]
+    #[Groups(['org:read'])]
     private ?int $codActividad = null;
 
     #[ORM\Column(name: 'NOMBRE', length: 40)]
+    #[Groups(['org:read'])]
     private ?string $nombre = null;
 
     #[ORM\Column(name: 'ESTADO', length: 40)]
+    #[Groups(['org:read'])]
     private ?string $estado = 'En Curso';
 
     #[ORM\Column(name: 'DIRECCION', type: Types::STRING, length: 40)]
+    #[Groups(['org:read'])]
     private ?string $direccion = null;
 
     // #[ORM\Column(type: Types::TEXT, nullable: true)]
     // private ?string $descripcion = null;
 
     #[ORM\Column(name: 'FECHA_INICIO', type: Types::DATETIME_MUTABLE)]
+    #[Groups(['org:read'])]
     private ?\DateTimeInterface $fechaInicio = null;
     
     #[ORM\Column(name: 'FECHA_FIN', type: Types::DATETIME_MUTABLE)]
+    #[Groups(['org:read'])]
     private ?\DateTimeInterface $fechaFin = null;
 
     #[ORM\Column(name: 'MAX_PARTICIPANTES', type: Types::SMALLINT)]
+    #[Groups(['org:read'])]
     private ?int $maxParticipantes = null;
 
     #[ORM\Column(name: 'ODS', type: Types::TEXT, nullable: true)]
+    #[Groups(['org:read'])]
     private ?string $ods = null;
 
     // --- RELACIONES ---
@@ -179,6 +188,7 @@ class Actividad
     }
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['org:read'])]
     private ?string $habilidades = null;
 
     public function getHabilidades(): array

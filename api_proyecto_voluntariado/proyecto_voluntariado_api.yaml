@@ -68,6 +68,81 @@ paths:
         '409':
           description: El CIF o Email ya existen
 
+  /organizations:
+    get:
+      tags:
+        - Organizaciones
+      summary: Listar todas las organizaciones
+      description: Devuelve la lista completa de organizaciones registradas.
+      responses:
+        '200':
+          description: Lista recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganizacionDetalle'
+    post:
+      tags:
+        - Organizaciones
+      summary: Registrar nueva organización
+      description: Crea una nueva organización en la plataforma.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizacionRegistro'
+      responses:
+        '201':
+          description: Organización creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizacionDetalle'
+        '400':
+          description: Datos inválidos
+        '409':
+          description: El CIF o Email ya existen
+
+  /organizations/{cif}/state:
+    patch:
+      tags:
+        - Organizaciones
+      summary: Actualizar estado de una organización
+      description: Permite cambiar el estado (pendiente, aprobado, rechazado) de una organización.
+      parameters:
+        - name: cif
+          in: path
+          required: true
+          description: CIF de la organización
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado:
+                  type: string
+                  enum: [pendiente, aprobado, rechazado]
+                  example: "aprobado"
+      responses:
+        '200':
+          description: Estado actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizacionDetalle'
+        '400':
+          description: Estado inválido
+        '404':
+          description: Organización no encontrada
+
   # ==========================================
   # ACTIVIDADES
   # ==========================================
@@ -360,6 +435,37 @@ components:
         descripcion:
           type: string
           example: "ONG dedicada a..."
+
+    OrganizacionDetalle:
+      type: object
+      properties:
+        cif:
+          type: string
+        nombre:
+          type: string
+        estado:
+          type: string
+          description: "Estado de la organización (pendiente, aprobado, rechazado)"
+          example: "pendiente"
+        email:
+          type: string
+          format: email
+        sector:
+          type: string
+        direccion:
+          type: string
+        localidad:
+          type: string
+        cp:
+          type: string
+        descripcion:
+          type: string
+        contacto:
+          type: string
+        actividades:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActividadDetalle'
 
     # --- MODELOS DE ACTIVIDADES ---
     ActividadCreacion:

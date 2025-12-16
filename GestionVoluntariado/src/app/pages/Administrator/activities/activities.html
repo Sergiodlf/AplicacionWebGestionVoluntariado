@@ -1,1 +1,153 @@
-<p>activities works!</p>
+<div class="d-flex flex-column h-100">
+    <!-- Header Section -->
+    <div class="d-flex flex-column align-items-center mb-5">
+        <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
+        <app-status-toggle leftLabel="Pendientes" rightLabel="Aprobados" [leftCount]="0"
+            (optionChanged)="onTabChange($event)">
+        </app-status-toggle>
+    </div>
+
+    <!-- Subheader & Search -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center text-dark">
+                <i class="bi bi-people me-2 fs-4"></i>
+                <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Pendientes' : 'Aprobados' }}</h4>
+            </div>
+
+            <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end">
+                <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm" style="max-width: 400px;">
+                    <span class="input-group-text bg-transparent border-0"><i
+                            class="bi bi-calendar3 text-muted"></i></span>
+                    <input type="text" class="form-control bg-transparent border-0 shadow-none"
+                        placeholder="Buscar Voluntariado">
+                    <span class="input-group-text bg-transparent border-0"><i
+                            class="bi bi-search text-muted"></i></span>
+                </div>
+
+                <button class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center"
+                    (click)="openFilterModal()">
+                    <i class="bi bi-sliders me-2"></i> Filtrar Por
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="row g-4">
+        <div class="col-md-6" *ngFor="let item of filteredOpportunities">
+            <app-volunteering-card [title]="item.title" [organization]="item.organization" [skills]="item.skills"
+                [date]="item.date" [ods]="item.ods" (onAction)="onAction(item)" (onInfo)="openInfoModal(item)">
+            </app-volunteering-card>
+        </div>
+        <div *ngIf="filteredOpportunities.length === 0" class="col-12 text-center py-5">
+            <p class="text-muted">No se encontraron voluntariados con los filtros seleccionados.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showInfoModal && selectedVolunteering">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-custom-blue">Detalles del Voluntariado</h5>
+                <button type="button" class="btn-close" (click)="closeInfoModal()"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-custom-blue text-white d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="bi bi-building fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-custom-blue mb-1">{{ selectedVolunteering.title }}</h4>
+                    <p class="text-muted mb-0">{{ selectedVolunteering.organization }}</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-uppercase text-muted fw-bold"
+                                style="font-size: 0.7rem;">Descripción</small>
+                            <p class="mb-0 fw-medium">Descripción detallada de la actividad voluntaria. Aquí se
+                                explicarían las tareas
+                                específicas, el impacto esperado y los requisitos adicionales.</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold"
+                                style="font-size: 0.7rem;">Ubicación</small>
+                            <p class="mb-0 fw-medium">Madrid, Centro</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fecha</small>
+                            <p class="mb-0 fw-medium">{{ selectedVolunteering.date }}</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded-3">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">ODS
+                                Relacionados</small>
+                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                                <span *ngFor="let item of selectedVolunteering.ods"
+                                    class="badge text-white px-3 py-2 rounded-pill"
+                                    [style.backgroundColor]="item.color">
+                                    {{ item.name }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                    (click)="closeInfoModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showFilterModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-custom-blue">Filtrar Voluntariados</h5>
+                <button type="button" class="btn-close" (click)="closeFilterModal()"></button>
+            </div>
+            <div class="modal-body px-4">
+
+                <!-- Date Filter -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-custom-blue">Fecha</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-calendar"></i></span>
+                        <input type="date" class="form-control bg-light border-0" [(ngModel)]="filters.date">
+                    </div>
+                </div>
+
+                <!-- Skills Filter -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-custom-blue">Habilidades</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-gear"></i></span>
+                        <input type="text" class="form-control bg-light border-0"
+                            placeholder="Ej. Educación, Primeros Auxilios" [(ngModel)]="filters.skill">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-0 justify-content-between px-4 pb-4">
+                <button type="button" class="btn btn-outline-danger rounded-pill px-4" (click)="resetFilters()">
+                    <i class="bi bi-trash me-1"></i> Limpiar
+                </button>
+                <button type="button" class="btn btn-custom-blue text-white rounded-pill px-4" (click)="applyFilters()">
+                    Aplicar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,103 +1,102 @@
-<div class="d-flex flex-column h-100 bg-light">
-  <app-navbar></app-navbar>
-  <div class="d-flex flex-grow-1 overflow-hidden">
-    <app-sidebar></app-sidebar>
-    <div class="flex-grow-1 overflow-auto">
-      <div class="container-fluid p-4">
-        <h2 class="mb-4 text-custom-blue fw-bold">Dashboard</h2>
+<h2 class="mb-4 text-custom-blue fw-bold">Dashboard</h2>
 
-      <!-- Top Cards Row 1 -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <app-stat-card title="VOLUNTARIOS" value="5" subtext="+4 Pendientes" icon="bi-people" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-        <div class="col-md-3">
-          <app-stat-card title="ORGANIZACIONES" value="2" subtext="+2 Pendientes" icon="bi-building" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-        <div class="col-md-3">
-          <app-stat-card title="TOTAL MATCHES" value="2" icon="bi-heart" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-        <div class="col-md-3">
-          <app-stat-card title="PENDIENTES" value="4" icon="bi-clock" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-      </div>
+<!-- Top Cards Row 1 -->
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <app-stat-card title="VOLUNTARIOS" [value]="volunteersTotal" [subtext]="'+' + volunteersPending + ' Pendientes'"
+      icon="bi-people" iconBgColor="bg-primary"></app-stat-card>
+  </div>
+  <div class="col-md-3">
+    <app-stat-card title="ORGANIZACIONES" [value]="organizationsTotal"
+      [subtext]="'+' + organizationsPending + ' Pendientes'" icon="bi-building"
+      iconBgColor="bg-primary"></app-stat-card>
+  </div>
+  <div class="col-md-3">
+    <app-stat-card title="TOTAL MATCHES" [value]="matchesTotal" icon="bi-heart"
+      iconBgColor="bg-primary"></app-stat-card>
+  </div>
+  <div class="col-md-3">
+    <app-stat-card title="PENDIENTES" [value]="matchesPending" icon="bi-clock" iconBgColor="bg-primary"></app-stat-card>
+  </div>
+</div>
 
-      <!-- Top Cards Row 2 -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <app-stat-card title="COMPLETADOS" value="1" subtext="Voluntariados Terminados" icon="bi-check-circle" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-        <div class="col-md-4">
-          <app-stat-card title="PENDIENTES" value="0" subtext="Esperando Respuesta" icon="bi-hourglass-split" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-        <div class="col-md-4">
-          <app-stat-card title="ACEPTADOS" value="1" subtext="En Progreso" icon="bi-play-circle" iconBgColor="bg-primary"></app-stat-card>
-        </div>
-      </div>
+<!-- Top Cards Row 2 -->
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <app-stat-card title="COMPLETADOS" [value]="matchesCompleted" subtext="Voluntariados Terminados"
+      icon="bi-check-circle" iconBgColor="bg-primary"></app-stat-card>
+  </div>
+  <div class="col-md-4">
+    <app-stat-card title="MATCHES PENDIENTES" [value]="matchesPending" subtext="Esperando Respuesta"
+      icon="bi-hourglass-split" iconBgColor="bg-primary"></app-stat-card>
+  </div>
+  <div class="col-md-4">
+    <app-stat-card title="ACEPTADOS" [value]="matchesAccepted" subtext="En Progreso" icon="bi-play-circle"
+      iconBgColor="bg-primary"></app-stat-card>
+  </div>
+</div>
 
-      <!-- Bottom Section -->
-      <div class="row g-4">
-        <!-- Distribution of Matches -->
-        <div class="col-md-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title text-custom-blue fw-bold">Distribución de Matches</h5>
-              <p class="text-muted">Estado actual de los matches</p>
-              
-              <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                  <span>Pendientes</span>
-                  <span>4</span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                  <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-              </div>
+<!-- Bottom Section -->
+<div class="row g-4">
+  <!-- Distribution of Matches -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title text-custom-blue fw-bold">Distribución de Matches</h5>
+        <p class="text-muted">Estado actual de los matches</p>
 
-              <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                  <span>Aceptados</span>
-                  <span>1</span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                  <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <div class="d-flex justify-content-between mb-1">
-                  <span>Completados</span>
-                  <span>1</span>
-                </div>
-                <div class="progress" style="height: 10px;">
-                  <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 20%" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-              </div>
-            </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Pendientes</span>
+            <span>4</span>
+          </div>
+          <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 80%" aria-valuenow="80"
+              aria-valuemin="0" aria-valuemax="100"></div>
           </div>
         </div>
 
-        <!-- Quick Information -->
-        <div class="col-md-6">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title text-custom-blue fw-bold">Información Rápida</h5>
-              <p class="text-muted">Métricas principales</p>
-              
-              <div class="mb-4 p-3 bg-light rounded">
-                <small class="text-muted">Tasa de Aceptación</small>
-                <h3 class="text-custom-blue fw-bold mb-0">20%</h3>
-              </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Aceptados</span>
+            <span>1</span>
+          </div>
+          <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 20%" aria-valuenow="20"
+              aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
 
-              <div class="p-3 bg-light rounded">
-                <small class="text-muted">Tasa de Finalización</small>
-                <h3 class="text-custom-blue fw-bold mb-0">10%</h3>
-              </div>
-            </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Completados</span>
+            <span>1</span>
+          </div>
+          <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-custom-blue" role="progressbar" style="width: 20%" aria-valuenow="20"
+              aria-valuemin="0" aria-valuemax="100"></div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- Quick Information -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title text-custom-blue fw-bold">Información Rápida</h5>
+        <p class="text-muted">Métricas principales</p>
+
+        <div class="mb-4 p-3 bg-light rounded">
+          <small class="text-muted">Tasa de Aceptación</small>
+          <h3 class="text-custom-blue fw-bold mb-0">20%</h3>
+        </div>
+
+        <div class="p-3 bg-light rounded">
+          <small class="text-muted">Tasa de Finalización</small>
+          <h3 class="text-custom-blue fw-bold mb-0">10%</h3>
+        </div>
       </div>
     </div>
   </div>

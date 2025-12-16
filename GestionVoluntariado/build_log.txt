@@ -1,46 +1,44 @@
-[33mÔØ»[39m Building...
-[32mÔ£ö[39m Building...
-Application bundle generation failed. [8.397 seconds] - 2025-12-11T08:59:42.775Z
+[33m❯[39m Building...
+[32m✔[39m Building...
+Application bundle generation failed. [7.422 seconds] - 2025-12-15T13:25:37.581Z
 
-Ôû▓ [WARNING] NG8113: All imports are unused [plugin angular-compiler]
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: All imports are unused[0m [1m[35m[plugin angular-compiler][0m
 
     src/app/components/Global-Components/navbar/navbar.component.ts:7:2:
-      7 Ôöé   imports: [RouterLink],
-        ÔòÁ   ~~~~~~~
+[37m      7 │   [32mimports[37m: [RouterLink],
+        ╵   [32m~~~~~~~[0m
 
 
-Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of Matches [plugin angular-compiler]
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: AddButtonComponent is not used within the template of Matches[0m [1m[35m[plugin angular-compiler][0m
 
     src/app/pages/Administrator/matches/matches.ts:18:4:
-      18 Ôöé     AddButtonComponent
-         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+[37m      18 │     [32mAddButtonComponent[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~[0m
 
 
-Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of OrganizationsComponent [plugin angular-compiler]
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: AddButtonComponent is not used within the template of VolunteersComponent[0m [1m[35m[plugin angular-compiler][0m
 
-    src/app/pages/Administrator/organizations/organizations.component.ts:19:4:
-      19 Ôöé     AddButtonComponent,
-         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+    src/app/pages/Administrator/volunteers/volunteers.component.ts:21:4:
+[37m      21 │     [32mAddButtonComponent[37m,
+         ╵     [32m~~~~~~~~~~~~~~~~~~[0m
 
-
-Ôû▓ [WARNING] NG8113: AddButtonComponent is not used within the template of VolunteersComponent [plugin angular-compiler]
-
-    src/app/pages/Administrator/volunteers/volunteers.component.ts:19:4:
-      19 Ôöé     AddButtonComponent,
-         ÔòÁ     ~~~~~~~~~~~~~~~~~~
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "C:\\Users\\jrenz\\Desktop\\DAM2\\COPIASEGURIDADINTER\\AplicacionWebGestionVoluntariadoJavi\\GestionVoluntariado\\src\\main.ts"[0m
 
 
-X [ERROR] TS2349: This expression is not callable.
-  Type 'Observable<Organization[]>' has no call signatures. [plugin angular-compiler]
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module './app.routes' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
 
-    src/app/pages/Administrator/organizations/organizations.component.html:31:23:
-      31 Ôöé           @for (org of organizations(); track org.name) {
-         ÔòÁ                        ~~~~~~~~~~~~~
-
-  Error occurs in the template of component OrganizationsComponent.
-
-    src/app/pages/Administrator/organizations/organizations.component.ts:23:15:
-      23 Ôöé   templateUrl: './organizations.component.html',
-         ÔòÁ                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    src/app/app.config.ts:5:23:
+[37m      5 │ import { routes } from [32m'./app.routes'[37m;
+        ╵                        [32m~~~~~~~~~~~~~~[0m
 
 
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "src/styles.css"[0m
+
+    angular:styles/global:styles:1:8:
+[37m      1 │ @import [32m'src/styles.css'[37m;
+        ╵         [32m~~~~~~~~~~~~~~~~[0m
+
+  You can mark the path "src/styles.css" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle.
+
+[39m[22m
