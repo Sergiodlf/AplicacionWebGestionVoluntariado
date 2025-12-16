@@ -11,6 +11,8 @@ import { DashboardComponent } from './pages/Administrator/dashboard/dashboard';
 import { MatchesComponent } from './pages/Administrator/matches/matches';
 import { OrganizationsComponent } from './pages/Administrator/organizations/organizations';
 import { ActivitiesComponent } from './pages/Administrator/activities/activities';
+import { VolunteerLayoutComponent } from './layouts/volunteer-layout/volunteer-layout.component';
+import { OrganizerLayoutComponent } from './layouts/organizer-layout/organizer-layout.component';
 
 export const routes: Routes = [
     { path: '', component: LandingPageComponent, pathMatch: 'full' },
@@ -28,6 +30,22 @@ export const routes: Routes = [
             { path: 'organizations', component: OrganizationsComponent },
             { path: 'activities', component: ActivitiesComponent },
             { path: '', redirectTo: 'volunteers', pathMatch: 'full' }
+        ]
+    }, {
+        path: 'volunteer',
+        component: VolunteerLayoutComponent,
+        children: [
+            { path: 'activities', component: ActivitiesComponent },
+            { path: 'matches', component: MatchesComponent },
+            { path: '', redirectTo: 'activities', pathMatch: 'full' }
+        ]
+    }, {
+        path: 'organization',
+        component: OrganizerLayoutComponent,
+        children: [
+            { path: 'activities', component: ActivitiesComponent },
+            { path: 'matches', component: MatchesComponent },
+            { path: '', redirectTo: 'activities', pathMatch: 'full' }
         ]
     }
 ];
