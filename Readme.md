@@ -57,8 +57,9 @@ git pull --rebase origin develop
    ```
 
 ### Instalación de librerías de PHP
+```bash
 composer install
-
+ ``` 
 ### Dependencias y Entorno:
 
 ### Creación del archivo de configuración local
@@ -77,3 +78,4 @@ php bin/console doctrine:database:create
 ```bash
 php bin/console doctrine:migrations:migrate
 ``` 
+
