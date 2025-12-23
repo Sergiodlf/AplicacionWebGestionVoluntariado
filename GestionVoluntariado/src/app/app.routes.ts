@@ -14,7 +14,7 @@ import { ActivitiesComponent } from './pages/Administrator/activities/activities
 import { Voluntariados } from './pages/Volunteer/voluntariados/voluntariados';
 import { MisVoluntariados } from './pages/Volunteer/mis-voluntariados/mis-voluntariados';
 
-//import { MisVoluntariadosOrganizacion } from './pages/Organization/mis-voluntariados-organizacion/mis-voluntariados-organizacion';
+import { MisVoluntariadosOrganizacion } from './pages/Organization/mis-voluntariados-organizacion/mis-voluntariados-organizacion';
 
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
@@ -29,5 +29,5 @@ export const routes: Routes = [
   { path: 'admin/matches', component: MatchesComponent },
   { path: 'volunteer/voluntariados', component: Voluntariados},
   { path: 'volunteer/mis-voluntariados', component: MisVoluntariados},
-  //{ path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion}
+  { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion}
 ];
