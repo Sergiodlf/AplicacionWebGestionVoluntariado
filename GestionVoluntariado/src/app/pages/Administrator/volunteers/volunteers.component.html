@@ -1,32 +1,44 @@
-<!-- Header Section -->
-<div class="d-flex flex-column align-items-center mb-5">
-  <h2 class="text-custom-blue fw-bold mb-4">Voluntarios</h2>
-  <app-status-toggle leftLabel="Pendientes" rightLabel="Aprobados" [leftCount]="4"
-    (optionChanged)="onTabChange($event)">
-  </app-status-toggle>
-</div>
+<div class="d-flex flex-column h-100 bg-light">
+  <app-navbar></app-navbar>
+  <div class="d-flex flex-grow-1 overflow-hidden">
+    <app-sidebar></app-sidebar>
+    <div class="flex-grow-1 overflow-auto">
+      <div class="container-fluid p-4">
 
-<!-- Subheader & Action -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div class="d-flex align-items-center text-custom-blue">
-    <i class="bi bi-people me-2 fs-4"></i>
-    <h4 class="fw-bold mb-0">Voluntarios {{ activeTab === 'left' ? 'Pendientes' : 'Aprobados' }}</h4>
-  </div>
-  <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAddVolunteer()">
-    Añadir Voluntario
-  </button>
-</div>
+        <!-- Header Section -->
+        <div class="d-flex flex-column align-items-center mb-5">
+          <h2 class="text-custom-blue fw-bold mb-4">Voluntarios</h2>
+          <app-status-toggle leftLabel="Pendientes" rightLabel="Aprobados" [leftCount]="4"
+            (optionChanged)="onTabChange($event)">
+          </app-status-toggle>
+        </div>
 
-<div class="row g-4">
-  @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
-  volunteer.email) {
-  <div class="col-12 col-md-6">
-    <app-volunteer-card [name]="volunteer.name" [email]="volunteer.email" [skills]="volunteer.skills"
-      [availability]="volunteer.availability" [interests]="volunteer.interests" [status]="volunteer.status"
-      (onAccept)="onAccept(volunteer)" (onReject)="onReject(volunteer)">
-    </app-volunteer-card>
+        <!-- Subheader & Action -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center text-custom-blue">
+            <i class="bi bi-people me-2 fs-4"></i>
+            <h4 class="fw-bold mb-0">Voluntarios {{ activeTab === 'left' ? 'Pendientes' : 'Aprobados' }}</h4>
+          </div>
+          <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAddVolunteer()">
+            Añadir Voluntario
+          </button>
+        </div>
+
+        <div class="row g-4">
+          @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
+          volunteer.email) {
+          <div class="col-12 col-md-6">
+            <app-volunteer-card [name]="volunteer.name" [email]="volunteer.email" [skills]="volunteer.skills"
+              [availability]="volunteer.availability" [interests]="volunteer.interests" [status]="volunteer.status"
+              (onAccept)="onAccept(volunteer)" (onReject)="onReject(volunteer)">
+            </app-volunteer-card>
+          </div>
+          }
+        </div>
+
+      </div>
+    </div>
   </div>
-  }
 </div>
 
 <!-- Modal -->

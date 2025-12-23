@@ -1,12 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
-import { AddButtonComponent } from '../../../components/Global-Components/add-button/add-button.component';
 import { VolunteerCardComponent } from '../../../components/Administrator/Volunteers/volunteer-card/volunteer-card.component';
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, catchError, tap } from 'rxjs/operators';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 
 @Component({
   selector: 'app-volunteers',
@@ -14,12 +15,13 @@ import { VolunteerService } from '../../../services/volunteer.service';
   imports: [
     CommonModule,
     StatusToggleComponent,
-    AddButtonComponent,
     VolunteerCardComponent,
-    VolunteerFormComponent
+    VolunteerFormComponent,
+    NavbarComponent,
+    SidebarComponent
   ],
   templateUrl: './volunteers.component.html',
-  styleUrl: './volunteers.component.css'
+  styleUrl: './volunteers.component.css',
 })
 export class VolunteersComponent {
   private volunteerService = inject(VolunteerService);
@@ -27,21 +29,27 @@ export class VolunteersComponent {
 
   // Main stream that reacts to refresh$
   volunteers$ = this.refresh$.pipe(
-    switchMap(() => this.volunteerService.getVolunteers().pipe(
-      tap(data => console.log('Fetched volunteers:', data)),
-      catchError(err => {
-        console.error('Error fetching volunteers:', err);
-        return of([]); // Keep the stream alive with empty list
-      })
-    ))
+    switchMap(() =>
+      this.volunteerService.getVolunteers().pipe(
+        tap((data) => console.log('Fetched volunteers:', data)),
+        catchError((err) => {
+          console.error('Error fetching volunteers:', err);
+          return of([]); // Keep the stream alive with empty list
+        })
+      )
+    )
   );
 
   activeTab: 'left' | 'right' = 'left';
 
   // Derived filtered streams (depend on volunteers$)
   // Derived filtered streams (depend on volunteers$)
-  pendingVolunteers$ = this.volunteers$.pipe(map(list => list.filter(v => v.status === 'PENDIENTE')));
-  approvedVolunteers$ = this.volunteers$.pipe(map(list => list.filter(v => v.status === 'ACEPTADO')));
+  pendingVolunteers$ = this.volunteers$.pipe(
+    map((list) => list.filter((v) => v.status === 'PENDIENTE'))
+  );
+  approvedVolunteers$ = this.volunteers$.pipe(
+    map((list) => list.filter((v) => v.status === 'ACEPTADO'))
+  );
 
   showModal = false;
 
@@ -64,7 +72,7 @@ export class VolunteersComponent {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'ACEPTADO').subscribe({
       next: () => this.refresh$.next(),
-      error: (err) => console.error('Error updating status:', err)
+      error: (err) => console.error('Error updating status:', err),
     });
   }
 
@@ -72,13 +80,13 @@ export class VolunteersComponent {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'RECHAZADO').subscribe({
       next: () => this.refresh$.next(),
-      error: (err) => console.error('Error updating status:', err)
+      error: (err) => console.error('Error updating status:', err),
     });
   }
 
   handleCreateVolunteer(volunteerData: any) {
     console.log('Parent received volunteer data:', volunteerData);
-    // Map form data to backend expected structure 
+    // Map form data to backend expected structure
     const mappedVolunteer = {
       nombre: volunteerData.nombreCompleto,
       email: volunteerData.correo,
@@ -92,10 +100,12 @@ export class VolunteersComponent {
       idiomas: volunteerData.idiomas,
       habilidades: volunteerData.habilidades,
       intereses: volunteerData.intereses,
-      // Convert availability array to string if needed, or keep as array if backend supports it. 
+      // Convert availability array to string if needed, or keep as array if backend supports it.
       // Based on 500 error history and typical SQL issues, string is safer or backend needs to handle array.
       // Trying String join first as Service mock used String.
-      disponibilidad: Array.isArray(volunteerData.disponibilidad) ? volunteerData.disponibilidad.join(', ') : volunteerData.disponibilidad
+      disponibilidad: Array.isArray(volunteerData.disponibilidad)
+        ? volunteerData.disponibilidad.join(', ')
+        : volunteerData.disponibilidad,
     };
 
     console.log('Sending mapped volunteer data:', mappedVolunteer);
@@ -104,7 +114,7 @@ export class VolunteersComponent {
         console.log('Volunteer created successfully', response);
         // this.volunteerService.addVolunteerToSignal(volunteerData); // Optimistic update or use response
         // Reload list or trust optimistic if we reimplement it. For now, simple reload or no-op.
-        // To refresh, we can unwrap/rewrap or use a BehaviorSubject in service. 
+        // To refresh, we can unwrap/rewrap or use a BehaviorSubject in service.
         // For simplicity: Just keep as is, data will persist on navigation, or we should refresh the list.
         this.refresh$.next();
         this.closeModal();
@@ -113,7 +123,7 @@ export class VolunteersComponent {
       error: (error) => {
         console.error('Error creating volunteer', error);
         alert('Error al crear voluntario: ' + JSON.stringify(error));
-      }
+      },
     });
   }
 }

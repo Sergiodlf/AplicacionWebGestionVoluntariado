@@ -1,5 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { FormsModule } from '@angular/forms';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { VolunteeringCardComponent } from '../../../components/Administrator/Volunteers/volunteering-card/volunteering-card.component';
@@ -12,7 +14,9 @@ import { ActividadService } from '../../../services/actividad';
     CommonModule,
     FormsModule,
     StatusToggleComponent,
-    VolunteeringCardComponent
+    VolunteeringCardComponent,
+    NavbarComponent,
+    SidebarComponent
   ],
   templateUrl: './activities.html',
   styleUrl: './activities.css'
