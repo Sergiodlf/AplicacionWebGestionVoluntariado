@@ -11,6 +11,11 @@ import { MatchesComponent } from './pages/Administrator/matches/matches';
 import { OrganizationsComponent } from './pages/Administrator/organizations/organizations';
 import { ActivitiesComponent } from './pages/Administrator/activities/activities';
 
+import { Voluntariados } from './pages/Volunteer/voluntariados/voluntariados';
+import { MisVoluntariados } from './pages/Volunteer/mis-voluntariados/mis-voluntariados';
+
+//import { MisVoluntariadosOrganizacion } from './pages/Organization/mis-voluntariados-organizacion/mis-voluntariados-organizacion';
+
 export const routes: Routes = [
   { path: '', component: LandingPageComponent },
   { path: 'login', component: LoginComponent },
@@ -22,7 +27,7 @@ export const routes: Routes = [
   { path: 'admin/organizations', component: OrganizationsComponent },
   { path: 'admin/activities', component: ActivitiesComponent },
   { path: 'admin/matches', component: MatchesComponent },
-  //{ path: 'volunteer/voluntariados', component: Voluntariados},
-  //{ path: 'volunteer/mis-voluntariados', component: MisVoluntariados},
+  { path: 'volunteer/voluntariados', component: Voluntariados},
+  { path: 'volunteer/mis-voluntariados', component: MisVoluntariados},
   //{ path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion}
 ];

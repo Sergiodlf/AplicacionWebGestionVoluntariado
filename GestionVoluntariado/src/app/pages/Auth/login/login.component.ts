@@ -24,10 +24,10 @@ export class LoginComponent {
             this.router.navigate(['/admin/dashboard']);
         } else if (this.email === 'voluntario@example.com' && this.password === 'password') {
             this.errorMessage = '';
-            this.router.navigate(['/volunteer/activities']);
+            this.router.navigate(['/volunteer/voluntariados']);
         } else if (this.email === 'organizacion@example.com' && this.password === 'password') {
             this.errorMessage = '';
-            this.router.navigate(['/organization/activities']);
+            this.router.navigate(['/organization/mis-voluntariados-organizacion']);
         } else {
             this.errorMessage = 'Credenciales incorrectas. Prueba con: test@example.com (Admin), voluntario@example.com (Voluntario) o organizacion@example.com (Organización)';
         }
