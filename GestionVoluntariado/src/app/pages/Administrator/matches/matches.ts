@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { MatchCardComponent } from '../../../components/Administrator/Matches/match-card/match-card.component';
@@ -12,7 +12,7 @@ import { MatchCardComponent } from '../../../components/Administrator/Matches/ma
     CommonModule,
     StatusToggleComponent,
     MatchCardComponent,
-    NavbarComponent,
+    Navbar,
     SidebarComponent
   ],
   templateUrl: './matches.html',

@@ -6,7 +6,7 @@ import { VolunteerFormComponent } from '../../../components/Global-Components/vo
 import { BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, catchError, tap } from 'rxjs/operators';
 import { VolunteerService } from '../../../services/volunteer.service';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 
 @Component({
@@ -17,7 +17,7 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
     StatusToggleComponent,
     VolunteerCardComponent,
     VolunteerFormComponent,
-    NavbarComponent,
+    Navbar,
     SidebarComponent
   ],
   templateUrl: './volunteers.component.html',

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarVolunteer } from '../../../components/Volunteer/sidebar-volunteer/sidebar-volunteer';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
@@ -8,7 +8,7 @@ import { StatusToggleComponent } from '../../../components/Global-Components/sta
 
 @Component({
   selector: 'app-voluntariados',
-  imports: [CommonModule, NavbarComponent, SidebarVolunteer, VoluntariadoCard, StatusToggleComponent],
+  imports: [CommonModule, Navbar, SidebarVolunteer, VoluntariadoCard, StatusToggleComponent],
   templateUrl: './voluntariados.html',
   styleUrl: './voluntariados.css',
 })

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatCard } from '../../../components/Administrator/Dashboard/stat-card/stat-card';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { VolunteerService } from '../../../services/volunteer.service';
 import { OrganizationService } from '../../../services/organization.service';
 import { CommonModule } from '@angular/common';
@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, StatCard, NavbarComponent],
+  imports: [CommonModule, SidebarComponent, StatCard, Navbar],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

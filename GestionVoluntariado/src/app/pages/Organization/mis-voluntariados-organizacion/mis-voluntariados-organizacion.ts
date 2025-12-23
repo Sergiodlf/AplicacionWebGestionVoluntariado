@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from '../../../components/Global-Components/navbar/navbar.component';
+import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { StatusToggleVoluntariado } from '../../../components/Volunteer/status-toggle-voluntariado/status-toggle-voluntariado';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 
 @Component({
   selector: 'app-mis-voluntariados-organizacion',
-  imports: [CommonModule, NavbarComponent, StatusToggleVoluntariado, VoluntariadoCard, CrearVoluntariadoModal],
+  imports: [CommonModule, Navbar, StatusToggleVoluntariado, VoluntariadoCard, CrearVoluntariadoModal],
   templateUrl: './mis-voluntariados-organizacion.html',
   styleUrl: './mis-voluntariados-organizacion.css',
 })
