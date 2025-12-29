@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface Voluntariado {
   codAct: number;
@@ -6,60 +8,60 @@ export interface Voluntariado {
   estado: string;
   direccion: string;
   maxParticipantes: number;
-  //fechaInicio: Date;
-  //fechaFin: Date;
   organizacion: string;
-  //organizacion: Organizacion;
+  // Optional fields for UI mapping
+  organization?: string;
+  habilidades?: string;
+  fechaInicio?: string;
+  descripcion?: string;
+  // For UI structure compatibility
+  title?: string;
+  skills?: string[];
+  date?: string;
+  ods?: any[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class VoluntariadoService {
-  private voluntariadosSignal = signal<Voluntariado[]>([
-    {
-      codAct: 1,
-      nombre: 'Ayudar en residencia',
-      estado: 'Pendiente',
-      direccion: 'San Jorge',
-      maxParticipantes: 20,
-      organizacion: "organizacion"
-    },
-    {
-      codAct: 2,
-      nombre: 'Ayudar en residencia',
-      estado: 'En curso',
-      direccion: 'San Jorge',
-      maxParticipantes: 20,
-      organizacion: "organizacion"
-    },
-    {
-      codAct: 3,
-      nombre: 'Ayudar en residencia',
-      estado: 'Completado',
-      direccion: 'San Jorge',
-      maxParticipantes: 20,
-      organizacion: "organizacion"
-    },
-    {
-      codAct: 4,
-      nombre: 'Ayudar en residencia',
-      estado: 'Pendiente',
-      direccion: 'San Jorge',
-      maxParticipantes: 20,
-      organizacion: "organizacion"
-    },
-  ]);
+  private apiUrl = '/api/actividades';
+  private inscripcionesUrl = '/api/inscripciones';
 
-  getVoluntariados() {
-    return this.voluntariadosSignal.asReadonly();
+  constructor(private http: HttpClient) { }
+
+  getAllVoluntariados(): Observable<Voluntariado[]> {
+    return this.http.get<Voluntariado[]>(this.apiUrl);
   }
 
-  addVoluntariado(vol: Voluntariado) {
-    this.voluntariadosSignal.update((voluntariadosSignal) => [...voluntariadosSignal, vol]);
+  getInscripcionesVoluntario(dni: string): Observable<any[]> {
+    // Assuming this endpoint returns the list of inscriptions (matches) for the volunteer
+    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}`);
   }
 
-  removeVoluntaiado(cod: number) {
-    this.voluntariadosSignal.update((voluntariadosSignal) => voluntariadosSignal.filter((v) => v.codAct !== cod));
+  getInscripcionesPendientes(dni: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}/pendientes`);
+  }
+
+  getAllInscripciones(): Observable<any[]> {
+    return this.http.get<any[]>(this.inscripcionesUrl);
+  }
+
+  inscribirVoluntario(dniVoluntario: string, idActividad: number): Observable<any> {
+    return this.http.post(this.inscripcionesUrl, {
+      dniVoluntario: dniVoluntario,
+      codActividad: idActividad
+    });
+  }
+
+  updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE'): Observable<any> {
+    const url = `${this.inscripcionesUrl}/${idInscripcion}/estado`;
+    return this.http.patch(url, { estado: estado });
+  }
+
+  getActividadesAceptadas(dni: string, estado: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}/actividades-aceptadas`, {
+      params: { estado: estado }
+    });
   }
 }

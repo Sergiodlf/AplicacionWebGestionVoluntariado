@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarVolunteer } from '../../../components/Volunteer/sidebar-volunteer/sidebar-volunteer';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { StatusToggleVoluntariado } from "../../../components/Volunteer/status-toggle-voluntariado/status-toggle-voluntariado";
 
 @Component({
@@ -13,7 +14,7 @@ import { StatusToggleVoluntariado } from "../../../components/Volunteer/status-t
     SidebarVolunteer,
     VoluntariadoCard,
     StatusToggleVoluntariado
-],
+  ],
   templateUrl: './mis-voluntariados.html',
   styleUrl: './mis-voluntariados.css',
 })
@@ -22,55 +23,66 @@ export class MisVoluntariados {
 
   tabLabel = 'Pendientes';
 
-  volunteeringData = [
-    {
-      title: 'Ayudar en Residencia',
-      organization: 'Fundación Ayuda',
-      skills: ['Comunicación', 'Asistencia'],
-      date: '14/02/2026',
-      status: 'Pendiente',
-      ods: [
-        { id: 3, name: 'ODS 3', color: '#00c851' },
-        { id: 1, name: 'ODS 1', color: '#ff4444' },
-      ],
-    },
-    {
-      title: 'Logística de Evento',
-      organization: 'Centro Cultural',
-      skills: ['Organización'],
-      date: '12/03/2026',
-      status: 'En Curso',
-      ods: [{ id: 4, name: 'ODS 4', color: '#33b5e5' }],
-    },
-    {
-      title: 'Ayuda en Comedor',
-      organization: 'Fundación Manos',
-      skills: ['Cocina'],
-      date: '08/01/2026',
-      status: 'Completado',
-      ods: [{ id: 2, name: 'ODS 2', color: '#ffbb33' }],
-    },
-  ];
+  private voluntariadoService = inject(VoluntariadoService);
+  currentDNI = '11111111A';
 
-  get filteredVolunteering() {
-    switch (this.activeTab) {
-      case 'left':
-        return this.volunteeringData.filter((x) => x.status === 'Pendiente');
-      case 'middle':
-        return this.volunteeringData.filter((x) => x.status === 'En Curso');
-      case 'right':
-        return this.volunteeringData.filter((x) => x.status === 'Completado');
-      default:
-        return this.volunteeringData;
-    }
+  volunteeringData: any[] = [];
+
+  ngOnInit() {
+    this.loadData('pendiente');
   }
+
+  loadData(estado: string) {
+    this.voluntariadoService.getActividadesAceptadas(this.currentDNI, estado).subscribe({
+      next: (data) => {
+        console.log(`API Response MisVoluntariados (${estado}):`, data);
+        this.volunteeringData = data.map(v => ({
+          title: v.nombre,
+          organization: v.nombre_organizacion,
+          skills: Array.isArray(v.habilidades) ? v.habilidades : [],
+          date: v.fechaInicio,
+          status: v.estado,
+          ods: Array.isArray(v.ods) ? v.ods.map((o: string) => ({
+            id: 0,
+            name: o,
+            color: this.getOdsColor(o)
+          })) : []
+        }));
+      },
+      error: (err) => {
+        console.error('Error fetching mis voluntariados', err);
+        this.volunteeringData = [];
+      }
+    });
+  }
+
+  getOdsColor(ods: string): string {
+    const colors: { [key: string]: string } = {
+      'ODS1': '#ff4444',
+      'ODS2': '#ffbb33',
+      'ODS3': '#00c851',
+      'ODS4': '#33b5e5',
+    };
+    return colors[ods] || '#9e9e9e';
+  }
+
+  // Removed filteredVolunteering getter as we now load filtered data directly
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
 
-    if (tab === 'left') this.tabLabel = 'Pendientes';
-    if (tab === 'middle') this.tabLabel = 'En Curso';
-    if (tab === 'right') this.tabLabel = 'Completados';
+    if (tab === 'left') {
+      this.tabLabel = 'Pendientes';
+      this.loadData('pendiente');
+    }
+    if (tab === 'middle') {
+      this.tabLabel = 'En Curso';
+      this.loadData('en curso');
+    }
+    if (tab === 'right') {
+      this.tabLabel = 'Completados';
+      this.loadData('completada');
+    }
   }
 
   onAction(item: any) {

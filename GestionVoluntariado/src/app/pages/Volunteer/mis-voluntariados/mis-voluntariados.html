@@ -50,7 +50,7 @@
 
                 <!-- Cards List -->
                 <div class="row g-4">
-                    <div class="col-md-6" *ngFor="let item of filteredVolunteering">
+                    <div class="col-md-6" *ngFor="let item of volunteeringData">
                         <app-voluntariado-card [title]="item.title" [organization]="item.organization"
                             [skills]="item.skills" [date]="item.date" [ods]="item.ods" [status]="item.status"
                             (onAction)="onAction(item)">

@@ -208,6 +208,46 @@ paths:
   # ==========================================
   # INSCRIPCIONES
   # ==========================================
+  /inscripciones:
+    get:
+      tags:
+        - Inscripciones
+      summary: Listar todas las inscripciones pendientes
+      description: Devuelve una lista de todas las inscripciones con estado PENDIENTE en el sistema.
+      responses:
+        '200':
+          description: Lista de pendientes recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InscripcionDetalle'
+    post:
+      tags:
+        - Inscripciones
+      summary: Crear una nueva inscripción
+      description: Permite a un voluntario inscribirse en una actividad especificando ambos IDs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InscripcionNueva'
+      responses:
+        '201':
+          description: Inscripción creada correctamente
+          content:
+            application/json:
+              example:
+                message: "Inscripción creada correctamente"
+        '400':
+          description: Faltan datos o son inválidos
+        '404':
+          description: Voluntario o Actividad no encontrados
+        '409':
+          description: El voluntario ya está inscrito
+
   /inscripciones/{id}/estado:
     patch:
       tags:
@@ -239,6 +279,66 @@ paths:
           description: Estado inválido o falta campo
         '404':
           description: Inscripción no encontrada
+
+  /inscripciones/voluntario/{dni}/pendientes:
+    get:
+      tags:
+        - Inscripciones
+      summary: Listar inscripciones pendientes de un voluntario
+      description: Devuelve todas las inscripciones con estado PENDIENTE para un DNI dado.
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          description: DNI del voluntario
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de inscripciones pendientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InscripcionPendiente'
+        '404':
+          description: Voluntario no encontrado
+
+
+
+  /inscripciones/voluntario/{dni}/actividades-aceptadas:
+    get:
+      tags:
+        - Inscripciones
+      summary: Listar actividades ACEPTADAS de un voluntario (filtro opcional por estado)
+      description: Recupera actividades donde el voluntario está CONFIRMADO, permitiendo filtrar por el estado de la actividad (PENDIENTE, EN CURSO, FINALIZADO).
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          description: DNI del voluntario
+          schema:
+            type: string
+        - name: estado
+          in: query
+          required: false
+          description: Estado de la actividad para filtrar (ej. PENDIENTE, EN CURSO)
+          schema:
+            type: string
+            enum: ["PENDIENTE", "EN_CURSO", "FINALIZADO"]
+            example: "PENDIENTE"
+      responses:
+        '200':
+          description: Lista de actividades filtradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActividadInscritaDetalle'
+        '404':
+          description: Voluntario no encontrado
 
   /voluntarios:
     get:
@@ -523,6 +623,56 @@ components:
           type: string
           example: "12345678Z"
 
+    InscripcionNueva:
+      type: object
+      required: [dniVoluntario, codActividad]
+      properties:
+        dniVoluntario:
+          type: string
+          example: "12345678Z"
+        codActividad:
+          type: integer
+          example: 1
+
+
+    InscripcionPendiente:
+      type: object
+      properties:
+        id_inscripcion:
+          type: integer
+        codActividad:
+          type: integer
+        nombre_actividad:
+          type: string
+        fecha_actividad:
+          type: string
+          format: date-time
+        nombre_organizacion:
+          type: string
+        estado:
+          type: string
+          example: "PENDIENTE"
+
+    ActividadInscritaDetalle:
+      type: object
+      properties:
+        codActividad:
+          type: integer
+        nombre:
+          type: string
+        direccion:
+          type: string
+        fechaInicio:
+          type: string
+          format: date-time
+        fechaFin:
+          type: string
+          format: date-time
+        organizacion:
+          type: string
+        id_inscripcion:
+          type: integer
+
     # --- MODELO ACTUALIZAR ESTADO ---
     UpdateEstadoRequest:
       type: object
@@ -532,4 +682,22 @@ components:
           type: string
           description: "Nuevo estado (PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO)"
           example: "CONFIRMADO"
+
+    InscripcionDetalle:
+      type: object
+      properties:
+        id_inscripcion:
+          type: integer
+        dni_voluntario:
+          type: string
+        nombre_voluntario:
+          type: string
+        codActividad:
+          type: integer
+        nombre_actividad:
+          type: string
+        estado:
+          type: string
+          example: "PENDIENTE"
+
 
