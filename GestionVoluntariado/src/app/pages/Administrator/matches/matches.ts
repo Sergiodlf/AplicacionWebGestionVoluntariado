@@ -22,7 +22,7 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
 export class MatchesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
 
-  activeTab: 'left' | 'right' = 'left';
+  activeTab: 'left' | 'middle' | 'right' = 'left';
   matches: any[] = [];
 
   ngOnInit() {
@@ -56,7 +56,32 @@ export class MatchesComponent implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'right') {
+  get filteredMatches() {
+    switch (this.activeTab) {
+      case 'left':
+        return this.matches.filter(m => m.status === 'PENDIENTE');
+      case 'middle':
+        return this.matches.filter(m => m.status === 'CONFIRMADO');
+      case 'right':
+        return this.matches.filter(m => m.status === 'RECHAZADO'); // Mapping 'Completados' to Rejected/Finished for now
+      default:
+        return this.matches;
+    }
+  }
+
+  get countPending() {
+    return this.matches.filter(m => m.status === 'PENDIENTE').length;
+  }
+
+  get countConfirmed() {
+    return this.matches.filter(m => m.status === 'CONFIRMADO').length;
+  }
+
+  get countRejected() {
+    return this.matches.filter(m => m.status === 'RECHAZADO').length;
+  }
+
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 

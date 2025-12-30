@@ -143,9 +143,61 @@ paths:
         '404':
           description: Organización no encontrada
 
+  /voluntarios/email/{email}:
+    get:
+      summary: Obtiene los datos de un voluntario por su email.
+      tags:
+        - Voluntarios
+      parameters:
+        - in: path
+          name: email
+          schema:
+            type: string
+          required: true
+          description: Correo electrónico del voluntario
+      responses:
+        '200':
+          description: Datos del voluntario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoluntarioDetalle'
+        '404':
+          description: Voluntario no encontrado.
+
   # ==========================================
   # ACTIVIDADES
   # ==========================================
+  /actividades/organizacion/{cif}:
+    get:
+      summary: Obtiene las actividades de una organización con sus inscripciones (opcionalmente filtradas).
+      tags:
+        - Actividades
+      parameters:
+        - in: path
+          name: cif
+          schema:
+            type: string
+          required: true
+          description: CIF de la organización
+        - in: query
+          name: estadoInscripcion
+          schema:
+            type: string
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO]
+          description: Filtra las inscripciones devueltas dentro de cada actividad por este estado.
+      responses:
+        '200':
+          description: Lista de actividades con información detallada e inscripciones.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActividadConInscripciones'
+        '404':
+          description: Organización no encontrada.
+
   /actividades:
     get:
       tags:
@@ -339,6 +391,39 @@ paths:
                   $ref: '#/components/schemas/ActividadInscritaDetalle'
         '404':
           description: Voluntario no encontrado
+
+  /inscripciones/organizacion/{cif}:
+    get:
+      tags:
+        - Inscripciones
+      summary: Listar inscripciones de actividades de una organización
+      description: Devuelve todas las inscripciones (solicitudes de voluntarios) para las actividades creadas por la organización especificada.
+      parameters:
+        - name: cif
+          in: path
+          required: true
+          description: CIF de la organización
+          schema:
+            type: string
+        - name: estado
+          in: query
+          required: false
+          description: Filtrar por estado de la inscripción
+          schema:
+            type: string
+            enum: ["PENDIENTE", "CONFIRMADO", "RECHAZADO", "EN_CURSO", "FINALIZADO"]
+            example: "PENDIENTE"
+      responses:
+        '200':
+          description: Lista de inscripciones recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InscripcionOrganizacionDetalle'
+        '404':
+          description: Organización no encontrada
 
   /voluntarios:
     get:
@@ -699,5 +784,55 @@ components:
         estado:
           type: string
           example: "PENDIENTE"
+        estadoAprobacion:
+          type: string
+          example: "PENDIENTE"
+
+    InscripcionOrganizacionDetalle:
+      type: object
+      properties:
+        id_inscripcion:
+          type: integer
+        estado:
+          type: string
+          example: "PENDIENTE"
+        voluntario:
+          type: object
+          properties:
+            dni:
+              type: string
+            telefono:
+              type: string
+              nullable: true
+        actividad:
+          type: object
+          properties:
+            codActividad:
+              type: integer
+            nombre:
+              type: string
 
 
+    ActividadConInscripciones:
+      type: object
+      properties:
+        codActividad:
+          type: integer
+        nombre:
+          type: string
+        estado:
+          type: string
+        estadoAprobacion:
+          type: string
+          example: "PENDIENTE"
+        direccion:
+          type: string
+        fechaInicio:
+          type: string
+          format: date-time
+        maxParticipantes:
+          type: integer
+        inscripciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/InscripcionOrganizacionDetalle'

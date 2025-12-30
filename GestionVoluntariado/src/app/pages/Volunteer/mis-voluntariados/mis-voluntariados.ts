@@ -19,7 +19,7 @@ import { StatusToggleVoluntariado } from "../../../components/Volunteer/status-t
   styleUrl: './mis-voluntariados.css',
 })
 export class MisVoluntariados {
-  activeTab: 'left' | 'middle' | 'right' = 'left';
+  activeTab: 'left' | 'second' | 'middle' | 'right' = 'left';
 
   tabLabel = 'Pendientes';
 
@@ -66,14 +66,16 @@ export class MisVoluntariados {
     return colors[ods] || '#9e9e9e';
   }
 
-  // Removed filteredVolunteering getter as we now load filtered data directly
-
-  onTabChange(tab: 'left' | 'middle' | 'right') {
+  onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
     this.activeTab = tab;
 
     if (tab === 'left') {
       this.tabLabel = 'Pendientes';
       this.loadData('pendiente');
+    }
+    if (tab === 'second') {
+      this.tabLabel = 'Aceptados';
+      this.loadData('confirmado');
     }
     if (tab === 'middle') {
       this.tabLabel = 'En Curso';

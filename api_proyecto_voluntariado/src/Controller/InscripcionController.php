@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Inscripcion;
 use App\Entity\Voluntario;
 use App\Entity\Actividad;
+use App\Entity\Organizacion;
+use App\Repository\InscripcionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -186,5 +188,59 @@ class InscripcionController extends AbstractController
         }
 
         return $this->json($actividades);
+    }
+
+    #[Route('/organizacion/{cif}', name: 'get_inscripciones_by_organizacion', methods: ['GET'])]
+    public function getInscripcionesByOrganizacion(string $cif, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        try {
+            // 1. Check Organizacion
+            $organizacion = $em->getRepository(Organizacion::class)->find($cif);
+            if (!$organizacion) {
+                return $this->json(['error' => 'Organización no encontrada'], 404);
+            }
+            
+            // 2. Query Repository
+            /** @var InscripcionRepository $inscripcionRepository */
+            $inscripcionRepository = $em->getRepository(Inscripcion::class);
+            $estado = $request->query->get('estado');
+            
+            $inscripciones = $inscripcionRepository->findByOrganizacionAndEstado($cif, $estado);
+            
+            $data = [];
+            foreach ($inscripciones as $inscripcion) {
+                $voluntario = $inscripcion->getVoluntario();
+                $actividad = $inscripcion->getActividad();
+                
+                if (!$voluntario || !$actividad) {
+                    continue;
+                }
+    
+                $telefono = null;
+                if (method_exists($voluntario, 'getTelefono')) {
+                    $telefono = $voluntario->getTelefono();
+                }
+
+                $data[] = [
+                    'id_inscripcion' => $inscripcion->getId(),
+                    'estado' => $inscripcion->getEstado(),
+                    // 'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
+                    'voluntario' => [
+                        'dni' => $voluntario->getDni(),
+                        // 'nombre' => $voluntario->getNombre() . ' ' . $voluntario->getApellido1(),
+                        // 'email' => $voluntario->getUserIdentifier(), 
+                        'telefono' => $telefono
+                    ],
+                    'actividad' => [
+                        'codActividad' => $actividad->getCodActividad(),
+                        // 'nombre' => $actividad->getNombre()
+                    ]
+                ];
+            }
+            
+            return $this->json($data);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+        }
     }
 }

@@ -20,4 +20,23 @@ class InscripcionRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Inscripcion::class);
     }
+
+    /**
+     * @return Inscripcion[] Returns an array of Inscripcion objects
+     */
+    public function findByOrganizacionAndEstado(string $cif, ?string $estado = null): array
+    {
+        $qb = $this->createQueryBuilder('i')
+            ->join('i.actividad', 'a')
+            ->join('a.organizacion', 'o')
+            ->where('o.cif = :cif')
+            ->setParameter('cif', $cif);
+
+        if ($estado) {
+            $qb->andWhere('i.estado = :estado')
+               ->setParameter('estado', $estado);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

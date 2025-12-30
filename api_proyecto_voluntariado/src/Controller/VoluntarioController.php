@@ -86,4 +86,31 @@ class VoluntarioController extends AbstractController
             'nuevo_estado' => $voluntario->getEstadoVoluntario()
         ]);
     }
+    #[Route('/email/{email}', name: 'api_voluntarios_get_by_email', methods: ['GET'])]
+    public function getByEmail(string $email, VoluntarioRepository $voluntarioRepository): JsonResponse
+    {
+        $voluntario = $voluntarioRepository->findOneBy(['correo' => $email]);
+
+        if (!$voluntario) {
+            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+        }
+
+        $data = [
+            'dni' => $voluntario->getDni(),
+            'nombre' => $voluntario->getNombre(),
+            'apellido1' => $voluntario->getApellido1(),
+            'apellido2' => $voluntario->getApellido2(),
+            'correo' => $voluntario->getCorreo(),
+            'zona' => $voluntario->getZona(),
+            'fechaNacimiento' => $voluntario->getFechaNacimiento() ? $voluntario->getFechaNacimiento()->format('Y-m-d') : null,
+            'experiencia' => $voluntario->getExperiencia(),
+            'coche' => $voluntario->isCoche(),
+            'habilidades' => $voluntario->getHabilidades(),
+            'intereses' => $voluntario->getIntereses(),
+            'idiomas' => $voluntario->getIdiomas(),
+            'estado_voluntario' => $voluntario->getEstadoVoluntario() // Assuming getter exists or public property
+        ];
+
+        return $this->json($data);
+    }
 }

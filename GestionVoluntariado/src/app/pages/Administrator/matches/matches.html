@@ -8,7 +8,8 @@
         <!-- Header Section -->
         <div class="d-flex flex-column align-items-center mb-5">
           <h2 class="text-custom-blue fw-bold mb-4">Matches</h2>
-          <app-status-toggle leftLabel="Pendientes" rightLabel="Completados" [leftCount]="2"
+          <app-status-toggle leftLabel="Pendientes" middleLabel="Aceptados" rightLabel="Completados"
+            [leftCount]="countPending" [middleCount]="countConfirmed" [rightCount]="countRejected"
             (optionChanged)="onTabChange($event)">
           </app-status-toggle>
         </div>
@@ -18,7 +19,8 @@
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center text-dark">
               <i class="bi bi-link-45deg me-2 fs-4"></i>
-              <h4 class="fw-bold mb-0">Matches {{ activeTab === 'left' ? 'Pendientes' : 'Completados' }}</h4>
+              <h4 class="fw-bold mb-0">Matches {{ activeTab === 'left' ? 'Pendientes' : (activeTab === 'middle' ?
+                'Aceptados' : 'Completados') }}</h4>
             </div>
 
             <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end">
@@ -37,7 +39,7 @@
 
         <!-- Cards List -->
         <div class="d-flex flex-column gap-3">
-          @for (match of matches; track match) {
+          @for (match of filteredMatches; track match) {
           <div>
             <app-match-card [match]="match" (onAccept)="onAccept(match)" (onReject)="onReject(match)">
             </app-match-card>

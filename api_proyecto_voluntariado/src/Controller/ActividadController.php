@@ -115,10 +115,19 @@ class ActividadController extends AbstractController
                 'fin' => $fechaFinSql,       // Enviamos string '20251231'
                 'cif' => $organizacion->getCif(),
                 'ods' => $odsJson,
-                'habilidades' => $habilidadesJson
+                'habilidades' => $habilidadesJson,
+                'estadoAprobacion' => 'PENDIENTE'
             ];
 
-            $conn->executeStatement($sql, $params);
+            $conn->executeStatement("
+                INSERT INTO ACTIVIDADES (
+                    NOMBRE, ESTADO, DIRECCION, MAX_PARTICIPANTES, 
+                    FECHA_INICIO, FECHA_FIN, CIF_EMPRESA, ODS, HABILIDADES, ESTADO_APROBACION
+                ) VALUES (
+                    :nombre, :estado, :direccion, :max, 
+                    :inicio, :fin, :cif, :ods, :habilidades, :estadoAprobacion
+                )
+            ", $params);
             
             // Recuperar el ID generado (IDENTITY) para devolverlo
             $nuevoId = $conn->fetchOne("SELECT @@IDENTITY");
@@ -144,7 +153,9 @@ class ActividadController extends AbstractController
             $data[] = [
                 'codActividad' => $actividad->getCodActividad(),
                 'nombre' => $actividad->getNombre(),
+                'nombre' => $actividad->getNombre(),
                 'estado' => $actividad->getEstado(),
+                'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                 'direccion' => $actividad->getDireccion(),
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                 'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i:s') : null,
@@ -209,5 +220,74 @@ class ActividadController extends AbstractController
         }
 
         return $this->json(['message' => 'Solicitud de inscripción enviada con estado PENDIENTE'], 201);
+    }
+
+    // OBTENER ACTIVIDADES POR ORGANIZACIÓN (Con Inscripciones)
+    #[Route('/organizacion/{cif}', name: 'get_by_organizacion', methods: ['GET'])]
+    public function getByOrganizacion(string $cif, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        try {
+            $organizacion = $em->getRepository(Organizacion::class)->find($cif);
+            if (!$organizacion) {
+                return $this->json(['error' => 'Organización no encontrada'], 404);
+            }
+
+            $actividades = $em->getRepository(Actividad::class)->findBy(['organizacion' => $organizacion]);
+            $estadoInscripcion = $request->query->get('estadoInscripcion'); // Opcional: filtrar inscripciones internas
+
+            $data = [];
+            foreach ($actividades as $actividad) {
+                // Mapeo básico de actividad
+                $actividadData = [
+                    'codActividad' => $actividad->getCodActividad(),
+                    'nombre' => $actividad->getNombre(),
+                    'estado' => $actividad->getEstado(),
+                    'estadoAprobacion' => $actividad->getEstadoAprobacion(),
+                    'direccion' => $actividad->getDireccion(),
+                    'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
+                    'maxParticipantes' => $actividad->getMaxParticipantes(),
+                    // 'ods' => $actividad->getOds(),
+                    // 'habilidades' => $actividad->getHabilidades(),
+                    'inscripciones' => []
+                ];
+
+                // Mapeo SIMPLIFICADO de inscripciones para debug
+                foreach ($actividad->getInscripciones() as $inscripcion) {
+                    if ($estadoInscripcion && $inscripcion->getEstado() !== $estadoInscripcion) {
+                        continue;
+                    }
+                    
+                    
+                    $voluntario = $inscripcion->getVoluntario();
+                    if (!$voluntario) continue;
+                    
+                    $telefono = null;
+                    if (method_exists($voluntario, 'getTelefono')) {
+                        $telefono = $voluntario->getTelefono();
+                    }
+
+                    $actividadData['inscripciones'][] = [
+                        'id_inscripcion' => $inscripcion->getId(),
+                        'estado' => $inscripcion->getEstado(),
+                        // 'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
+                        'voluntario' => [
+                            'dni' => $voluntario->getDni(),
+                            'telefono' => $telefono
+                        ]
+                    ];
+                }
+
+                // FILTER LOGIC
+                if ($estadoInscripcion && empty($actividadData['inscripciones'])) {
+                    continue;
+                }
+
+                $data[] = $actividadData;
+            }
+
+            return $this->json($data);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+        }
     }
 }

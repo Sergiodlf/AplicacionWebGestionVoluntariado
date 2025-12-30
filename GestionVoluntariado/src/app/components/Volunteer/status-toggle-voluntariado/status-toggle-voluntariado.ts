@@ -10,18 +10,20 @@ import { CommonModule } from '@angular/common';
 export class StatusToggleVoluntariado {
 
   @Input() leftLabel: string = 'Pendientes';
+  @Input() secondLabel: string = ''; // New option between left and middle
   @Input() middleLabel: string = 'En Curso';
   @Input() rightLabel: string = 'Completados';
 
   @Input() leftCount: number = 0;
+  @Input() secondCount: number = 0;
   @Input() middleCount: number = 0;
   @Input() rightCount: number = 0;
 
-  @Output() optionChanged = new EventEmitter<'left' | 'middle' | 'right'>();
+  @Output() optionChanged = new EventEmitter<'left' | 'second' | 'middle' | 'right'>();
 
-  active: 'left' | 'middle' | 'right' = 'left';
+  active: 'left' | 'second' | 'middle' | 'right' = 'left';
 
-  setOption(option: 'left' | 'middle' | 'right') {
+  setOption(option: 'left' | 'second' | 'middle' | 'right') {
     this.active = option;
     this.optionChanged.emit(option);
   }

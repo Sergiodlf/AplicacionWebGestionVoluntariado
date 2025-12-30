@@ -29,6 +29,10 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $estado = 'En Curso';
 
+    #[ORM\Column(name: 'ESTADO_APROBACION', length: 20, options: ['default' => 'PENDIENTE'])]
+    #[Groups(['org:read'])]
+    private ?string $estadoAprobacion = 'PENDIENTE';
+
     #[ORM\Column(name: 'DIRECCION', type: Types::STRING, length: 40)]
     #[Groups(['org:read'])]
     private ?string $direccion = null;
@@ -95,6 +99,17 @@ class Actividad
     public function setEstado(string $estado): static
     {
         $this->estado = $estado;
+        return $this;
+    }
+
+    public function getEstadoAprobacion(): ?string
+    {
+        return $this->estadoAprobacion;
+    }
+
+    public function setEstadoAprobacion(string $estadoAprobacion): static
+    {
+        $this->estadoAprobacion = $estadoAprobacion;
         return $this;
     }
 

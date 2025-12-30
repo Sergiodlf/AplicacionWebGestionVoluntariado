@@ -14,6 +14,16 @@ import { CommonModule } from '@angular/common';
         {{ leftLabel }}
         <span *ngIf="leftCount !== undefined" class="badge bg-white text-custom-blue rounded-pill ms-1">{{ leftCount }}</span>
       </button>
+      
+      <!-- Middle Option -->
+      <button *ngIf="middleLabel"
+        class="btn rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2 transition-all"
+        [ngClass]="{'bg-custom-blue text-white': activeOption === 'middle', 'text-muted bg-transparent': activeOption !== 'middle'}"
+        (click)="selectOption('middle')">
+        {{ middleLabel }}
+        <span *ngIf="middleCount !== undefined" class="badge bg-white text-custom-blue rounded-pill ms-1">{{ middleCount }}</span>
+      </button>
+
       <button 
         class="btn rounded-pill px-4 py-2 fw-bold transition-all"
         [ngClass]="{'bg-custom-blue text-white': activeOption === 'right', 'text-muted bg-transparent': activeOption !== 'right'}"
@@ -32,14 +42,16 @@ import { CommonModule } from '@angular/common';
 })
 export class StatusToggleComponent {
   @Input() leftLabel: string = 'Pendientes';
+  @Input() middleLabel?: string;
   @Input() rightLabel: string = 'Aprobados';
   @Input() leftCount?: number;
+  @Input() middleCount?: number;
   @Input() rightCount?: number;
-  @Input() activeOption: 'left' | 'right' = 'left';
-  
-  @Output() optionChanged = new EventEmitter<'left' | 'right'>();
+  @Input() activeOption: 'left' | 'middle' | 'right' = 'left';
 
-  selectOption(option: 'left' | 'right') {
+  @Output() optionChanged = new EventEmitter<'left' | 'middle' | 'right'>();
+
+  selectOption(option: 'left' | 'middle' | 'right') {
     this.activeOption = option;
     this.optionChanged.emit(option);
   }
