@@ -37,6 +37,12 @@
                                 (click)="openFilterModal()">
                                 <i class="bi bi-sliders me-2"></i> Filtrar Por
                             </button>
+
+                            <button
+                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center"
+                                (click)="openCreateModal()">
+                                <i class="bi bi-plus-lg me-2"></i> Nuevo Voluntariado
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -163,3 +169,8 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Crear Actividad -->
+    <app-crear-voluntariado-modal *ngIf="modalCrearActividadOpen" (close)="modalCrearActividadOpen = false"
+        (created)="onVoluntariadoCreated($event)">
+    </app-crear-voluntariado-modal>
