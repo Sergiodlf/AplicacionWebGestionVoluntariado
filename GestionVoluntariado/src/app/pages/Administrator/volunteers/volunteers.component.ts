@@ -40,7 +40,7 @@ export class VolunteersComponent {
     )
   );
 
-  activeTab: 'left' | 'right' = 'left';
+  activeTab: 'left' | 'middle' | 'right' = 'left';
 
   // Derived filtered streams (depend on volunteers$)
   // Derived filtered streams (depend on volunteers$)
@@ -53,7 +53,7 @@ export class VolunteersComponent {
 
   showModal = false;
 
-  onTabChange(tab: 'left' | 'right') {
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 

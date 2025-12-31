@@ -23,7 +23,7 @@ import { ActividadService } from '../../../services/actividad';
 })
 export class ActivitiesComponent implements OnInit {
   private actividadService = inject(ActividadService);
-  activeTab: 'left' | 'right' = 'left';
+  activeTab: 'left' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
   filteredOpportunities: any[] = [];
@@ -75,7 +75,7 @@ export class ActivitiesComponent implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'right') {
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 

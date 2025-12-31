@@ -25,7 +25,7 @@ import { Subscription } from 'rxjs';
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
   constructor(private organizationService: OrganizationService) {}
-  activeTab: 'left' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'right' = Approved (Aprobados)
+  activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aprobados)
 
   organizations = signal<Organization[]>([]);
   private organizationsSubscription: Subscription | undefined;
@@ -90,9 +90,16 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
   // LÓGICA DE INTERFAZ Y ACCIONES //
 
-  onTabChange(tab: 'left' | 'right') {
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     console.log('Tab changed to:', tab);
     this.activeTab = tab;
+    // Map status-toggle options to our currentTab ('pending' | 'approved')
+    if (tab === 'right') {
+      this.currentTab = 'approved';
+    } else {
+      // treat 'left' and 'middle' as pending for this page
+      this.currentTab = 'pending';
+    }
     this.loadOrganizations();
   }
 
