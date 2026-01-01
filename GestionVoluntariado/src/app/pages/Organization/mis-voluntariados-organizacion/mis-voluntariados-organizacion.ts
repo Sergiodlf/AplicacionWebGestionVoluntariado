@@ -12,7 +12,7 @@ import { CrearVoluntariadoModal } from '../../../components/organization/crear-v
   styleUrl: './mis-voluntariados-organizacion.css',
 })
 export class MisVoluntariadosOrganizacion {
-  activeTab: 'left' | 'middle' | 'right' = 'left';
+  activeTab: 'left' | 'second' | 'middle' | 'right' = 'left';
 
   tabLabel = 'Pendientes';
 
@@ -50,6 +50,7 @@ export class MisVoluntariadosOrganizacion {
     switch (this.activeTab) {
       case 'left':
         return this.volunteeringData.filter((x) => x.status === 'Pendiente');
+      case 'second':
       case 'middle':
         return this.volunteeringData.filter((x) => x.status === 'En Curso');
       case 'right':
@@ -65,11 +66,11 @@ export class MisVoluntariadosOrganizacion {
     this.modalOpen = true;
   }
 
-  onTabChange(tab: 'left' | 'middle' | 'right') {
+  onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
     this.activeTab = tab;
 
     if (tab === 'left') this.tabLabel = 'Pendientes';
-    if (tab === 'middle') this.tabLabel = 'En Curso';
+    if (tab === 'second' || tab === 'middle') this.tabLabel = 'En Curso';
     if (tab === 'right') this.tabLabel = 'Completados';
   }
 

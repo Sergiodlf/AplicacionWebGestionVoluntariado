@@ -15,7 +15,7 @@ import { StatusToggleComponent } from '../../../components/Global-Components/sta
 export class Voluntariados implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
 
-  activeTab: 'left' | 'right' = 'left';
+  activeTab: 'left' | 'middle' | 'right' = 'left';
   currentDNI = '11111111A'; // Mock DNI as requested
 
   // Raw data from API
@@ -69,7 +69,7 @@ export class Voluntariados implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'right') {
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
     this.filterData();
   }

@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { VolunteeringCardComponent } from '../../../components/Administrator/Volunteers/volunteering-card/volunteering-card.component';
 import { ActividadService } from '../../../services/actividad';
+import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 
 @Component({
   selector: 'app-activities',
@@ -16,14 +17,15 @@ import { ActividadService } from '../../../services/actividad';
     StatusToggleComponent,
     VolunteeringCardComponent,
     Navbar,
-    SidebarComponent
+    SidebarComponent,
+    CrearVoluntariadoModal
   ],
   templateUrl: './activities.html',
   styleUrl: './activities.css'
 })
 export class ActivitiesComponent implements OnInit {
   private actividadService = inject(ActividadService);
-  activeTab: 'left' | 'right' = 'left';
+  activeTab: 'left' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
   filteredOpportunities: any[] = [];
@@ -75,7 +77,7 @@ export class ActivitiesComponent implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'right') {
+  onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 
@@ -132,5 +134,17 @@ export class ActivitiesComponent implements OnInit {
   closeInfoModal() {
     this.showInfoModal = false;
     this.selectedVolunteering = null;
+  }
+
+  // Modal crear actividad
+  modalCrearActividadOpen = false;
+
+  openCreateModal() {
+    this.modalCrearActividadOpen = true;
+  }
+
+  onVoluntariadoCreated(newVoluntariado: any) {
+    this.actividadService.crearActividad(newVoluntariado);
+    this.modalCrearActividadOpen = false;
   }
 }
