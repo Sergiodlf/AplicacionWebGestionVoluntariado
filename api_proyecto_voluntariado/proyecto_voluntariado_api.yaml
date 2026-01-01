@@ -250,12 +250,44 @@ paths:
             schema:
               $ref: '#/components/schemas/InscripcionRequest'
       responses:
-        '200':
-          description: Inscripción realizada con éxito
+        '201':
+          description: Inscripción creada.
         '404':
-          description: Actividad o Voluntario no encontrados
+          description: Actividad o Voluntario no encontrado.
         '409':
-          description: El voluntario ya está inscrito o no hay plazas
+          description: Ya inscrito.
+
+  /actividades/{id}/estado:
+    patch:
+      summary: Actualiza el estado de ejecución de una actividad.
+      tags:
+        - Actividades
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID de la actividad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [estado]
+              properties:
+                estado:
+                  type: string
+                  enum: [PENDIENTE, EN CURSO, FINALIZADO, CANCELADO]
+                  description: Nuevo estado de la actividad (case-insensitive).
+      responses:
+        '200':
+          description: Estado actualizado.
+        '400':
+          description: Estado inválido o faltante.
+        '404':
+          description: Actividad no encontrada.
 
   # ==========================================
   # INSCRIPCIONES

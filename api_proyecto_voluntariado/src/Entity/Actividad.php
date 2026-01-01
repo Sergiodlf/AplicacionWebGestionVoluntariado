@@ -25,7 +25,7 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $nombre = null;
 
-    #[ORM\Column(name: 'ESTADO', length: 40)]
+    #[ORM\Column(name: 'ESTADO', length: 255)]
     #[Groups(['org:read'])]
     private ?string $estado = 'En Curso';
 

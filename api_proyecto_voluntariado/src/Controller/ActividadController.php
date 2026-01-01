@@ -290,4 +290,54 @@ class ActividadController extends AbstractController
             return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
         }
     }
+    // ACTUALIZAR ESTADO DE ACTIVIDAD
+    #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
+    public function updateEstado(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $actividad = $em->getRepository(Actividad::class)->find($id);
+
+        if (!$actividad) {
+            return $this->json(['error' => 'Actividad no encontrada'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $nuevoEstado = $data['estado'] ?? null;
+
+        if (!$nuevoEstado) {
+            return $this->json(['error' => 'Falta el campo "estado"'], 400);
+        }
+
+        // Normalizar entrada
+        $nuevoEstadoUpper = strtoupper($nuevoEstado);
+        $estadosPermitidos = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO'];
+
+        if (!in_array($nuevoEstadoUpper, $estadosPermitidos)) {
+            return $this->json([
+                'error' => 'Estado inválido',
+                'permitidos' => $estadosPermitidos
+            ], 400);
+        }
+        
+        $mapaFormato = [
+            'PENDIENTE' => 'Pendiente',
+            'EN CURSO' => 'En Curso',
+            'FINALIZADO' => 'Finalizado',
+            'CANCELADO' => 'Cancelado'
+        ];
+        
+        $estadoGuardar = $mapaFormato[$nuevoEstadoUpper] ?? $nuevoEstado;
+
+        $actividad->setEstado($estadoGuardar);
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al actualizar el estado: ' . $e->getMessage()], 500);
+        }
+
+        return $this->json([
+            'message' => 'Estado actualizado correctamente',
+            'nuevo_estado' => $actividad->getEstado()
+        ]);
+    }
 }
