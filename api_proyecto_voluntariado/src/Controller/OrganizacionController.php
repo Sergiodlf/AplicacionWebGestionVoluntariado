@@ -167,4 +167,30 @@ class OrganizacionController extends AbstractController
 
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
     }
+
+    /**
+     * Obtiene una organización por su email (POST /api/organizations/by-email).
+     *
+     * @param Request $request
+     * @param OrganizacionRepository $organizacionRepository
+     * @return JsonResponse
+     */
+    #[Route('/api/organizations/by-email', name: 'api_organizations_get_by_email', methods: ['POST'])]
+    public function getByEmail(Request $request, OrganizacionRepository $organizacionRepository): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+
+        if (!$email) {
+            return $this->json(['message' => 'El campo email es obligatorio.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $organizacion = $organizacionRepository->findOneBy(['email' => $email]);
+
+        if (!$organizacion) {
+            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
+    }
 }
