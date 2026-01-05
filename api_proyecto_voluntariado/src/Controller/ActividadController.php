@@ -232,13 +232,24 @@ class ActividadController extends AbstractController
                 return $this->json(['error' => 'Organización no encontrada'], 404);
             }
 
-            $actividades = $em->getRepository(Actividad::class)->findBy(['organizacion' => $organizacion]);
-            $estadoInscripcion = $request->query->get('estadoInscripcion'); // Opcional: filtrar inscripciones internas
+            $criteria = ['organizacion' => $organizacion];
+
+            // Filtros opcionales de Actividad
+            // 1. Estado de ejecución (Pendiente, En Curso, Finalizado...)
+            if ($estado = $request->query->get('estado')) {
+                $criteria['estado'] = $estado;
+            }
+            // 2. Estado de aprobación del organizador (ACEPTADA, PENDIENTE, RECHAZADA)
+            if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
+                $criteria['estadoAprobacion'] = $estadoAprobacion;
+            }
+
+            $actividades = $em->getRepository(Actividad::class)->findBy($criteria);
 
             $data = [];
             foreach ($actividades as $actividad) {
                 // Mapeo básico de actividad
-                $actividadData = [
+                $data[] = [
                     'codActividad' => $actividad->getCodActividad(),
                     'nombre' => $actividad->getNombre(),
                     'estado' => $actividad->getEstado(),
@@ -248,41 +259,7 @@ class ActividadController extends AbstractController
                     'maxParticipantes' => $actividad->getMaxParticipantes(),
                     // 'ods' => $actividad->getOds(),
                     // 'habilidades' => $actividad->getHabilidades(),
-                    'inscripciones' => []
                 ];
-
-                // Mapeo SIMPLIFICADO de inscripciones para debug
-                foreach ($actividad->getInscripciones() as $inscripcion) {
-                    if ($estadoInscripcion && $inscripcion->getEstado() !== $estadoInscripcion) {
-                        continue;
-                    }
-                    
-                    
-                    $voluntario = $inscripcion->getVoluntario();
-                    if (!$voluntario) continue;
-                    
-                    $telefono = null;
-                    if (method_exists($voluntario, 'getTelefono')) {
-                        $telefono = $voluntario->getTelefono();
-                    }
-
-                    $actividadData['inscripciones'][] = [
-                        'id_inscripcion' => $inscripcion->getId(),
-                        'estado' => $inscripcion->getEstado(),
-                        // 'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
-                        'voluntario' => [
-                            'dni' => $voluntario->getDni(),
-                            'telefono' => $telefono
-                        ]
-                    ];
-                }
-
-                // FILTER LOGIC
-                if ($estadoInscripcion && empty($actividadData['inscripciones'])) {
-                    continue;
-                }
-
-                $data[] = $actividadData;
             }
 
             return $this->json($data);

@@ -10,9 +10,9 @@
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Mis Voluntariados</h2>
 
-                    <app-status-toggle-voluntariado leftLabel="Pendientes" middleLabel="En Curso"
-                        rightLabel="Completados" [leftCount]="5" [middleCount]="2" [rightCount]="8"
-                        (optionChanged)="onTabChange($event)">
+                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="En Revisión"
+                        middleLabel="En Curso" rightLabel="Completados" [leftCount]="5" [secondCount]="3"
+                        [middleCount]="2" [rightCount]="8" (optionChanged)="onTabChange($event)">
                     </app-status-toggle-voluntariado>
                 </div>
 

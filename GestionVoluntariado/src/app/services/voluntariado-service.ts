@@ -64,4 +64,12 @@ export class VoluntariadoService {
       params: { estado: estado }
     });
   }
+
+  getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {
+    let params: any = { estadoAprobacion: estadoAprobacion };
+    if (estado) {
+      params.estado = estado;
+    }
+    return this.http.get<any[]>(`${this.apiUrl}/organizacion/${cif}`, { params });
+  }
 }

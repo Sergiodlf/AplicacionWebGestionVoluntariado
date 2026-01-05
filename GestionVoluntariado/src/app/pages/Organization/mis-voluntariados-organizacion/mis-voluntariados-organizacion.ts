@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
+
 import { CommonModule } from '@angular/common';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { StatusToggleVoluntariado } from '../../../components/Volunteer/status-toggle-voluntariado/status-toggle-voluntariado';
@@ -11,56 +13,65 @@ import { CrearVoluntariadoModal } from '../../../components/organization/crear-v
   templateUrl: './mis-voluntariados-organizacion.html',
   styleUrl: './mis-voluntariados-organizacion.css',
 })
-export class MisVoluntariadosOrganizacion {
+export class MisVoluntariadosOrganizacion implements OnInit {
   activeTab: 'left' | 'second' | 'middle' | 'right' = 'left';
-
   tabLabel = 'Pendientes';
+  volunteeringData: any[] = [];
+  modalOpen = false;
 
-  volunteeringData = [
-    {
-      title: 'Ayudar en Residencia',
-      organization: 'Fundación Ayuda',
-      skills: ['Comunicación', 'Asistencia'],
-      date: '14/02/2026',
-      status: 'Pendiente',
-      ods: [
-        { id: 3, name: 'ODS 3', color: '#00c851' },
-        { id: 1, name: 'ODS 1', color: '#ff4444' },
-      ],
-    },
-    {
-      title: 'Logística de Evento',
-      organization: 'Centro Cultural',
-      skills: ['Organización'],
-      date: '12/03/2026',
-      status: 'En Curso',
-      ods: [{ id: 4, name: 'ODS 4', color: '#33b5e5' }],
-    },
-    {
-      title: 'Ayuda en Comedor',
-      organization: 'Fundación Manos',
-      skills: ['Cocina'],
-      date: '08/01/2026',
-      status: 'Completado',
-      ods: [{ id: 2, name: 'ODS 2', color: '#ffbb33' }],
-    },
-  ];
+  // CIF de prueba proporcionado
+  private readonly TEST_CIF = 'A12345678';
 
-  get filteredVolunteering() {
-    switch (this.activeTab) {
-      case 'left':
-        return this.volunteeringData.filter((x) => x.status === 'Pendiente');
-      case 'second':
-      case 'middle':
-        return this.volunteeringData.filter((x) => x.status === 'En Curso');
-      case 'right':
-        return this.volunteeringData.filter((x) => x.status === 'Completado');
-      default:
-        return this.volunteeringData;
-    }
+  constructor(private voluntariadoService: VoluntariadoService) { }
+
+  ngOnInit(): void {
+    this.loadActivities();
   }
 
-  modalOpen = false;
+  get filteredVolunteering() {
+    return this.volunteeringData;
+  }
+
+  loadActivities() {
+    let estado: string | undefined = 'PENDIENTE';
+    let estadoAprobacion = 'ACEPTADA';
+
+    if (this.activeTab === 'left') {
+      // PENDIENTES (Aprobadas pero no empezadas/pendientes de realización)
+      estado = 'PENDIENTE';
+    } else if (this.activeTab === 'second') {
+      // EN REVISIÓN (Solicitadas pero no aceptadas por admin)
+      estado = undefined; // No filtramos por estado de actividad
+      estadoAprobacion = 'PENDIENTE';
+    } else if (this.activeTab === 'middle') {
+      // EN CURSO
+      estado = 'EN_CURSO';
+    } else if (this.activeTab === 'right') {
+      // COMPLETADAS
+      estado = 'COMPLETADA';
+    }
+
+    this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, estado, estadoAprobacion)
+      .subscribe({
+        next: (data) => {
+          // Map API response to Component Model
+          this.volunteeringData = data.map((item: any) => ({
+            title: item.nombre,
+            organization: 'Mi Organización', // Placeholder as API doesn't return it
+            skills: item.habilidades ? (typeof item.habilidades === 'string' ? item.habilidades.split(',') : item.habilidades) : ['General'],
+            date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha pendiente',
+            status: item.estado,
+            ods: item.ods || [],
+            ...item // Keep original properties
+          }));
+          console.log('Actividades cargadas y mapeadas:', this.volunteeringData);
+        },
+        error: (err) => {
+          console.error('Error al cargar actividades:', err);
+          // Opcional: manejar error en UI
+        }
+      });
+  }
 
   openCreateModal() {
     this.modalOpen = true;
@@ -70,8 +81,11 @@ export class MisVoluntariadosOrganizacion {
     this.activeTab = tab;
 
     if (tab === 'left') this.tabLabel = 'Pendientes';
-    if (tab === 'second' || tab === 'middle') this.tabLabel = 'En Curso';
+    if (tab === 'second') this.tabLabel = 'En Revisión';
+    if (tab === 'middle') this.tabLabel = 'En Curso';
     if (tab === 'right') this.tabLabel = 'Completados';
+
+    this.loadActivities();
   }
 
   onAction(item: any) {
@@ -79,7 +93,7 @@ export class MisVoluntariadosOrganizacion {
   }
 
   onVoluntariadoCreated(newVoluntariado: any) {
-    this.volunteeringData.push(newVoluntariado);
+    this.loadActivities(); // Reload list after creation
     this.modalOpen = false;
   }
 }
