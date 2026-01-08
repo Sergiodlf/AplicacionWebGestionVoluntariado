@@ -7,7 +7,7 @@ import { Organization, OrganizationCreateData } from '../models/organizationMode
   providedIn: 'root',
 })
 export class OrganizationService {
-  private apiUrl = 'http://localhost:8000/api/organizations';
+  private apiUrl = '/api/organizations';
 
   // 1. Subject para notificar cambios en la lista de organizaciones
   private organizationUpdatedSource = new Subject<void>();
@@ -15,7 +15,7 @@ export class OrganizationService {
   // 2. Observable público para que otros componentes se suscriban
   organizationUpdated$ = this.organizationUpdatedSource.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getOrganizations(): Observable<Organization[]> {
     return this.http.get<Organization[]>(this.apiUrl);

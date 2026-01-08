@@ -1,14 +1,17 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
 
 @Component({
   selector: 'app-crear-voluntariado-modal',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './crear-voluntariado-modal.html',
   styleUrl: './crear-voluntariado-modal.css',
 })
 export class CrearVoluntariadoModal {
+  @Input() cifOrganization: string = '';
   @Output() close = new EventEmitter<void>();
   @Output() created = new EventEmitter<any>();
 
@@ -25,6 +28,8 @@ export class CrearVoluntariadoModal {
     skills: [] as string[],
     ods: [] as { id: number; name: string; color: string }[],
   };
+
+  constructor(private voluntariadoService: VoluntariadoService) { }
 
   addSkill() {
     const value = this.form.skillInput.trim();
@@ -53,16 +58,33 @@ export class CrearVoluntariadoModal {
   }
 
   crear() {
-    if (!this.form.title || !this.form.organization) return;
+    if (!this.form.title) return;
 
-    this.created.emit({
-      title: this.form.title,
-      organization: this.form.organization,
-      skills: this.form.skills,
-      ods: this.form.ods,
-      startDate: this.form.startDate,
-      endDate: this.form.endDate,
-      status: 'Pendiente',
+    const payload = {
+      nombre: this.form.title,
+      cifOrganizacion: this.cifOrganization,
+      descripcion: this.form.description,
+      fechaInicio: this.form.startDate,
+      fechaFin: this.form.endDate,
+      direccion: this.form.zone,
+      maxParticipantes: 10,
+      estado: 'Pendiente',
+      sector: this.form.sector,
+      habilidades: this.form.skills.join(','),
+      ods: this.form.ods
+    };
+
+    console.log('Sending payload:', payload);
+
+    this.voluntariadoService.crearActividad(payload).subscribe({
+      next: (res) => {
+        console.log('Activity created:', res);
+        this.created.emit(res);
+        this.onClose();
+      },
+      error: (err) => {
+        console.error('Error creating activity:', err);
+      }
     });
   }
 

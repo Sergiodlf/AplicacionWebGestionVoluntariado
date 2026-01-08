@@ -87,6 +87,13 @@ class AuthController extends AbstractController
         
         $hashedPassword = $passwordHasher->hashPassword($userParaHash, $dto->password);
 
+        // --- DETERMINAR ESTADO ---
+        $estado = 'PENDIENTE';
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof Organizacion) {
+            $estado = 'ACEPTADO';
+        }
+
         // --- INSERT MANUAL ---
         try {
             $conn = $entityManager->getConnection();
@@ -95,11 +102,11 @@ class AuthController extends AbstractController
                 INSERT INTO VOLUNTARIOS (
                     DNI, NOMBRE, APELLIDO1, APELLIDO2, CORREO, PASSWORD, 
                     COCHE, FECHA_NACIMIENTO, ZONA, EXPERIENCIA, 
-                    IDIOMAS, HABILIDADES, INTERESES
+                    IDIOMAS, HABILIDADES, INTERESES, ESTADO_VOLUNTARIO
                 ) VALUES (
                     :dni, :nombre, :ap1, :ap2, :correo, :pass, 
                     :coche, :fecha, :zona, :exp, 
-                    :idiomas, :hab, :int
+                    :idiomas, :hab, :int, :estado
                 )
             ";
 
@@ -116,7 +123,8 @@ class AuthController extends AbstractController
                 'exp' => $dto->experiencia,
                 'idiomas' => $idiomas,
                 'hab' => $habilidades,
-                'int' => $intereses
+                'int' => $intereses,
+                'estado' => $estado
             ];
 
             $conn->executeStatement($sql, $params);

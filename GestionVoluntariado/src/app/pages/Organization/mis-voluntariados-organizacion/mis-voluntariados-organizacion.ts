@@ -20,7 +20,7 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   modalOpen = false;
 
   // CIF de prueba proporcionado
-  private readonly TEST_CIF = 'A12345678';
+  public readonly TEST_CIF = 'A12345678';
 
   constructor(private voluntariadoService: VoluntariadoService) { }
 

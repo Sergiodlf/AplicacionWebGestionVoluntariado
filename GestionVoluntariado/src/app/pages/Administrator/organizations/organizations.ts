@@ -24,7 +24,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './organizations.css',
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
-  constructor(private organizationService: OrganizationService) {}
+  constructor(private organizationService: OrganizationService) { }
   activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aprobados)
 
   organizations = signal<Organization[]>([]);
@@ -68,8 +68,8 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
         const allOrgs = data; // Filtrado y actualización de la lista
         this.filterAndSetOrganizations(allOrgs); // Actualizar contadores
 
-        const pending = data.filter((org) => org.estado === 'Pendiente');
-        const approved = data.filter((org) => org.estado === 'Aprobado');
+        const pending = data.filter((org) => org.estado?.toLowerCase() === 'pendiente');
+        const approved = data.filter((org) => org.estado?.toLowerCase() === 'aprobado');
         this.pendingCount.set(pending.length);
         this.approvedCount.set(approved.length);
       },
@@ -80,10 +80,9 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   }
   filterAndSetOrganizations(allOrgs: Organization[]): void {
     const filtered = allOrgs.filter((org) => {
-      if (this.currentTab === 'pending') {
-        return org.estado === 'Pendiente';
-      }
-      return org.estado === 'Aprobado';
+      const status = org.estado?.trim().toLowerCase();
+      const target = this.currentTab === 'pending' ? 'pendiente' : 'aprobado';
+      return status === target;
     });
     this.organizations.set(filtered);
   }

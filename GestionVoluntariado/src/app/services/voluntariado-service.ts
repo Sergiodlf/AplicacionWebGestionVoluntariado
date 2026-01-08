@@ -72,4 +72,8 @@ export class VoluntariadoService {
     }
     return this.http.get<any[]>(`${this.apiUrl}/organizacion/${cif}`, { params });
   }
+
+  crearActividad(actividad: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/crear`, actividad);
+  }
 }
