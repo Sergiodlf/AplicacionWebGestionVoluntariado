@@ -1,0 +1,84 @@
+<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-custom-blue">Crear Nuevo Match</h5>
+                <button type="button" class="btn-close" (click)="close.emit()"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted">Voluntario</label>
+                    <div class="form-text mb-2 text-custom-blue" *ngIf="selectedActivityId">
+                        <i class="bi bi-magic me-1"></i> Ordenados por afinidad con la actividad
+                    </div>
+                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI">
+                        <option value="" disabled selected>Selecciona un voluntario</option>
+                        <option *ngFor="let vol of volunteers" [value]="vol.dni"
+                            [style.fontWeight]="vol.matchScore > 50 ? 'bold' : 'normal'"
+                            [class.text-success]="vol.matchScore > 70">
+                            {{ vol.matchScore !== undefined ? vol.matchScore + '% | ' : '' }} {{ vol.name }} {{
+                            vol.lastname }} - {{ vol.email }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-muted">Actividad</label>
+                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedActivityId"
+                        [disabled]="!!preselectedActivityId" (change)="onActivityChange()">
+                        <option [ngValue]="null" disabled selected>Selecciona una actividad</option>
+                        <option *ngFor="let act of activities" [value]="act.codActividad">
+                            {{ act.nombre }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Smart Matching Info -->
+                <div class="row g-3 p-3 bg-light rounded-4 mb-3" *ngIf="selectedVolunteer || selectedActivity">
+                    <div class="col-6" *ngIf="selectedVolunteer">
+                        <h6 class="fw-bold text-custom-blue mb-2">
+                            <i class="bi bi-person me-1"></i> {{ selectedVolunteer.name }} {{ selectedVolunteer.lastname
+                            }}
+                        </h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            <span *ngFor="let skill of selectedVolunteer.skills"
+                                class="badge bg-white text-dark border">
+                                {{ skill }}
+                            </span>
+                            <small *ngIf="!selectedVolunteer.skills?.length" class="text-muted fst-italic">Sin
+                                habilidades registradas</small>
+                        </div>
+                    </div>
+
+                    <div class="col-6" *ngIf="selectedActivity">
+                        <h6 class="fw-bold text-custom-blue mb-2">
+                            <i class="bi bi-activity me-1"></i> Requisitos
+                        </h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            <ng-container *ngIf="selectedActivity.habilidades; else noSkills">
+                                <span class="badge bg-custom-blue text-white"
+                                    *ngFor="let skill of (selectedActivity.habilidades.split ? selectedActivity.habilidades.split(',') : selectedActivity.habilidades)">
+                                    {{ skill }}
+                                </span>
+                            </ng-container>
+                            <ng-template #noSkills>
+                                <small class="text-muted fst-italic">Sin requisitos específicos</small>
+                            </ng-template>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="close.emit()">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-custom-blue text-white rounded-pill px-4" (click)="onSubmit()"
+                    [disabled]="isLoading || !selectedVolunteerDnI || !selectedActivityId">
+                    {{ isLoading ? 'Creando...' : 'Crear Match' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

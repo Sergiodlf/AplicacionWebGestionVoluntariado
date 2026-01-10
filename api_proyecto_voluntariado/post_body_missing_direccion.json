@@ -1,9 +1,0 @@
-{
-    "cif": "X12345678",
-    "nombre": "Fundación Missing Address",
-    "email": "missingaddr@test.org",
-    "password": "password",
-    "localidad": "Madrid",
-    "cp": "28001",
-    "contacto": "Test"
-}

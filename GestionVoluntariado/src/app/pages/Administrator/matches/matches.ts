@@ -1,9 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { MatchCardComponent } from '../../../components/Administrator/Matches/match-card/match-card.component';
+import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
 
 @Component({
@@ -11,8 +13,10 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     StatusToggleComponent,
     MatchCardComponent,
+    CreateMatchModalComponent,
     Navbar,
     SidebarComponent
   ],
@@ -24,13 +28,32 @@ export class MatchesComponent implements OnInit {
 
   activeTab: 'left' | 'middle' | 'right' = 'left';
   matches: any[] = [];
+  showCreateModal = false;
+  searchTerm: string = ''; // Added search term
 
   ngOnInit() {
     this.loadMatches();
   }
 
-  loadMatches() {
-    this.voluntariadoService.getAllInscripciones().subscribe({
+  // Helper to safely parse JSON or CSV lists
+  private parseList(value: any): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      value = value.trim();
+      if (value.startsWith('[') && value.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [value];
+        } catch { }
+      }
+      return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+    }
+    return [String(value)];
+  }
+
+  loadMatches(forceReload: boolean = false) {
+    this.voluntariadoService.getAllInscripciones(forceReload).subscribe({
       next: (data) => {
         console.log('Matches API Response:', data);
         this.matches = data.map(item => ({
@@ -38,35 +61,54 @@ export class MatchesComponent implements OnInit {
           volunteer: {
             name: item.nombre_voluntario || 'Voluntario',
             email: item.email_voluntario || 'email@example.com',
-            skills: item.habilidades_voluntario ? item.habilidades_voluntario.split(',') : [],
-            availability: item.disponibilidad_voluntario || 'No especificada',
-            interests: item.intereses_voluntario ? item.intereses_voluntario.split(',') : []
+            skills: this.parseList(item.habilidades_voluntario),
+            availability: this.parseList(item.disponibilidad_voluntario).join(', ') || 'No especificada',
+            interests: this.parseList(item.intereses_voluntario)
           },
           organization: {
-            name: item.nombre_actividad || 'Actividad', // Mapping activity name to org section based on card layout
+            name: item.nombre_actividad || 'Actividad',
             email: item.email_organizacion || 'org@example.com',
             description: item.descripcion_actividad || '',
             schedule: item.horario || 'No especificado',
-            needs: item.habilidades_actividad ? item.habilidades_actividad.split(',') : []
+            needs: this.parseList(item.habilidades_actividad) // Using generic parseList
           },
           status: item.estado
         }));
+        this.applyFilters();
       },
       error: (err) => console.error('Error loading matches', err)
     });
   }
 
-  get filteredMatches() {
+  filteredMatches: any[] = [];
+
+  applyFilters() {
+    let list = this.matches;
+
+    // First filter by status
     switch (this.activeTab) {
       case 'left':
-        return this.matches.filter(m => m.status === 'PENDIENTE');
+        list = this.matches.filter(m => m.status === 'PENDIENTE');
+        break;
       case 'middle':
-        return this.matches.filter(m => m.status === 'CONFIRMADO');
+        list = this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO');
+        break;
       case 'right':
-        return this.matches.filter(m => m.status === 'RECHAZADO'); // Mapping 'Completados' to Rejected/Finished for now
-      default:
-        return this.matches;
+        list = this.matches.filter(m => ['RECHAZADA', 'RECHAZADO', 'COMPLETADA', 'FINALIZADA'].includes(m.status));
+        break;
     }
+
+    // Then filter by search term (Logical AND)
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      list = list.filter(m =>
+        m.volunteer.name.toLowerCase().includes(term) ||
+        m.organization.name.toLowerCase().includes(term) ||
+        m.volunteer.email.toLowerCase().includes(term)
+      );
+    }
+
+    this.filteredMatches = list;
   }
 
   get countPending() {
@@ -74,15 +116,16 @@ export class MatchesComponent implements OnInit {
   }
 
   get countConfirmed() {
-    return this.matches.filter(m => m.status === 'CONFIRMADO').length;
+    return this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO').length;
   }
 
   get countRejected() {
-    return this.matches.filter(m => m.status === 'RECHAZADO').length;
+    return this.matches.filter(m => ['RECHAZADA', 'RECHAZADO', 'COMPLETADA', 'FINALIZADA'].includes(m.status)).length;
   }
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
+    this.applyFilters();
   }
 
   onAccept(match: any) {
@@ -90,7 +133,7 @@ export class MatchesComponent implements OnInit {
     this.voluntariadoService.updateInscripcionStatus(match.id, 'CONFIRMADO').subscribe({
       next: () => {
         alert('Match aceptado correctamente');
-        this.loadMatches();
+        this.loadMatches(true);
       },
       error: (err) => {
         console.error('Error accepting match', err);
@@ -104,7 +147,7 @@ export class MatchesComponent implements OnInit {
     this.voluntariadoService.updateInscripcionStatus(match.id, 'RECHAZADO').subscribe({
       next: () => {
         alert('Match rechazado correctamente');
-        this.loadMatches();
+        this.loadMatches(true);
       },
       error: (err) => {
         console.error('Error rejecting match', err);
@@ -113,7 +156,26 @@ export class MatchesComponent implements OnInit {
     });
   }
 
+  onComplete(match: any) {
+    console.log('Completing match', match);
+    this.voluntariadoService.updateInscripcionStatus(match.id, 'COMPLETADA').subscribe({
+      next: () => {
+        alert('Match completado correctamente');
+        this.loadMatches(true);
+      },
+      error: (err) => {
+        console.error('Error completing match', err);
+        alert('Error al completar el match');
+      }
+    });
+  }
+
   onCreateMatch() {
-    console.log('Create match clicked');
+    this.showCreateModal = true;
+  }
+
+  onMatchCreated() {
+    this.loadMatches(true);
+    this.showCreateModal = false;
   }
 }

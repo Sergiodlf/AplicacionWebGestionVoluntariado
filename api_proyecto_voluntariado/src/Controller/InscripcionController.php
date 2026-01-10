@@ -19,21 +19,49 @@ class InscripcionController extends AbstractController
     #[Route('', name: 'get_all', methods: ['GET'])]
     public function getAll(EntityManagerInterface $em): JsonResponse
     {
-        $inscripciones = $em->getRepository(Inscripcion::class)->findBy(['estado' => 'PENDIENTE']);
+        try {
+            $inscripciones = $em->getRepository(Inscripcion::class)->findAll();
 
-        $data = [];
-        foreach ($inscripciones as $inscripcion) {
-            $data[] = [
-                'id_inscripcion' => $inscripcion->getId(),
-                'dni_voluntario' => $inscripcion->getVoluntario() ? $inscripcion->getVoluntario()->getDni() : 'Desconocido',
-                'nombre_voluntario' => $inscripcion->getVoluntario() ? $inscripcion->getVoluntario()->getNombre() : 'Desconocido',
-                'codActividad' => $inscripcion->getActividad()->getCodActividad(),
-                'nombre_actividad' => $inscripcion->getActividad()->getNombre(),
-                'estado' => $inscripcion->getEstado()
-            ];
+            $data = [];
+            foreach ($inscripciones as $inscripcion) {
+                $voluntario = $inscripcion->getVoluntario();
+                $actividad = $inscripcion->getActividad();
+
+                if (!$voluntario || !$actividad) {
+                    continue; // Skip corrupted records
+                }
+
+                $data[] = [
+                    'id_inscripcion' => $inscripcion->getId(),
+                    'dni_voluntario' => $voluntario->getDni(),
+                    'nombre_voluntario' => $voluntario->getNombre() . ' ' . $voluntario->getApellido1(),
+                    'email_voluntario' => $voluntario->getCorreo(),
+                    'habilidades_voluntario' => $voluntario->getHabilidades(),
+                    'disponibilidad_voluntario' => $voluntario->getDisponibilidad(),
+                    'intereses_voluntario' => $voluntario->getIntereses(),
+                    
+                    'codActividad' => $actividad->getCodActividad(),
+                    'nombre_actividad' => $actividad->getNombre(),
+                    'descripcion_actividad' => '', // $actividad->getDescripcion(),
+                    'email_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getEmail() : '',
+                    'horario' => $actividad->getHorario(),
+                    'habilidades_actividad' => $actividad->getHabilidades(), // Requisitos
+                    
+                    'estado' => $inscripcion->getEstado()
+                ];
+            }
+
+            return $this->json($data);
+        } catch (\Throwable $e) {
+            file_put_contents('C:\Users\leyre\.gemini\antigravity\brain\099ec777-b215-4cc2-b47d-571f4422020a\debug_error.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
+            return $this->json([
+                'error' => 'Error interno en el servidor',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
-
-        return $this->json($data);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -95,7 +123,7 @@ class InscripcionController extends AbstractController
         }
 
         // Validación de estados permitidos
-        $estadosPermitidos = ['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'EN_CURSO', 'FINALIZADO'];
+        $estadosPermitidos = ['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'EN_CURSO', 'FINALIZADO', 'COMPLETADA'];
         if (!in_array(strtoupper($nuevoEstado), $estadosPermitidos)) {
             return $this->json([
                 'error' => 'Estado inválido',
@@ -146,8 +174,8 @@ class InscripcionController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/voluntario/{dni}/actividades-aceptadas', name: 'get_accepted_activities', methods: ['GET'])]
-    public function getAcceptedActivities(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
+    #[Route('/voluntario/{dni}/inscripciones', name: 'get_inscripciones_voluntario', methods: ['GET'])]
+    public function getInscripcionesVoluntario(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $voluntario = $em->getRepository(Voluntario::class)->find($dni);
 
@@ -155,39 +183,40 @@ class InscripcionController extends AbstractController
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
         }
 
-        $estadoFilter = $request->query->get('estado'); // Opcional: filtro por estado de actividad
+        // Recuperar parámetro 'estado' (puede ser 'PENDIENTE', 'CONFIRMADO', 'EN_CURSO', 'FINALIZADO', etc.)
+        $estadoInscripcion = $request->query->get('estado'); 
 
-        // 1. Obtener inscripciones CONFIRMADAS del voluntario
-        $inscripcionesConfirmadas = $em->getRepository(Inscripcion::class)->findBy([
-            'voluntario' => $voluntario,
-            'estado' => 'CONFIRMADO'
-        ]);
+        $criteria = ['voluntario' => $voluntario];
+        if ($estadoInscripcion) {
+            $criteria['estado'] = strtoupper($estadoInscripcion);
+        }
 
-        $actividades = [];
-        foreach ($inscripcionesConfirmadas as $inscripcion) {
+        $inscripciones = $em->getRepository(Inscripcion::class)->findBy($criteria, ['id' => 'DESC']);
+
+        $data = [];
+        foreach ($inscripciones as $inscripcion) {
             $actividad = $inscripcion->getActividad();
             
             if ($actividad) {
-                 // 2. Filtrar por estado si se proporciona el parámetro
-                if ($estadoFilter && strtoupper($actividad->getEstado()) !== strtoupper($estadoFilter)) {
-                    continue;
-                }
-
-                $actividades[] = [
+                $data[] = [
+                    'id_inscripcion' => $inscripcion->getId(),
+                    'estado_inscripcion' => $inscripcion->getEstado(),
+                    
+                    // Datos Actividad
                     'codActividad' => $actividad->getCodActividad(),
                     'nombre' => $actividad->getNombre(),
                     'direccion' => $actividad->getDireccion(),
                     'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i') : null,
                     'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i') : null,
                     'organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getNombre() : 'Desconocida',
-                    // Incluimos ID inscripción por si se necesita referencia
-                    'id_inscripcion' => $inscripcion->getId(),
-                    'estado_actividad' => $actividad->getEstado()
+                    'estado_actividad' => $actividad->getEstado(),
+                    'ods' => $actividad->getOds(),
+                    'habilidades' => $actividad->getHabilidades(),
                 ];
             }
         }
 
-        return $this->json($actividades);
+        return $this->json($data);
     }
 
     #[Route('/organizacion/{cif}', name: 'get_inscripciones_by_organizacion', methods: ['GET'])]

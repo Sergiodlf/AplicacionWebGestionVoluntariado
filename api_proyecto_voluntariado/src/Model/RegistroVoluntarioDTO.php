@@ -20,6 +20,7 @@ class RegistroVoluntarioDTO
     public array $idiomas = [];
     public array $habilidades = [];
     public array $intereses = [];
+    public array $disponibilidad = [];
     
     public ?string $ciclo = null;
 }

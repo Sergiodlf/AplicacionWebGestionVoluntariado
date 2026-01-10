@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
@@ -14,6 +15,7 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule, // Added to fix ngModel
     Navbar,
     SidebarComponent,
     StatusToggleComponent,
@@ -25,7 +27,7 @@ import { Subscription } from 'rxjs';
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
   constructor(private organizationService: OrganizationService) { }
-  activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aprobados)
+  activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aceptados)
 
   organizations = signal<Organization[]>([]);
   private organizationsSubscription: Subscription | undefined;
@@ -34,6 +36,33 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   showModal = signal(false);
   pendingCount = signal(0);
   approvedCount = signal(0);
+
+  // Modal detalle actividad
+  showActivityModal = signal(false);
+  selectedActivity: any = null;
+
+  // Data storage
+  allOrganizations: Organization[] = [];
+
+  // Filter Criteria
+  filterCriteria = {
+    localidad: '',
+    sector: ''
+  };
+
+  searchTerm: string = ''; // Added for search functionality
+
+  // Temporary state for modal
+  tempFilters = {
+    localidad: '',
+    sector: ''
+  };
+
+  // Available options for dropdowns
+  availableLocations: string[] = [];
+  availableSectors: string[] = [];
+
+  showFilterModal = signal(false);
 
   ngOnInit(): void {
     this.loadOrganizations();
@@ -55,18 +84,20 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
    */
   setupUpdateSubscription(): void {
     this.updateSubscription = this.organizationService.organizationUpdated$.subscribe(() => {
-      this.loadOrganizations();
+      this.loadOrganizations(true);
     });
   }
 
-  loadOrganizations(): void {
+  loadOrganizations(forceReload: boolean = false): void {
     if (this.organizationsSubscription) {
       this.organizationsSubscription.unsubscribe();
     }
-    this.organizationsSubscription = this.organizationService.getOrganizations().subscribe({
+    this.organizationsSubscription = this.organizationService.getOrganizations(forceReload).subscribe({
       next: (data) => {
-        const allOrgs = data; // Filtrado y actualización de la lista
-        this.filterAndSetOrganizations(allOrgs); // Actualizar contadores
+        this.allOrganizations = data; // Store all data
+        this.extractFilterOptions(data); // Populate dropdowns
+
+        this.filterAndSetOrganizations(); // Apply filters
 
         const pending = data.filter((org) => org.estado?.toLowerCase() === 'pendiente');
         const approved = data.filter((org) => org.estado?.toLowerCase() === 'aprobado');
@@ -78,11 +109,39 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
       },
     });
   }
-  filterAndSetOrganizations(allOrgs: Organization[]): void {
-    const filtered = allOrgs.filter((org) => {
+
+  extractFilterOptions(data: Organization[]) {
+    const locs = new Set<string>();
+    const secs = new Set<string>();
+    data.forEach(org => {
+      if (org.localidad) locs.add(org.localidad);
+      if (org.sector) secs.add(org.sector);
+    });
+    this.availableLocations = Array.from(locs).sort();
+    this.availableSectors = Array.from(secs).sort();
+  }
+
+  filterAndSetOrganizations(): void {
+    const filtered = this.allOrganizations.filter((org) => {
+      // 1. Status Filter (Tab)
       const status = org.estado?.trim().toLowerCase();
       const target = this.currentTab === 'pending' ? 'pendiente' : 'aprobado';
-      return status === target;
+      if (status !== target) return false;
+
+      // 2. Attribute Filters
+      if (this.filterCriteria.localidad && org.localidad !== this.filterCriteria.localidad) return false;
+      if (this.filterCriteria.sector && org.sector !== this.filterCriteria.sector) return false;
+
+      // 3. Search Term Filter
+      if (this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        const matchesName = org.nombre?.toLowerCase().includes(term);
+        const matchesEmail = org.email?.toLowerCase().includes(term);
+        // Include other fields if necessary
+        if (!matchesName && !matchesEmail) return false;
+      }
+
+      return true;
     });
     this.organizations.set(filtered);
   }
@@ -99,11 +158,39 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
       // treat 'left' and 'middle' as pending for this page
       this.currentTab = 'pending';
     }
-    this.loadOrganizations();
+    this.filterAndSetOrganizations(); // Re-filter based on new tab
   }
 
   onAddOrganization(): void {
     this.showModal.set(true);
+  }
+
+  openFilterModal() {
+    // Copy current state to temp
+    this.tempFilters = { ...this.filterCriteria };
+    this.showFilterModal.set(true);
+  }
+
+  closeFilterModal() {
+    this.showFilterModal.set(false);
+  }
+
+  applyFilters() {
+    this.filterCriteria = { ...this.tempFilters };
+    this.filterAndSetOrganizations();
+    this.closeFilterModal();
+  }
+
+  resetFilters() {
+    this.tempFilters = { localidad: '', sector: '' };
+    this.applyFilters();
+  }
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.filterCriteria.localidad) count++;
+    if (this.filterCriteria.sector) count++;
+    return count;
   }
 
   closeModal(): void {
@@ -114,5 +201,15 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     console.log('Nueva organización añadida:', data);
     this.closeModal();
     this.organizationService.notifyOrganizationUpdate();
+  }
+
+  openActivityModal(activity: any) {
+    this.selectedActivity = activity;
+    this.showActivityModal.set(true);
+  }
+
+  closeActivityModal() {
+    this.showActivityModal.set(false);
+    this.selectedActivity = null;
   }
 }

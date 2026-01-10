@@ -25,12 +25,17 @@
         }
 
         @if (organization.estado?.toLowerCase() !== 'pendiente') {
-        <span [ngClass]="{
-                      'bg-success': organization.estado?.toLowerCase() === 'aprobado', 
-                      'bg-danger': organization.estado?.toLowerCase() === 'rechazado'
-                   }" class="badge text-white px-3 py-2 rounded-pill">
+        @if (organization.estado?.toLowerCase() === 'aprobado') {
+        <div
+            class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill d-flex align-items-center">
+            <i class="bi bi-check-circle-fill me-2"></i> Aceptado
+        </div>
+        } @else {
+        <span [ngClass]="{'bg-danger': organization.estado?.toLowerCase() === 'rechazado'}"
+            class="badge text-white px-3 py-2 rounded-pill">
             {{ organization.estado }}
         </span>
+        }
         }
     </div>
 
@@ -52,9 +57,14 @@
 
     @if (organization.actividades && organization.actividades.length > 0) {
     <div>
+        <div class="d-flex align-items-center mb-1">
+            <span class="fw-bold text-custom-blue me-2">Voluntariados:</span>
+        </div>
         <div class="d-flex gap-1 flex-wrap">
             @for (actividad of organization.actividades; track actividad.nombre) {
-            <span class="badge bg-light text-custom-blue border">
+            <span class="badge bg-light text-custom-blue border" style="cursor: pointer; transition: all 0.2s;"
+                (click)="onActivityClick.emit(actividad)" onmouseover="this.classList.add('bg-white', 'shadow-sm')"
+                onmouseout="this.classList.remove('bg-white', 'shadow-sm')">
                 {{ actividad.nombre }}
             </span>
             }

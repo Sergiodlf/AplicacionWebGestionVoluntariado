@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export interface Voluntariado {
   codAct: number;
@@ -28,41 +29,60 @@ export class VoluntariadoService {
   private apiUrl = '/api/actividades';
   private inscripcionesUrl = '/api/inscripciones';
 
+  private inscripcionesSubject = new BehaviorSubject<any[] | null>(null);
+  inscripciones$ = this.inscripcionesSubject.asObservable();
+
+  private actividadesSubject = new BehaviorSubject<Voluntariado[] | null>(null);
+  actividades$ = this.actividadesSubject.asObservable();
+
   constructor(private http: HttpClient) { }
 
-  getAllVoluntariados(): Observable<Voluntariado[]> {
-    return this.http.get<Voluntariado[]>(this.apiUrl);
+  getAllVoluntariados(forceReload: boolean = false): Observable<Voluntariado[]> {
+    if (this.actividadesSubject.value && !forceReload) {
+      return this.actividadesSubject.asObservable() as Observable<Voluntariado[]>;
+    }
+    return this.loadVoluntariados();
   }
 
-  getInscripcionesVoluntario(dni: string): Observable<any[]> {
-    // Assuming this endpoint returns the list of inscriptions (matches) for the volunteer
-    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}`);
+  loadVoluntariados(): Observable<Voluntariado[]> {
+    return this.http.get<Voluntariado[]>(this.apiUrl).pipe(
+      tap(data => this.actividadesSubject.next(data))
+    );
   }
 
-  getInscripcionesPendientes(dni: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}/pendientes`);
+
+  getAllInscripciones(forceReload: boolean = false): Observable<any[]> {
+    if (this.inscripcionesSubject.value && !forceReload) {
+      return this.inscripcionesSubject.asObservable() as Observable<any[]>;
+    }
+    return this.loadInscripciones();
   }
 
-  getAllInscripciones(): Observable<any[]> {
-    return this.http.get<any[]>(this.inscripcionesUrl);
+  loadInscripciones(): Observable<any[]> {
+    return this.http.get<any[]>(this.inscripcionesUrl).pipe(
+      tap(data => this.inscripcionesSubject.next(data))
+    );
   }
 
   inscribirVoluntario(dniVoluntario: string, idActividad: number): Observable<any> {
-    return this.http.post(this.inscripcionesUrl, {
-      dniVoluntario: dniVoluntario,
-      codActividad: idActividad
+    const url = `${this.apiUrl}/${idActividad}/inscribir`;
+    return this.http.post(url, {
+      dni: dniVoluntario
     });
   }
 
-  updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE'): Observable<any> {
+  updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE' | 'COMPLETADA'): Observable<any> {
     const url = `${this.inscripcionesUrl}/${idInscripcion}/estado`;
     return this.http.patch(url, { estado: estado });
   }
 
-  getActividadesAceptadas(dni: string, estado: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.inscripcionesUrl}/voluntario/${dni}/actividades-aceptadas`, {
-      params: { estado: estado }
-    });
+  getInscripcionesVoluntario(dni: string, estado?: string): Observable<any[]> {
+    let params: any = {};
+    if (estado) {
+      params.estado = estado;
+    }
+    const fullUrl = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    return this.http.get<any[]>(fullUrl, { params });
   }
 
   getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {
@@ -75,5 +95,9 @@ export class VoluntariadoService {
 
   crearActividad(actividad: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/crear`, actividad);
+  }
+
+  actualizarEstadoActividad(id: number, estado: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
   }
 }

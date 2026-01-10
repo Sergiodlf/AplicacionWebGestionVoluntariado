@@ -14,7 +14,9 @@ export class VolunteeringCardComponent {
   @Input() skills: string[] = [];
   @Input() date: string = '';
   @Input() ods: { id: number, name: string, color: string }[] = [];
+  @Input() status: string = '';
 
   @Output() onAction = new EventEmitter<void>();
   @Output() onInfo = new EventEmitter<void>();
+  @Output() onAssign = new EventEmitter<void>();
 }

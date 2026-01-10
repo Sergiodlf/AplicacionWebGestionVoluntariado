@@ -14,7 +14,7 @@ class Ciclo
     private ?int $curso = null;
 
     #[ORM\Id]
-    #[ORM\Column(name: 'NOMBRE', type: Types::STRING, length: 40)]
+    #[ORM\Column(name: 'NOMBRE', type: Types::STRING, length: 100)]
     private ?string $nombre = null;
 
     public function getCurso(): ?int

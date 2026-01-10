@@ -19,4 +19,9 @@ export class ActividadService {
   getActividades(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
   }
+
+  // Nuevo método para actualizar estado
+  actualizarEstado(id: number, estado: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
+  }
 }

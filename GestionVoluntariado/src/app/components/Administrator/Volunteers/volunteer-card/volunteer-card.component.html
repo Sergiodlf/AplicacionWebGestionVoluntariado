@@ -24,20 +24,21 @@
         </button>
       </ng-container>
       <ng-template #acceptedBadge>
-        <div
-          class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill d-flex align-items-center">
-          <i class="bi bi-check-circle-fill me-2"></i> Aceptado
-        </div>
+        <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill d-flex align-items-center text-nowrap"
+          (click)="onAssign.emit()">
+          <i class="bi bi-link-45deg me-1"></i> Asignar Match
+        </button>
       </ng-template>
     </div>
   </div>
 
   <div class="mb-2">
-    <div class="d-flex align-items-center mb-2">
+    <div class="d-flex align-items-center">
       <i class="bi bi-gear text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Habilidades:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let skill of skills()" class="badge bg-light text-custom-blue border">{{ skill }}</span>
+        <span *ngFor="let skill of parseList(skills())" class="badge bg-light text-custom-blue border">{{ skill
+          }}</span>
       </div>
     </div>
   </div>
@@ -46,7 +47,9 @@
     <div class="d-flex align-items-center">
       <i class="bi bi-clock text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Disponibilidad:</span>
-      <span class="text-muted">{{ availability() }}</span>
+      <div class="d-flex gap-1 flex-wrap">
+        <span *ngFor="let item of parseList(availability())" class="text-muted">{{ item }}</span>
+      </div>
     </div>
   </div>
 
@@ -55,7 +58,8 @@
       <i class="bi bi-heart text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Intereses:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let interest of interests()" class="badge bg-light text-muted border">{{ interest }}</span>
+        <span *ngFor="let interest of parseList(interests())" class="badge bg-light text-muted border">{{ interest
+          }}</span>
       </div>
     </div>
   </div>

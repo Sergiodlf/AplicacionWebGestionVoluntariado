@@ -11,11 +11,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\SerializerInterface;
+use App\Service\ActivityService;
+use App\Service\InscripcionService;
 
 #[Route('/api/actividades', name: 'api_actividades_')]
 class ActividadController extends AbstractController
 {
+    private $activityService;
+    private $inscripcionService;
+
+    public function __construct(ActivityService $activityService, InscripcionService $inscripcionService)
+    {
+        $this->activityService = $activityService;
+        $this->inscripcionService = $inscripcionService;
+    }
     // =========================================================================
     // CREAR ACTIVIDAD (SOLUCIÓN BLINDADA: SQL PURO)
     // =========================================================================
@@ -39,6 +48,11 @@ class ActividadController extends AbstractController
         $organizacion = $em->getRepository(Organizacion::class)->find($dto->cifOrganizacion);
         if (!$organizacion) {
             return $this->json(['error' => 'Organización no encontrada. Revisa el CIF.'], 404);
+        }
+
+        // --- CONTROL DE DUPLICIDAD (PV-40) ---
+        if ($this->activityService->activityExists($dto->nombre, $organizacion)) {
+            return $this->json(['error' => 'Ya existe una actividad con este nombre en tu organización'], 409);
         }
 
         // 2. Preparar Fechas (FORMATO Ymd PARA SQL SERVER)
@@ -77,6 +91,12 @@ class ActividadController extends AbstractController
 
         // 3. Preparar otros datos
         $maxParticipantes = $dto->maxParticipantes ?? 10;
+
+        // --- VALIDACIÓN DE CUPO MÁXIMO (PV-39) ---
+        if ($maxParticipantes <= 0) {
+            return $this->json(['error' => 'El cupo máximo de participantes debe ser mayor que cero'], 400);
+        }
+
         $direccion = $dto->direccion ?? 'Sede Principal';
         $estado = 'En Curso';
 
@@ -92,54 +112,26 @@ class ActividadController extends AbstractController
             $habilidadesJson = json_encode($dto->habilidades);
         }
 
-        // 4. INSERT MANUAL (Raw SQL)
+        // 4. INSERT MANUAL (Vía Service) (PV-Clean)
         try {
-            $conn = $em->getConnection();
-            
-            $sql = "
-                INSERT INTO ACTIVIDADES (
-                    NOMBRE, ESTADO, DIRECCION, MAX_PARTICIPANTES, 
-                    FECHA_INICIO, FECHA_FIN, CIF_EMPRESA, ODS, HABILIDADES
-                ) VALUES (
-                    :nombre, :estado, :direccion, :max, 
-                    :inicio, :fin, :cif, :ods, :habilidades
-                )
-            ";
-            
-            $params = [
-                'nombre' => $dto->nombre,
-                'estado' => $estado,
-                'direccion' => $direccion,
-                'max' => $maxParticipantes,
-                'inicio' => $fechaInicioSql, // Enviamos string '20251201'
-                'fin' => $fechaFinSql,       // Enviamos string '20251231'
-                'cif' => $organizacion->getCif(),
-                'ods' => $odsJson,
-                'habilidades' => $habilidadesJson,
-                'estadoAprobacion' => 'PENDIENTE'
-            ];
+            $created = $this->activityService->createActivity([
+                'nombre'           => $dto->nombre,
+                'fechaInicioSql'   => $fechaInicioSql,
+                'fechaFinSql'      => $fechaFinSql,
+                'maxParticipantes' => $maxParticipantes,
+                'direccion'        => $direccion,
+                'odsJson'          => $odsJson,
+                'habilidadesJson' => $habilidadesJson
+            ], $organizacion);
 
-            $conn->executeStatement("
-                INSERT INTO ACTIVIDADES (
-                    NOMBRE, ESTADO, DIRECCION, MAX_PARTICIPANTES, 
-                    FECHA_INICIO, FECHA_FIN, CIF_EMPRESA, ODS, HABILIDADES, ESTADO_APROBACION
-                ) VALUES (
-                    :nombre, :estado, :direccion, :max, 
-                    :inicio, :fin, :cif, :ods, :habilidades, :estadoAprobacion
-                )
-            ", $params);
-            
-            // Recuperar el ID generado (IDENTITY) para devolverlo
-            $nuevoId = $conn->fetchOne("SELECT @@IDENTITY");
-
+            if (!$created) {
+                return $this->json(['error' => 'No se pudo crear la actividad'], 500);
+            }
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Error crítico al guardar actividad en BD',
-                'mensaje_tecnico' => $e->getMessage()
-            ], 500);
+            return $this->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
         }
 
-        return $this->json(['message' => 'Actividad creada con éxito', 'id' => $nuevoId], 201);
+        return $this->json(['message' => 'Actividad creada con éxito'], 201);
     }
     
     // LISTAR TODAS
@@ -194,26 +186,27 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
         }
 
-        // Comprobar si ya existe la inscripción
-        $inscripcionRepo = $em->getRepository(\App\Entity\Inscripcion::class);
-        $existe = $inscripcionRepo->findOneBy(['actividad' => $actividad, 'voluntario' => $voluntario]);
-
-        if ($existe) {
+        // 1. Comprobar si ya existe la inscripción (Vía Service)
+        if ($this->inscripcionService->isVolunteerInscribed($actividad, $voluntario)) {
             return $this->json(['error' => 'El voluntario ya está inscrito en esta actividad'], 409);
         }
 
-        // Crear nueva inscripción
-        $inscripcion = new \App\Entity\Inscripcion();
-        $inscripcion->setActividad($actividad);
-        $inscripcion->setVoluntario($voluntario);
-        $inscripcion->setEstado('PENDIENTE');
-        // $inscripcion->setFechaInscripcion(new \DateTime()); // Ya se pone en el constructor
+        // 2. VALIDACIÓN DE CUPO MÁXIMO (Vía Service)
+        $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
 
+        if ($ocupadas >= $actividad->getMaxParticipantes()) {
+            return $this->json([
+                'error' => 'El cupo máximo de participantes se ha alcanzado.',
+                'maximo' => $actividad->getMaxParticipantes(),
+                'ocupadas' => $ocupadas
+            ], 409); 
+        }
+
+        // 3. Crear nueva inscripción (Vía Service)
         try {
-            $em->persist($inscripcion);
-            $em->flush();
+            $this->inscripcionService->createInscription($actividad, $voluntario);
         } catch (\Exception $e) {
-             return $this->json([
+            return $this->json([
                 'error' => 'Error al inscribir voluntario',
                 'mensaje_tecnico' => $e->getMessage()
             ], 500);
@@ -286,7 +279,7 @@ class ActividadController extends AbstractController
 
         // Normalizar entrada
         $nuevoEstadoUpper = strtoupper($nuevoEstado);
-        $estadosPermitidos = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO'];
+        $estadosPermitidos = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ACEPTADA', 'ABIERTA'];
 
         if (!in_array($nuevoEstadoUpper, $estadosPermitidos)) {
             return $this->json([
@@ -296,10 +289,12 @@ class ActividadController extends AbstractController
         }
         
         $mapaFormato = [
-            'PENDIENTE' => 'Pendiente',
-            'EN CURSO' => 'En Curso',
-            'FINALIZADO' => 'Finalizado',
-            'CANCELADO' => 'Cancelado'
+            'PENDIENTE' => 'PENDIENTE',
+            'EN CURSO' => 'EN CURSO',
+            'FINALIZADO' => 'FINALIZADO',
+            'CANCELADO' => 'CANCELADO',
+            'ACEPTADA' => 'ACEPTADA',
+            'ABIERTA' => 'ABIERTA'
         ];
         
         $estadoGuardar = $mapaFormato[$nuevoEstadoUpper] ?? $nuevoEstado;
