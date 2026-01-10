@@ -43,7 +43,7 @@ import { CommonModule } from '@angular/common';
 export class StatusToggleComponent {
   @Input() leftLabel: string = 'Pendientes';
   @Input() middleLabel?: string;
-  @Input() rightLabel: string = 'Aprobados';
+  @Input() rightLabel: string = 'Aceptados';
   @Input() leftCount?: number;
   @Input() middleCount?: number;
   @Input() rightCount?: number;

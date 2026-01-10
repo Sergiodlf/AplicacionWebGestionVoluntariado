@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
+import { OrganizationFormComponent } from '../../../components/Global-Components/organization-form/organization-form.component';
+
 @Component({
     selector: 'app-register-organization',
     standalone: true,
-    imports: [CommonModule, RouterLink, FormsModule],
+    imports: [CommonModule, RouterLink, FormsModule, OrganizationFormComponent],
     templateUrl: './register-organization.component.html',
     styleUrl: './register-organization.component.css'
 })

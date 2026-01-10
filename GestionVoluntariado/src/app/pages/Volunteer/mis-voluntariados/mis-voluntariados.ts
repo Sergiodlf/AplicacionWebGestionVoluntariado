@@ -23,25 +23,40 @@ export class MisVoluntariados {
 
   tabLabel = 'Pendientes';
 
+  // Dynamic counts (mocked for now, or could be fetched)
+  countPending = 0;
+  countAccepted = 0;
+  countOngoing = 0;
+  countCompleted = 0;
+
   private voluntariadoService = inject(VoluntariadoService);
-  currentDNI = '11111111A';
+  // Fetch from session or fallback (00000000A is Carlos from fixtures)
+  currentDNI = localStorage.getItem('user_id') || '00000000A';
 
   volunteeringData: any[] = [];
 
   ngOnInit() {
-    this.loadData('pendiente');
+    this.loadData('PENDIENTE');
+    this.loadCounts();
+  }
+
+  loadCounts() {
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'PENDIENTE').subscribe(d => this.countPending = d.length);
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'CONFIRMADO').subscribe(d => this.countAccepted = d.length);
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'EN_CURSO').subscribe(d => this.countOngoing = d.length);
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'COMPLETADA').subscribe(d => this.countCompleted = d.length);
   }
 
   loadData(estado: string) {
-    this.voluntariadoService.getActividadesAceptadas(this.currentDNI, estado).subscribe({
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, estado).subscribe({
       next: (data) => {
         console.log(`API Response MisVoluntariados (${estado}):`, data);
-        this.volunteeringData = data.map(v => ({
+        this.volunteeringData = data.map((v: any) => ({
           title: v.nombre,
-          organization: v.nombre_organizacion,
+          organization: v.organizacion,
           skills: Array.isArray(v.habilidades) ? v.habilidades : [],
           date: v.fechaInicio,
-          status: v.estado,
+          status: v.estado_inscripcion,
           ods: Array.isArray(v.ods) ? v.ods.map((o: string) => ({
             id: 0,
             name: o,
@@ -71,19 +86,19 @@ export class MisVoluntariados {
 
     if (tab === 'left') {
       this.tabLabel = 'Pendientes';
-      this.loadData('pendiente');
+      this.loadData('PENDIENTE');
     }
     if (tab === 'second') {
       this.tabLabel = 'Aceptados';
-      this.loadData('confirmado');
+      this.loadData('CONFIRMADO');
     }
     if (tab === 'middle') {
       this.tabLabel = 'En Curso';
-      this.loadData('en curso');
+      this.loadData('EN_CURSO');
     }
     if (tab === 'right') {
       this.tabLabel = 'Completados';
-      this.loadData('completada');
+      this.loadData('COMPLETADA');
     }
   }
 

@@ -32,6 +32,7 @@ class VoluntarioController extends AbstractController
                 'intereses' => $voluntario->getIntereses(),
                 'idiomas' => $voluntario->getIdiomas(),
                 'estado_voluntario' => $voluntario->getEstadoVoluntario(),
+                'disponibilidad' => $voluntario->getDisponibilidad(),
                 
                 // INSCRIPCIONES (NUEVO)
                 'inscripciones' => $voluntario->getInscripciones()->map(function($inscripcion) {
@@ -108,7 +109,8 @@ class VoluntarioController extends AbstractController
             'habilidades' => $voluntario->getHabilidades(),
             'intereses' => $voluntario->getIntereses(),
             'idiomas' => $voluntario->getIdiomas(),
-            'estado_voluntario' => $voluntario->getEstadoVoluntario() // Assuming getter exists or public property
+            'estado_voluntario' => $voluntario->getEstadoVoluntario(),
+            'disponibilidad' => $voluntario->getDisponibilidad()
         ];
 
         return $this->json($data);

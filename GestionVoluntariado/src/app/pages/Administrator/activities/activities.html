@@ -1,62 +1,76 @@
-<div class="d-flex flex-column h-100 bg-light">
+<div class="d-flex flex-column min-vh-100 bg-light">
     <app-navbar></app-navbar>
     <div class="d-flex flex-grow-1 overflow-hidden">
         <app-sidebar></app-sidebar>
-        <div class="flex-grow-1 overflow-auto">
-            <div class="container-fluid p-4">
+        <div class="flex-grow-1 d-flex flex-column overflow-hidden">
+            <div class="container-fluid p-4 pb-0 flex-shrink-0">
                 <!-- Header Section -->
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
-                    <app-status-toggle leftLabel="Pendientes" rightLabel="Aprobados" [leftCount]="0"
+                    <app-status-toggle leftLabel="Pendientes" rightLabel="Aceptados"
+                        [leftCount]="pendingOpportunities.length" [rightCount]="acceptedOpportunities.length"
                         (optionChanged)="onTabChange($event)">
                     </app-status-toggle>
+
+                    <!-- Search Bar (Centered below tabs) -->
+                    <!-- Search Bar Removed -->
                 </div>
 
                 <!-- Subheader & Search -->
                 <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="d-flex align-items-center text-dark">
+                    <div class="d-flex align-items-center flex-wrap gap-3">
+                        <div class="d-flex align-items-center text-custom-blue">
                             <i class="bi bi-people me-2 fs-4"></i>
-                            <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Pendientes' : 'Aprobados'
+                            <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Pendientes' : 'Aceptados'
                                 }}</h4>
                         </div>
 
-                        <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end">
-                            <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm"
-                                style="max-width: 400px;">
-                                <span class="input-group-text bg-transparent border-0"><i
-                                        class="bi bi-calendar3 text-muted"></i></span>
-                                <input type="text" class="form-control bg-transparent border-0 shadow-none"
-                                    placeholder="Buscar Voluntariado">
-                                <span class="input-group-text bg-transparent border-0"><i
-                                        class="bi bi-search text-muted"></i></span>
+                        <!-- Search Bar (Right Aligned) -->
+                        <div class="d-flex align-items-center gap-3 ms-auto">
+                            <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm border-0"
+                                style="max-width: 350px; width: 100%;">
+                                <span
+                                    class="input-group-text bg-transparent border-0 text-custom-blue position-relative"
+                                    style="cursor: pointer;" (click)="openFilterModal()">
+                                    <i class="bi bi-sliders"></i>
+                                    <span class="position-absolute constant-badge badge rounded-pill bg-danger"
+                                        style="top: 5px; right: 5px; font-size: 0.5rem; padding: 0.25em 0.4em;"
+                                        *ngIf="activeFilterCount > 0">
+                                        {{ activeFilterCount }}
+                                    </span>
+                                </span>
+                                <input type="text"
+                                    class="form-control bg-transparent border-0 shadow-none ps-2 text-dark"
+                                    placeholder="Buscar voluntariado..." [(ngModel)]="searchTerm"
+                                    (input)="applyFilters()">
+                                <span class="input-group-text bg-transparent border-0 text-muted"><i
+                                        class="bi bi-search"></i></span>
                             </div>
 
-                            <button
-                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center"
-                                (click)="openFilterModal()">
-                                <i class="bi bi-sliders me-2"></i> Filtrar Por
-                            </button>
 
                             <button
-                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center"
+                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center text-nowrap"
                                 (click)="openCreateModal()">
                                 <i class="bi bi-plus-lg me-2"></i> Nuevo Voluntariado
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Cards Grid -->
-                <div class="row g-4">
-                    <div class="col-md-6" *ngFor="let item of filteredOpportunities">
-                        <app-volunteering-card [title]="item.title" [organization]="item.organization"
-                            [skills]="item.skills" [date]="item.date" [ods]="item.ods" (onAction)="onAction(item)"
-                            (onInfo)="openInfoModal(item)">
-                        </app-volunteering-card>
-                    </div>
-                    <div *ngIf="filteredOpportunities.length === 0" class="col-12 text-center py-5">
-                        <p class="text-muted">No se encontraron voluntariados con los filtros seleccionados.</p>
+            <div class="flex-grow-1 overflow-auto">
+                <div class="container-fluid px-4 pb-4">
+                    <div class="row g-4">
+                        <div class="col-md-6" *ngFor="let item of filteredOpportunities">
+                            <app-volunteering-card [title]="item.title" [organization]="item.organization"
+                                [skills]="item.skills" [date]="item.date" [ods]="item.ods" [status]="item.estado"
+                                (onAction)="onAction(item)" (onInfo)="openInfoModal(item)"
+                                (onAssign)="openAssignModal(item)">
+                            </app-volunteering-card>
+                        </div>
+                        <div *ngIf="filteredOpportunities.length === 0" class="col-12 text-center py-5">
+                            <p class="text-muted">No se encontraron voluntariados con los filtros seleccionados.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -130,31 +144,58 @@
 
 <!-- Filter Modal -->
 <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showFilterModal">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-custom-blue">Filtrar Voluntariados</h5>
+            <div class="modal-header border-0 pb-0">
+                <h3 class="modal-title fw-bold text-custom-blue">Filtrar Voluntariados</h3>
                 <button type="button" class="btn-close" (click)="closeFilterModal()"></button>
             </div>
-            <div class="modal-body px-4">
+            <div class="modal-body p-4">
 
-                <!-- Date Filter -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-custom-blue">Fecha</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-calendar"></i></span>
-                        <input type="date" class="form-control bg-light border-0" [(ngModel)]="filters.date">
+                <div class="row g-4">
+                    <!-- Date Filter -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark mb-2">Fecha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-calendar"></i></span>
+                            <input type="date" class="form-control bg-light border-0" [(ngModel)]="tempFilters.date">
+                        </div>
                     </div>
-                </div>
 
-                <!-- Skills Filter -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold text-custom-blue">Habilidades</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-gear"></i></span>
-                        <input type="text" class="form-control bg-light border-0"
-                            placeholder="Ej. Educación, Primeros Auxilios" [(ngModel)]="filters.skill">
+                    <!-- Organization Filter -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark mb-2">Organización</label>
+                        <select class="form-select border-light-gray" [(ngModel)]="tempFilters.organization">
+                            <option value="">Todas las organizaciones</option>
+                            <option *ngFor="let org of availableOrganizations" [value]="org">{{ org }}</option>
+                        </select>
                     </div>
+
+                    <!-- Skills Filter -->
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-dark mb-2">Habilidades</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-0"><i class="bi bi-gear"></i></span>
+                            <input type="text" class="form-control bg-light border-0"
+                                placeholder="Ej. Educación, Primeros Auxilios" [(ngModel)]="tempFilters.skill">
+                        </div>
+                    </div>
+
+                    <!-- ODS Filter -->
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-dark mb-2">ODS Relacionados</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span *ngFor="let ods of availableODS"
+                                class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
+                                [ngClass]="{'bg-success text-white': isOdsSelected(ods), 'bg-white text-dark': !isOdsSelected(ods)}"
+                                style="cursor: pointer;" (click)="toggleOdsFilter(ods)">
+                                {{ ods }}
+                                <i class="bi"
+                                    [ngClass]="{'bi-check-lg': isOdsSelected(ods), 'bi-plus-lg': !isOdsSelected(ods)}"></i>
+                            </span>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -171,6 +212,11 @@
 </div>
 
 <!-- Modal Crear Actividad -->
-    <app-crear-voluntariado-modal *ngIf="modalCrearActividadOpen" (close)="modalCrearActividadOpen = false"
-        (created)="onVoluntariadoCreated($event)">
-    </app-crear-voluntariado-modal>
+<app-crear-voluntariado-modal *ngIf="modalCrearActividadOpen" (close)="modalCrearActividadOpen = false"
+    (created)="onVoluntariadoCreated($event)">
+</app-crear-voluntariado-modal>
+
+<!-- Modal Asignar Voluntario -->
+<app-create-match-modal *ngIf="showAssignModal" [preselectedActivityId]="assignActivityId"
+    (close)="showAssignModal = false" (matchCreated)="onMatchCreated()">
+</app-create-match-modal>

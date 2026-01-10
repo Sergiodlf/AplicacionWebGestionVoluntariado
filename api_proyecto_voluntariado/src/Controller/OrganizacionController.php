@@ -73,6 +73,19 @@ class OrganizacionController extends AbstractController
             return $this->json(['error' => 'Formato JSON inválido.'], Response::HTTP_BAD_REQUEST);
         }
 
+        // --- VALIDACIÓN DE UNICIDAD (PV-35) ---
+        $repo = $entityManager->getRepository(Organizacion::class);
+        
+        // 1. Verificar CIF
+        if ($organizacion->getCif() && $repo->find($organizacion->getCif())) {
+            return $this->json(['error' => 'El CIF ya está registrado.'], Response::HTTP_CONFLICT);
+        }
+
+        // 2. Verificar Email
+        if ($organizacion->getEmail() && $repo->findOneBy(['email' => $organizacion->getEmail()])) {
+            return $this->json(['error' => 'El email ya está registrado.'], Response::HTTP_CONFLICT);
+        }
+
         // 2. HASH DE CONTRASEÑA: Codifica la contraseña antes de guardar.
         $hashedPassword = $passwordHasher->hashPassword(
             $organizacion,

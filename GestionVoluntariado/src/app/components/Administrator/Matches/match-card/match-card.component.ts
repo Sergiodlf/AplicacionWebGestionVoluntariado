@@ -12,4 +12,5 @@ export class MatchCardComponent {
   @Input() match: any;
   @Output() onAccept = new EventEmitter<void>();
   @Output() onReject = new EventEmitter<void>();
+  @Output() onComplete = new EventEmitter<void>();
 }

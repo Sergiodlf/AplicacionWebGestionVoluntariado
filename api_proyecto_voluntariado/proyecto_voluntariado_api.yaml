@@ -542,6 +542,26 @@ paths:
         '404':
           description: Voluntario no encontrado
 
+
+  # ==========================================
+  # CICLOS FORMATIVOS
+  # ==========================================
+  /ciclos:
+    get:
+      tags:
+        - Ciclos
+      summary: Listar todos los ciclos formativos
+      description: Devuelve la lista de ciclos y cursos disponibles para el registro de voluntarios.
+      responses:
+        '200':
+          description: Lista de ciclos recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CicloDetalle'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -808,12 +828,21 @@ components:
           type: string
         fecha_actividad:
           type: string
-          format: date-time
         nombre_organizacion:
           type: string
         estado:
           type: string
-          example: "PENDIENTE"
+
+    # --- MODELO CICLO ---
+    CicloDetalle:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: "Desarrollo de Aplicaciones Multiplataforma"
+        curso:
+          type: string
+          example: "2º"
 
     ActividadInscritaDetalle:
       type: object

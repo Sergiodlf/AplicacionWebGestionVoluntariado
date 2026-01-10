@@ -1,25 +1,39 @@
 <div class="card border-0 shadow-sm h-100 rounded-4 p-3">
   <div class="d-flex justify-content-between align-items-start mb-3">
     <div class="d-flex align-items-center">
+      <div class="rounded-circle bg-custom-blue text-white d-flex align-items-center justify-content-center me-3"
+        style="width: 50px; height: 50px;">
+        <i class="bi bi-calendar-check fs-4"></i>
+      </div>
       <div>
         <h5 class="fw-bold text-custom-blue mb-0">{{ title }}</h5>
         <small class="text-muted"><i class="bi bi-building me-1"></i>{{ organization }}</small>
       </div>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-dark btn-sm rounded-pill d-flex align-items-center" (click)="onInfo.emit()">
-        <i class="bi bi-info-circle me-1"></i> Detalle
+      <button
+        class="btn btn-custom-blue text-white btn-sm rounded-circle d-flex align-items-center justify-content-center"
+        style="width: 32px; height: 32px;" (click)="onInfo.emit()" title="Ver detalles">
+        <i class="bi bi-info-circle fs-6"></i>
       </button>
-      <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
-        Apuntarse
+
+      <button *ngIf="status.trim().toUpperCase() !== 'PENDIENTE'"
+        class="btn btn-outline-custom-blue btn-sm rounded-circle d-flex align-items-center justify-content-center"
+        style="width: 32px; height: 32px;" (click)="onAssign.emit()" title="Asignar voluntario">
+        <i class="bi bi-person-plus fs-6"></i>
+      </button>
+
+      <button *ngIf="status.trim().toUpperCase() === 'PENDIENTE'"
+        class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
+        Aceptar
       </button>
     </div>
   </div>
 
   <div class="mb-2">
-    <div class="d-flex align-items-center mb-2">
+    <div class="d-flex align-items-center">
       <i class="bi bi-gear text-custom-blue me-2"></i>
-      <span class="fw-bold text-custom-blue me-2">Habilidades:</span>
+      <span class="fw-bold text-custom-blue me-2">Necesidades:</span>
       <div class="d-flex gap-1 flex-wrap">
         <span *ngFor="let skill of skills" class="badge bg-light text-custom-blue border">{{ skill }}</span>
       </div>

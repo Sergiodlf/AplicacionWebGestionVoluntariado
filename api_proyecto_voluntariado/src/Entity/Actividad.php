@@ -33,11 +33,16 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $estadoAprobacion = 'PENDIENTE';
 
+    #[ORM\Column(name: 'ESTADO_NEW', length: 255, nullable: true)]
+    #[Groups(['org:read'])]
+    private ?string $estadoNew = null;
+
     #[ORM\Column(name: 'DIRECCION', type: Types::STRING, length: 40)]
     #[Groups(['org:read'])]
     private ?string $direccion = null;
 
     // #[ORM\Column(type: Types::TEXT, nullable: true)]
+    // #[Groups(['org:read'])]
     // private ?string $descripcion = null;
 
     #[ORM\Column(name: 'FECHA_INICIO', type: Types::DATETIME_MUTABLE)]
@@ -47,6 +52,29 @@ class Actividad
     #[ORM\Column(name: 'FECHA_FIN', type: Types::DATETIME_MUTABLE)]
     #[Groups(['org:read'])]
     private ?\DateTimeInterface $fechaFin = null;
+
+    // ... (existing code)
+
+    /*
+    public function getDescripcion(): ?string
+    {
+        return $this->descripcion;
+    }
+
+    public function setDescripcion(?string $descripcion): static
+    {
+        $this->descripcion = $descripcion;
+        return $this;
+    }
+    */
+
+    public function getHorario(): string
+    {
+        if ($this->fechaInicio && $this->fechaFin) {
+            return $this->fechaInicio->format('d/m/Y H:i') . ' - ' . $this->fechaFin->format('H:i');
+        }
+        return 'Sin horario definido';
+    }
 
     #[ORM\Column(name: 'MAX_PARTICIPANTES', type: Types::SMALLINT)]
     #[Groups(['org:read'])]
@@ -110,6 +138,17 @@ class Actividad
     public function setEstadoAprobacion(string $estadoAprobacion): static
     {
         $this->estadoAprobacion = $estadoAprobacion;
+        return $this;
+    }
+
+    public function getEstadoNew(): ?string
+    {
+        return $this->estadoNew;
+    }
+
+    public function setEstadoNew(?string $estadoNew): static
+    {
+        $this->estadoNew = $estadoNew;
         return $this;
     }
 
@@ -202,7 +241,7 @@ class Actividad
         return $this;
     }
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(name: 'HABILIDADES', type: Types::TEXT, nullable: true)]
     #[Groups(['org:read'])]
     private ?string $habilidades = null;
 

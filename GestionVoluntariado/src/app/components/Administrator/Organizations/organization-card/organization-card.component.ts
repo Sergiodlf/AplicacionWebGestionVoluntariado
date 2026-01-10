@@ -1,5 +1,5 @@
-import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common'; 
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Organization } from '../../../../models/organizationModel'; // Asegúrate de ajustar la ruta
 import { OrganizationService } from '../../../../services/organization.service'; // Asegúrate de ajustar la ruta
 
@@ -15,7 +15,7 @@ export class OrganizationCardComponent {
   constructor(private organizationService: OrganizationService) { }
 
   @Input({ required: true }) organization!: Organization;
-  
+
   /**
    * Mapea el sector (string) a un ícono de Bootstrap contextual.
    */
@@ -35,31 +35,33 @@ export class OrganizationCardComponent {
     }
   }
 
+  @Output() onActivityClick = new EventEmitter<any>();
+
   onAcceptClick(): void {
     // EL HIJO llama al servicio para ACEPTAR
     this.organizationService.acceptOrganization(this.organization.cif).subscribe({
-        next: () => {
-            // CRÍTICO: El hijo notifica al sistema que recargue la lista
-            this.organizationService.notifyOrganizationUpdate(); 
-        },
-        error: (err) => {
-            console.error('Error al aceptar organización:', err);
-            // Manejo de error
-        }
+      next: () => {
+        // CRÍTICO: El hijo notifica al sistema que recargue la lista
+        this.organizationService.notifyOrganizationUpdate();
+      },
+      error: (err) => {
+        console.error('Error al aceptar organización:', err);
+        // Manejo de error
+      }
     });
   }
 
   onRejectClick(): void {
     // EL HIJO llama al servicio para RECHAZAR
     this.organizationService.rejectOrganization(this.organization.cif).subscribe({
-        next: () => {
-            // CRÍTICO: El hijo notifica al sistema que recargue la lista
-            this.organizationService.notifyOrganizationUpdate();
-        },
-        error: (err) => {
-            console.error('Error al rechazar organización:', err);
-            // Manejo de error
-        }
+      next: () => {
+        // CRÍTICO: El hijo notifica al sistema que recargue la lista
+        this.organizationService.notifyOrganizationUpdate();
+      },
+      error: (err) => {
+        console.error('Error al rechazar organización:', err);
+        // Manejo de error
+      }
     });
   }
 }

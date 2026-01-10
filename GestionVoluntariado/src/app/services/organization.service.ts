@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Organization, OrganizationCreateData } from '../models/organizationModel';
 
 @Injectable({
@@ -12,13 +13,25 @@ export class OrganizationService {
   // 1. Subject para notificar cambios en la lista de organizaciones
   private organizationUpdatedSource = new Subject<void>();
 
+  private organizationsSubject = new BehaviorSubject<Organization[] | null>(null);
+  organizations$ = this.organizationsSubject.asObservable();
+
   // 2. Observable público para que otros componentes se suscriban
   organizationUpdated$ = this.organizationUpdatedSource.asObservable();
 
   constructor(private http: HttpClient) { }
 
-  getOrganizations(): Observable<Organization[]> {
-    return this.http.get<Organization[]>(this.apiUrl);
+  getOrganizations(forceReload: boolean = false): Observable<Organization[]> {
+    if (this.organizationsSubject.value && !forceReload) {
+      return this.organizationsSubject.asObservable() as Observable<Organization[]>;
+    }
+    return this.loadOrganizations();
+  }
+
+  loadOrganizations(): Observable<Organization[]> {
+    return this.http.get<Organization[]>(this.apiUrl).pipe(
+      tap(data => this.organizationsSubject.next(data))
+    );
   }
 
   updateOrganizationStatus(cif: string, newStatus: string): Observable<any> {
@@ -39,10 +52,8 @@ export class OrganizationService {
    * @param cif CIF de la organización a aprobar.
    */
   acceptOrganization(cif: string): Observable<any> {
-    // 3. Lógica para llamar a la API (ej: PATCH para cambiar el estado)
-    const updateData = { estado: 'Aprobado' };
-    // Asumo que la API tiene un endpoint para PATCH por CIF: /api/organizations/{cif}
-    return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
+    const updateData = { estado: 'aprobado' };
+    return this.http.patch(`${this.apiUrl}/${cif}/state`, updateData);
   }
 
   /**

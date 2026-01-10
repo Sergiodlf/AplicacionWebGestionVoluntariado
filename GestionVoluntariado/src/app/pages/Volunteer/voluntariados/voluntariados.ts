@@ -16,7 +16,8 @@ export class Voluntariados implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
 
   activeTab: 'left' | 'middle' | 'right' = 'left';
-  currentDNI = '11111111A'; // Mock DNI as requested
+  // Fetch from session or fallback
+  currentDNI = localStorage.getItem('user_id') || '00000000A';
 
   // Raw data from API
   allVoluntariados: Voluntariado[] = [];
@@ -55,12 +56,12 @@ export class Voluntariados implements OnInit {
     });
 
     // 2. Get my inscriptions (pending matches)
-    this.voluntariadoService.getInscripcionesPendientes(this.currentDNI).subscribe({
-      next: (data) => {
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'PENDIENTE').subscribe({
+      next: (data: any[]) => {
         this.myInscripciones = data;
         this.filterData();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error fetching inscripciones', err);
         // Fallback or empty if 404
         this.myInscripciones = [];

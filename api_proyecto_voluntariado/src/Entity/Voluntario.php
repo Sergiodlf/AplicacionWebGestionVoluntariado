@@ -55,6 +55,9 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: 'INTERESES', type: Types::TEXT, nullable: true)]
     private ?string $intereses = null;
+
+    #[ORM\Column(name: 'DISPONIBILIDAD', type: Types::TEXT, nullable: true)]
+    private ?string $disponibilidad = null;
     
     #[ORM\Column(name: 'IDIOMAS', type: Types::TEXT, nullable: true)]
     private ?string $idiomas = null;
@@ -100,12 +103,81 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCoche(?bool $c): static { $this->coche = $c; return $this; }
     public function getCiclo(): ?Ciclo { return $this->ciclo; }
     public function setCiclo(?Ciclo $c): static { $this->ciclo = $c; return $this; }
-    public function getHabilidades(): ?string { return $this->habilidades; }
-    public function setHabilidades(?string $h): static { $this->habilidades = $h; return $this; }
-    public function getIntereses(): ?string { return $this->intereses; }
-    public function setIntereses(?string $i): static { $this->intereses = $i; return $this; }
-    public function getIdiomas(): ?string { return $this->idiomas; }
-    public function setIdiomas(?string $i): static { $this->idiomas = $i; return $this; }
+    public function getHabilidades(): array
+    {
+        if ($this->habilidades === null) {
+            return [];
+        }
+        $decoded = json_decode($this->habilidades, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+        $raw = trim($this->habilidades, '"\'');
+        return empty($raw) ? [] : [$raw];
+    }
+
+    public function setHabilidades(?array $h): static
+    {
+        $this->habilidades = $h ? json_encode($h) : null;
+        return $this;
+    }
+
+    public function getIntereses(): array
+    {
+        if ($this->intereses === null) {
+            return [];
+        }
+        $decoded = json_decode($this->intereses, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+        $raw = trim($this->intereses, '"\'');
+        return empty($raw) ? [] : [$raw];
+    }
+
+    public function setIntereses(?array $i): static
+    {
+        $this->intereses = $i ? json_encode($i) : null;
+        return $this;
+    }
+
+    public function getDisponibilidad(): array
+    {
+        if ($this->disponibilidad === null) {
+            return [];
+        }
+        $decoded = json_decode($this->disponibilidad, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+        $raw = trim($this->disponibilidad, '"\'');
+        return empty($raw) ? [] : [$raw];
+    }
+
+    public function setDisponibilidad(?array $d): static
+    {
+        $this->disponibilidad = $d ? json_encode($d) : null;
+        return $this;
+    }
+
+    public function getIdiomas(): array
+    {
+        if ($this->idiomas === null) {
+            return [];
+        }
+        $decoded = json_decode($this->idiomas, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+        $raw = trim($this->idiomas, '"\'');
+        return empty($raw) ? [] : [$raw];
+    }
+
+    public function setIdiomas(?array $i): static
+    {
+        $this->idiomas = $i ? json_encode($i) : null;
+        return $this;
+    }
 
     public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
     public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }

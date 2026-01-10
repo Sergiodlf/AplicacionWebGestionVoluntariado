@@ -14,9 +14,17 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
+use App\Service\VolunteerService;
+
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
 {
+    private $volunteerService;
+
+    public function __construct(VolunteerService $volunteerService)
+    {
+        $this->volunteerService = $volunteerService;
+    }
     // =========================================================================
     // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
     // =========================================================================
@@ -44,93 +52,23 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Faltan campos obligatorios (dni, email, nombre, password)'], 400);
         }
 
-        $repo = $entityManager->getRepository(Voluntario::class);
-        if ($repo->findOneBy(['dni' => $dto->dni])) {
-            return $this->json(['error' => 'El DNI ya existe'], 409);
-        }
-        if ($repo->findOneBy(['correo' => $dto->email])) {
-            return $this->json(['error' => 'El correo ya existe'], 409);
+        // --- VALIDACIÓN DE FORMATO DE EMAIL (PV-41) ---
+        if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
         }
 
-        // --- PREPARACIÓN DE DATOS ---
-
-        // 1. Nombres
-        $partes = explode(' ', trim($dto->nombre));
-        $nombre = $partes[0] ?? '';
-        $apellido1 = $partes[1] ?? '';
-        $apellido2 = (count($partes) > 2) ? implode(' ', array_slice($partes, 2)) : '';
-
-        // 2. Fecha (Formato Ymd para SQL Server)
-        $fechaSql = null;
-        if ($dto->fechaNacimiento) {
-            try {
-                $fechaObj = new \DateTime($dto->fechaNacimiento);
-                $fechaSql = $fechaObj->format('Ymd'); 
-            } catch (\Exception $e) {}
+        // --- VALIDACIÓN DE UNICIDAD (Vía Service) ---
+        $error = $this->volunteerService->checkDuplicates($dto->dni, $dto->email);
+        if ($error) {
+            $status = str_contains($error, 'existe') ? 409 : 400;
+            return $this->json(['error' => $error], $status);
         }
 
-        // 3. Coche
-        $cocheStr = strtolower((string)$dto->coche);
-        $cocheBit = in_array($cocheStr, ['si', 'yes', 'true', '1']) ? 1 : 0;
-
-        // 4. Arrays
-        $idiomas = implode(', ', $dto->idiomas);
-        $habilidades = implode(', ', $dto->habilidades);
-        $intereses = implode(', ', $dto->intereses);
-
-        // 5. Contraseña (CORRECCIÓN IMPORTANTE)
-        // Usamos un objeto Voluntario "lleno" para generar el hash.
-        // Esto asegura que si el hasher usa el email/dni como salt, coincida con el login.
-        $userParaHash = new Voluntario();
-        $userParaHash->setCorreo($dto->email); // Clave para el UserIdentifier
-        $userParaHash->setDni($dto->dni);
-        
-        $hashedPassword = $passwordHasher->hashPassword($userParaHash, $dto->password);
-
-        // --- DETERMINAR ESTADO ---
-        $estado = 'PENDIENTE';
-        $currentUser = $this->getUser();
-        if ($currentUser instanceof Organizacion) {
-            $estado = 'ACEPTADO';
-        }
-
-        // --- INSERT MANUAL ---
+        // --- REGISTRO (Vía Service) ---
         try {
-            $conn = $entityManager->getConnection();
-            
-            $sql = "
-                INSERT INTO VOLUNTARIOS (
-                    DNI, NOMBRE, APELLIDO1, APELLIDO2, CORREO, PASSWORD, 
-                    COCHE, FECHA_NACIMIENTO, ZONA, EXPERIENCIA, 
-                    IDIOMAS, HABILIDADES, INTERESES, ESTADO_VOLUNTARIO
-                ) VALUES (
-                    :dni, :nombre, :ap1, :ap2, :correo, :pass, 
-                    :coche, :fecha, :zona, :exp, 
-                    :idiomas, :hab, :int, :estado
-                )
-            ";
-
-            $params = [
-                'dni' => $dto->dni,
-                'nombre' => $nombre,
-                'ap1' => $apellido1,
-                'ap2' => $apellido2,
-                'correo' => $dto->email,
-                'pass' => $hashedPassword,
-                'coche' => $cocheBit,
-                'fecha' => $fechaSql,
-                'zona' => $dto->zona,
-                'exp' => $dto->experiencia,
-                'idiomas' => $idiomas,
-                'hab' => $habilidades,
-                'int' => $intereses,
-                'estado' => $estado
-            ];
-
-            $conn->executeStatement($sql, $params);
-
+            $this->volunteerService->registerVolunteer($dto);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error SQL al guardar', 'detalle' => $e->getMessage()], 500);
+            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage()], 500);
         }
 
         return $this->json(['message' => 'Voluntario registrado correctamente'], 201);
@@ -154,6 +92,22 @@ class AuthController extends AbstractController
             $dto = $serializer->deserialize($json, RegistroOrganizacionDTO::class, 'json');
         } catch (\Exception $e) {
             return $this->json(['error' => 'Datos JSON inválidos'], 400);
+        }
+
+        // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS (PV-38) ---
+        if (
+            empty($dto->cif) || empty($dto->nombre) || empty($dto->email) || empty($dto->password) ||
+            empty($dto->direccion) || empty($dto->localidad) || empty($dto->descripcion) || 
+            empty($dto->cp) || empty($dto->contacto)
+        ) {
+            return $this->json([
+                'error' => 'Faltan campos obligatorios. Debes completar: cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto'
+            ], 400);
+        }
+
+        // --- VALIDACIÓN DE FORMATO DE EMAIL (PV-41) ---
+        if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
         }
 
         $repo = $entityManager->getRepository(Organizacion::class);

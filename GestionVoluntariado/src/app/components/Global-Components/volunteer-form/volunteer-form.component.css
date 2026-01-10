@@ -1,0 +1,9 @@
+.pointer-cursor {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.pointer-cursor:hover {
+    transform: translateY(-1px);
+    filter: brightness(0.95);
+}

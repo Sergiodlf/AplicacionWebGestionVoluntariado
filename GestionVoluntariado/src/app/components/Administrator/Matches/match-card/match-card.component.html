@@ -1,95 +1,98 @@
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 match-card">
+<div class="card border-0 shadow-sm rounded-4 mb-3 match-card overflow-hidden">
   <div class="card-body p-0">
-    <div class="row g-0">
-      
-      <!-- Volunteer Column -->
-      <div class="col-md-6 p-4 border-end bg-light-gray">
-        <div class="d-flex align-items-start mb-3">
-          <div class="rounded-circle bg-light-blue text-custom-blue d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-            <i class="bi bi-person fs-4"></i>
+    <div class="d-flex flex-column flex-md-row">
+
+      <!-- Volunteer Side -->
+      <div class="flex-grow-1 p-3 p-md-4 position-relative">
+        <div class="d-flex align-items-center mb-3">
+          <div class="avatar-circle bg-soft-blue text-custom-blue me-3">
+            <i class="bi bi-person-fill fs-5"></i>
           </div>
           <div>
-            <h5 class="fw-bold text-custom-blue mb-0">{{ match.volunteer.name }}</h5>
-            <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ match.volunteer.email }}</small>
+            <h6 class="fw-bold text-dark mb-0">{{ match.volunteer.name }}</h6>
+            <div class="text-muted small">{{ match.volunteer.email }}</div>
           </div>
         </div>
 
-        <div class="mb-2">
-          <div class="d-flex align-items-center mb-2">
-            <i class="bi bi-gear text-muted me-2"></i>
-            <span class="fw-bold text-muted me-2 small">Habilidades:</span>
-            <div class="d-flex gap-1 flex-wrap">
-              <span *ngFor="let skill of match.volunteer.skills" class="badge bg-white text-muted border rounded-pill fw-normal">{{ skill }}</span>
-            </div>
-          </div>
+        <div class="d-flex flex-wrap gap-2 mb-2">
+          <span *ngFor="let skill of match.volunteer.skills"
+            class="badge bg-light text-dark border px-2 py-1 fw-normal">
+            {{ skill }}
+          </span>
+          <small *ngIf="match.volunteer.skills?.length === 0" class="text-muted fst-italic">Sin habilidades</small>
         </div>
 
-        <div class="mb-2">
-          <div class="d-flex align-items-center">
-            <i class="bi bi-clock text-muted me-2"></i>
-            <span class="fw-bold text-muted me-2 small">Disponibilidad:</span>
-            <span class="text-dark small fw-bold">{{ match.volunteer.availability }}</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="d-flex align-items-center">
-            <i class="bi bi-person text-muted me-2"></i>
-            <span class="fw-bold text-muted me-2 small">Intereses:</span>
-            <div class="d-flex gap-1 flex-wrap">
-              <span *ngFor="let interest of match.volunteer.interests" class="badge bg-white text-muted border rounded-pill fw-normal">{{ interest }}</span>
-            </div>
-          </div>
+        <div class="text-muted small" *ngIf="match.volunteer.availability !== 'No especificada'">
+          <i class="bi bi-calendar-check me-1"></i> {{ match.volunteer.availability }}
         </div>
       </div>
 
-      <!-- Organization Column -->
-      <div class="col-md-6 p-4 bg-white">
-        <div class="d-flex align-items-start mb-3">
-          <div class="rounded-circle bg-light-orange text-orange d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-            <i class="bi bi-heart fs-4"></i>
-          </div>
-          <div>
-            <h5 class="fw-bold text-custom-blue mb-0">{{ match.organization.name }}</h5>
-            <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ match.organization.email }}</small>
-          </div>
-        </div>
-
-        <p class="text-muted fst-italic small mb-3">
-          {{ match.organization.description }}
-        </p>
-
-        <div class="mb-2">
-          <div class="d-flex align-items-center">
-            <i class="bi bi-clock text-muted me-2"></i>
-            <span class="fw-bold text-muted me-2 small">Horario:</span>
-            <span class="text-dark small fw-bold">{{ match.organization.schedule }}</span>
-          </div>
-        </div>
-
-        <div>
-          <div class="d-flex align-items-center">
-            <i class="bi bi-clock text-muted me-2"></i> <!-- Should be a different icon for needs, maybe list-check -->
-            <span class="fw-bold text-muted me-2 small">Necesidades:</span>
-            <div class="d-flex gap-1 flex-wrap">
-              <span *ngFor="let need of match.organization.needs" class="badge bg-white text-muted border rounded-pill fw-normal">{{ need }}</span>
-            </div>
-          </div>
+      <!-- Connecting Divider (Visual Match) -->
+      <div class="d-none d-md-flex align-items-center justify-content-center border-start border-end bg-light px-2"
+        style="width: 50px;">
+        <div class="rounded-circle bg-white border d-flex align-items-center justify-content-center shadow-sm"
+          style="width: 32px; height: 32px;">
+          <i class="bi bi-arrow-left-right text-muted small"></i>
         </div>
       </div>
 
-    </div>
-  </div>
+      <!-- Activity Side -->
+      <div class="flex-grow-1 p-3 p-md-4 bg-soft-gray">
+        <div class="d-flex align-items-center mb-3 justify-content-md-end text-md-end">
+          <div class="order-md-2 ms-md-3 me-3 me-md-0 avatar-circle bg-soft-orange text-orange">
+            <i class="bi bi-briefcase-fill fs-5"></i>
+          </div>
+          <div class="order-md-1">
+            <h6 class="fw-bold text-dark mb-0">{{ match.organization.name }}</h6>
+            <div class="text-muted small">Actividad</div>
+          </div>
+        </div>
 
-  <!-- Actions Footer -->
-  <div class="card-footer bg-light border-top p-3">
-    <div class="d-flex justify-content-center gap-3">
-      <button class="btn btn-custom-blue text-white rounded-pill px-4 d-flex align-items-center" (click)="onAccept.emit()">
-        <i class="bi bi-check-lg me-2"></i> Aceptar
-      </button>
-      <button class="btn btn-outline-danger rounded-pill px-4 d-flex align-items-center" (click)="onReject.emit()">
-        <i class="bi bi-x-lg me-2"></i> Rechazar
-      </button>
+        <div class="d-flex flex-wrap gap-2 mb-2 justify-content-md-end">
+          <span *ngFor="let need of match.organization.needs"
+            class="badge bg-white text-dark border px-2 py-1 fw-normal">
+            {{ need }}
+          </span>
+          <small *ngIf="match.organization.needs?.length === 0" class="text-muted fst-italic">Sin requisitos</small>
+        </div>
+
+        <div class="text-muted small text-md-end" *ngIf="match.organization.schedule !== 'No especificado'">
+          {{ match.organization.schedule }} <i class="bi bi-clock ms-1"></i>
+        </div>
+      </div>
+
+      <!-- Actions Column (Right aligned or Bottom) -->
+      <div class="d-flex flex-column justify-content-center p-3 border-start-md bg-white border-top border-top-md-0"
+        style="min-width: 140px;">
+        @if (match.status === 'PENDIENTE') {
+        <button class="btn btn-sm btn-custom-blue text-white rounded-pill mb-2 w-100" (click)="onAccept.emit()">
+          <i class="bi bi-check-lg"></i> Aceptar
+        </button>
+        <button class="btn btn-sm btn-outline-danger rounded-pill w-100" (click)="onReject.emit()">
+          <i class="bi bi-x-lg"></i> Rechazar
+        </button>
+        } @else if (match.status === 'CONFIRMADA' || match.status === 'ACEPTADA' || match.status === 'ACEPTADO' ||
+        match.status === 'CONFIRMADO') {
+        <div class="text-center text-success fw-bold small mb-2">
+          <i class="bi bi-check-circle-fill fs-4 d-block mb-1"></i>
+          Aceptado
+        </div>
+        <button class="btn btn-sm btn-outline-success rounded-pill w-100" (click)="onComplete.emit()">
+          <i class="bi bi-flag-fill"></i> Completar
+        </button>
+        } @else if (match.status === 'COMPLETADA') {
+        <div class="text-center text-primary fw-bold small">
+          <i class="bi bi-trophy-fill fs-4 d-block mb-1"></i>
+          Completado
+        </div>
+        } @else {
+        <div class="text-center text-danger fw-bold small">
+          <i class="bi bi-x-circle-fill fs-4 d-block mb-1"></i>
+          Rechazado
+        </div>
+        }
+      </div>
+
     </div>
   </div>
 </div>

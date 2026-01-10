@@ -1,11 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { VolunteerCardComponent } from '../../../components/Administrator/Volunteers/volunteer-card/volunteer-card.component';
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
-import { BehaviorSubject, of } from 'rxjs';
-import { map, switchMap, catchError, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, switchMap, catchError, tap, startWith } from 'rxjs/operators';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 
@@ -14,9 +16,11 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     StatusToggleComponent,
     VolunteerCardComponent,
     VolunteerFormComponent,
+    CreateMatchModalComponent,
     Navbar,
     SidebarComponent
   ],
@@ -25,43 +29,191 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
 })
 export class VolunteersComponent {
   private volunteerService = inject(VolunteerService);
-  private refresh$ = new BehaviorSubject<void>(void 0);
+  private refresh$ = new BehaviorSubject<boolean>(false);
 
-  // Main stream that reacts to refresh$
-  volunteers$ = this.refresh$.pipe(
-    switchMap(() =>
-      this.volunteerService.getVolunteers().pipe(
-        tap((data) => console.log('Fetched volunteers:', data)),
+  // Filter Criteria Subject
+  private filterCriteria$ = new BehaviorSubject<any>({
+    zona: '',
+    habilidades: [],
+    intereses: [],
+    disponibilidad: [],
+    text: '' // Added text filter
+  });
+
+  searchTerm: string = ''; // Added for search functionality
+
+  // Available Options for Filters (Mirrors VolunteerForm)
+  availableZones: string[] = [
+    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
+    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
+    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
+    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
+  ];
+  availableSkills: string[] = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Música', 'Marketing'];
+  availableInterests: string[] = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Deporte', 'Tecnología', 'Derechos Humanos', 'Mayores', 'Infancia'];
+  availableAvailability: string[] = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
+
+  // Temporary filter state for the modal
+  tempFilters: any = {
+    zona: '',
+    habilidades: [],
+    intereses: [],
+    disponibilidad: []
+  };
+
+  // Main data stream
+  private rawVolunteers$ = this.refresh$.pipe(
+    switchMap((force) =>
+      this.volunteerService.getVolunteers(force).pipe(
         catchError((err) => {
           console.error('Error fetching volunteers:', err);
-          return of([]); // Keep the stream alive with empty list
+          return of([]);
         })
       )
     )
   );
 
+  // Filtered stream
+  filteredVolunteers$ = combineLatest([this.rawVolunteers$, this.filterCriteria$]).pipe(
+    map(([volunteers, criteria]) => {
+      return volunteers.filter(v => {
+        // Filter by Text (Name or Email)
+        if (criteria.text) {
+          const term = criteria.text.toLowerCase();
+          const matchesName = v.name?.toLowerCase().includes(term);
+          const matchesEmail = v.email?.toLowerCase().includes(term);
+          if (!matchesName && !matchesEmail) return false;
+        }
+
+        // Filter by Zone
+        if (criteria.zona && v.zona !== criteria.zona) return false;
+
+        // Filter by Skills (OR logic: if volunteer has ANY of the selected skills)
+        if (criteria.habilidades.length > 0) {
+          const vSkills = Array.isArray(v.skills) ? v.skills : [];
+          const hasSkill = criteria.habilidades.some((s: string) => vSkills.includes(s));
+          if (!hasSkill) return false;
+        }
+
+        // Filter by Interests
+        if (criteria.intereses.length > 0) {
+          const vInterests = Array.isArray(v.interests) ? v.interests : [];
+          const hasInterest = criteria.intereses.some((i: string) => vInterests.includes(i));
+          if (!hasInterest) return false;
+        }
+
+        // Filter by Availability
+        if (criteria.disponibilidad.length > 0) {
+          const vAvailability = Array.isArray(v.availability) ? v.availability : [];
+          const hasAvailability = criteria.disponibilidad.some((a: string) => vAvailability.includes(a));
+          if (!hasAvailability) return false;
+        }
+
+        return true;
+      });
+    })
+  );
+
   activeTab: 'left' | 'middle' | 'right' = 'left';
 
-  // Derived filtered streams (depend on volunteers$)
-  // Derived filtered streams (depend on volunteers$)
-  pendingVolunteers$ = this.volunteers$.pipe(
+  // Derived filtered streams
+  pendingVolunteers$ = this.filteredVolunteers$.pipe(
     map((list) => list.filter((v) => v.status === 'PENDIENTE'))
   );
-  approvedVolunteers$ = this.volunteers$.pipe(
+  approvedVolunteers$ = this.filteredVolunteers$.pipe(
     map((list) => list.filter((v) => v.status === 'ACEPTADO'))
   );
 
   showModal = false;
+  showFilterModal = false;
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 
-  // No longer needed as streams are reactive
-  // private reinitFilters() {}
+  showCreateMatchModal = false;
+  selectedVolunteerForMatch: any = null;
+
+  openMatchModal(volunteer: any) {
+    this.selectedVolunteerForMatch = volunteer;
+    this.showCreateMatchModal = true;
+  }
+
+  onMatchCreated() {
+    this.showCreateMatchModal = false;
+    this.selectedVolunteerForMatch = null;
+    // Optionally refresh volunteers or show success message
+  }
 
   onAddVolunteer() {
     this.showModal = true;
+  }
+
+  openFilterModal() {
+    // Copy current applied filters to temp state
+    const current = this.filterCriteria$.value;
+    this.tempFilters = {
+      zona: current.zona,
+      habilidades: [...current.habilidades],
+      intereses: [...current.intereses],
+      disponibilidad: [...current.disponibilidad]
+    };
+    this.showFilterModal = true;
+  }
+
+  closeFilterModal() {
+    this.showFilterModal = false;
+  }
+
+  applyFilters() {
+    // Merge temp filters with search term
+    const current = this.filterCriteria$.value;
+    this.filterCriteria$.next({
+      ...current,
+      ...this.tempFilters,
+      text: this.searchTerm // Update text filter
+    });
+    // Check if modal is open before closing
+    if (this.showFilterModal) {
+      this.closeFilterModal();
+    }
+  }
+
+  resetFilters() {
+    this.filterCriteria$.next({
+      zona: '',
+      habilidades: [],
+      intereses: [],
+      disponibilidad: []
+    });
+    this.closeFilterModal();
+  }
+
+  // Helper to toggle items in arrays
+  toggleFilterItem(category: 'habilidades' | 'intereses' | 'disponibilidad', item: string) {
+    const list = this.tempFilters[category];
+    const index = list.indexOf(item);
+    if (index === -1) {
+      list.push(item);
+    } else {
+      list.splice(index, 1);
+    }
+  }
+
+  // Helper to check if item is selected
+  isFilterSelected(category: 'habilidades' | 'intereses' | 'disponibilidad', item: string): boolean {
+    return this.tempFilters[category].includes(item);
+  }
+
+  // Get active filter count for badge
+  get activeFilterCount(): number {
+    const c = this.filterCriteria$.value;
+    let count = 0;
+    if (c.zona) count++;
+    count += c.habilidades.length;
+    count += c.intereses.length;
+    count += c.disponibilidad.length;
+    return count;
   }
 
   closeModal() {
@@ -71,7 +223,7 @@ export class VolunteersComponent {
   onAccept(volunteer: any) {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'ACEPTADO').subscribe({
-      next: () => this.refresh$.next(),
+      next: () => this.refresh$.next(true),
       error: (err) => console.error('Error updating status:', err),
     });
   }
@@ -79,14 +231,13 @@ export class VolunteersComponent {
   onReject(volunteer: any) {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'RECHAZADO').subscribe({
-      next: () => this.refresh$.next(),
+      next: () => this.refresh$.next(true),
       error: (err) => console.error('Error updating status:', err),
     });
   }
 
   handleCreateVolunteer(volunteerData: any) {
     console.log('Parent received volunteer data:', volunteerData);
-    // Map form data to backend expected structure
     const mappedVolunteer = {
       nombre: volunteerData.nombreCompleto,
       email: volunteerData.correo,
@@ -100,23 +251,13 @@ export class VolunteersComponent {
       idiomas: volunteerData.idiomas,
       habilidades: volunteerData.habilidades,
       intereses: volunteerData.intereses,
-      // Convert availability array to string if needed, or keep as array if backend supports it.
-      // Based on 500 error history and typical SQL issues, string is safer or backend needs to handle array.
-      // Trying String join first as Service mock used String.
-      disponibilidad: Array.isArray(volunteerData.disponibilidad)
-        ? volunteerData.disponibilidad.join(', ')
-        : volunteerData.disponibilidad,
+      disponibilidad: volunteerData.disponibilidad,
     };
 
-    console.log('Sending mapped volunteer data:', mappedVolunteer);
     this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
       next: (response) => {
         console.log('Volunteer created successfully', response);
-        // this.volunteerService.addVolunteerToSignal(volunteerData); // Optimistic update or use response
-        // Reload list or trust optimistic if we reimplement it. For now, simple reload or no-op.
-        // To refresh, we can unwrap/rewrap or use a BehaviorSubject in service.
-        // For simplicity: Just keep as is, data will persist on navigation, or we should refresh the list.
-        this.refresh$.next();
+        this.refresh$.next(true);
         this.closeModal();
         alert('Voluntario creado con éxito');
       },

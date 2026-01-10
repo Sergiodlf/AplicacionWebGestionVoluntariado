@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output, Input, inject } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { VolunteerService } from '../../../services/volunteer.service';
 
 @Component({
   selector: 'app-volunteer-form',
@@ -9,15 +10,20 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
   templateUrl: './volunteer-form.component.html',
   styleUrl: './volunteer-form.component.css'
 })
-export class VolunteerFormComponent {
+export class VolunteerFormComponent implements OnInit {
   @Input() submitLabel: string = 'Registrarme';
   @Output() onSubmit = new EventEmitter<any>();
   errorMessage: string = '';
 
   private fb = inject(FormBuilder);
+  private volunteerService = inject(VolunteerService);
 
   ngOnInit() {
     console.log('VolunteerFormComponent initialized');
+    this.volunteerService.getCiclos().subscribe({
+      next: (data) => this.availableCiclos = data,
+      error: (err) => console.error('Error fetching cycles:', err)
+    });
   }
 
   volunteerForm: FormGroup = this.fb.group({
@@ -36,55 +42,55 @@ export class VolunteerFormComponent {
     disponibilidad: [[]]
   });
 
-  availableSkills: string[] = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Idiomas', 'Música'];
+  availableZones: string[] = [
+    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
+    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
+    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
+    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
+  ];
+  availableCiclos: any[] = []; // Will be populated from DB
+
+  availableSkills: string[] = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Música', 'Marketing'];
   availableInterests: string[] = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Deporte', 'Tecnología', 'Derechos Humanos', 'Mayores', 'Infancia'];
   availableAvailability: string[] = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
+  availableLanguages: string[] = ['Español', 'Inglés', 'Francés', 'Alemán', 'Italiano', 'Portugués', 'Euskera', 'Catalán', 'Gallego', 'Chino'];
 
   addedSkills: string[] = [];
   addedInterests: string[] = [];
   addedAvailability: string[] = [];
+  addedIdiomas: string[] = [];
 
-  toggleSkill(skill: string) {
-    const index = this.addedSkills.indexOf(skill);
-    if (index === -1) {
-      this.addedSkills.push(skill);
-    } else {
-      this.addedSkills.splice(index, 1);
+  // Generic toggle method for all lists
+  addItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: string) {
+    if (!value) return;
+
+    let targetList: string[] = [];
+    if (listName === 'habilidades') targetList = this.addedSkills;
+    if (listName === 'intereses') targetList = this.addedInterests;
+    if (listName === 'disponibilidad') targetList = this.addedAvailability;
+    if (listName === 'idiomas') targetList = this.addedIdiomas;
+
+    if (!targetList.includes(value)) {
+      targetList.push(value);
+      this.volunteerForm.patchValue({ [listName]: targetList });
     }
-    this.volunteerForm.patchValue({ habilidades: this.addedSkills });
   }
 
-  toggleInterest(interest: string) {
-    const index = this.addedInterests.indexOf(interest);
-    if (index === -1) {
-      this.addedInterests.push(interest);
-    } else {
-      this.addedInterests.splice(index, 1);
+  removeItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: string) {
+    let targetList: string[] = [];
+    if (listName === 'habilidades') targetList = this.addedSkills;
+    if (listName === 'intereses') targetList = this.addedInterests;
+    if (listName === 'disponibilidad') targetList = this.addedAvailability;
+    if (listName === 'idiomas') targetList = this.addedIdiomas;
+
+    const index = targetList.indexOf(value);
+    if (index !== -1) {
+      targetList.splice(index, 1);
+      this.volunteerForm.patchValue({ [listName]: targetList });
     }
-    this.volunteerForm.patchValue({ intereses: this.addedInterests });
   }
 
-  toggleAvailability(availability: string) {
-    const index = this.addedAvailability.indexOf(availability);
-    if (index === -1) {
-      this.addedAvailability.push(availability);
-    } else {
-      this.addedAvailability.splice(index, 1);
-    }
-    this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
-  }
-
-  isSkillSelected(skill: string): boolean {
-    return this.addedSkills.includes(skill);
-  }
-
-  isInterestSelected(interest: string): boolean {
-    return this.addedInterests.includes(interest);
-  }
-
-  isAvailabilitySelected(availability: string): boolean {
-    return this.addedAvailability.includes(availability);
-  }
+  // Specific getters for template helper (optional, can just use arrays directly)
 
   onRegister() {
     this.errorMessage = ''; // Clear previous errors
