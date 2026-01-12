@@ -1,22 +1,23 @@
 .bg-light-blue {
-    background-color: #e8f0fe;
-    /* Adjust based on your theme */
+  background-color: #e8f0fe;
+  /* Adjust based on your theme */
 }
 
 .text-custom-blue {
-    color: #1e3a8a;
-    /* Adjust based on your theme, assuming dark blue */
+  color: #1e3a8a;
+  /* Adjust based on your theme, assuming dark blue */
 }
 
 .btn-custom-blue {
-    background-color: #1e3a8a;
-    border-color: #1e3a8a;
+  background-color: #1e3a8a;
+  border-color: #1e3a8a;
 }
 
 .btn-custom-blue:hover {
-    background-color: #172e6e;
-    border-color: #172e6e;
+  background-color: #172e6e;
+  border-color: #172e6e;
 }
+
 /* --- Estilo base: EN CURSO --- */
 .status-pill {
   position: absolute;
@@ -33,10 +34,11 @@
   color: #34A853;
 }
 
-/* Pendiente */
+/* Pendiente - Dashboard Style (Warning/Yellow) */
 .status-pill.pendiente {
-  background-color: #FCE8E6;
-  color: #D97A6E;
+  background-color: #FFF4E5;
+  color: #B76E00;
+  border: 1px solid #FFD599;
 }
 
 /* Completado */
