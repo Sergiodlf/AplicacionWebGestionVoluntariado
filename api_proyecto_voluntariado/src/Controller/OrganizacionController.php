@@ -206,4 +206,47 @@ class OrganizacionController extends AbstractController
 
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
     }
+
+    /**
+     * Actualiza los datos de una organización (PUT /api/organizations/{cif}).
+     *
+     * @param string $cif
+     * @param Request $request
+     * @param OrganizacionRepository $organizacionRepository
+     * @param EntityManagerInterface $entityManager
+     * @return JsonResponse
+     */
+    #[Route('/api/organizations/{cif}', name: 'api_organizations_update', methods: ['PUT'])]
+    public function update(
+        string $cif, 
+        Request $request, 
+        OrganizacionRepository $organizacionRepository, 
+        EntityManagerInterface $entityManager
+    ): JsonResponse
+    {
+        $organizacion = $organizacionRepository->find($cif);
+        if (!$organizacion) {
+            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        // Campos permitidos para actualización
+        if (isset($data['nombre'])) $organizacion->setNombre($data['nombre']);
+        if (isset($data['email'])) $organizacion->setEmail($data['email']);
+        if (isset($data['sector'])) $organizacion->setSector($data['sector']);
+        if (isset($data['direccion'])) $organizacion->setDireccion($data['direccion']);
+        if (isset($data['localidad'])) $organizacion->setLocalidad($data['localidad']);
+        if (isset($data['cp'])) $organizacion->setCp($data['cp']);
+        if (isset($data['descripcion'])) $organizacion->setDescripcion($data['descripcion']);
+        if (isset($data['contacto'])) $organizacion->setContacto($data['contacto']);
+
+        try {
+            $entityManager->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al actualizar la organización: ' . $e->getMessage()], 500);
+        }
+
+        return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
+    }
 }

@@ -1,0 +1,9 @@
+[2026-01-12 09:01:55] Starting Verification for Change Password
+[2026-01-12 09:01:56] Using existing user: ana.lopez@mail.com
+[2026-01-12 09:01:56] Changing password from 'start123' to 'new_secret_456'...
+[2026-01-12 09:01:59] Response: Contraseña actualizada correctamente
+[2026-01-12 09:01:59] Testing Login with OLD password (should fail)...
+[2026-01-12 09:02:01] SUCCESS: Login with old password failed as expected.
+[2026-01-12 09:02:01] Testing Login with NEW password...
+[2026-01-12 09:02:02] SUCCESS: Login with new password successful. User: Ana
+[2026-01-12 09:02:02] Verification Complete.

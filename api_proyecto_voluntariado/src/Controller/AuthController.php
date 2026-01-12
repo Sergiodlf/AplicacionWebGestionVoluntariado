@@ -67,8 +67,8 @@ class AuthController extends AbstractController
         // --- REGISTRO (Vía Service) ---
         try {
             $this->volunteerService->registerVolunteer($dto);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
         }
 
         return $this->json(['message' => 'Voluntario registrado correctamente'], 201);
@@ -190,5 +190,57 @@ class AuthController extends AbstractController
             'tipo' => $tipoUsuario,
             'nombre' => $user->getNombre(),
         ]);
+    }
+    // =========================================================================
+    // 4. CAMBIO DE CONTRASEÑA
+    // =========================================================================
+    #[Route('/change-password', name: 'change_password', methods: ['POST'])]
+    public function changePassword(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        $email = $data['email'] ?? null;
+        $oldPassword = $data['oldPassword'] ?? null;
+        $newPassword = $data['newPassword'] ?? null;
+
+        if (!$email || !$oldPassword || !$newPassword) {
+            return $this->json(['error' => 'Faltan datos obligatorios (email, oldPassword, newPassword)'], 400);
+        }
+
+        // A. Buscar en tabla Voluntarios
+        $user = $entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
+        $tipoUsuario = 'voluntario';
+
+        // B. Si no está, buscar en tabla Organizaciones
+        if (!$user) {
+            $user = $entityManager->getRepository(Organizacion::class)->findOneBy(['email' => $email]);
+            $tipoUsuario = 'organizacion';
+        }
+
+        // Si no encontramos al usuario
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        // C. Verificar contraseña actual
+        if (!$passwordHasher->isPasswordValid($user, $oldPassword)) {
+            return $this->json(['error' => 'La contraseña actual es incorrecta'], 401);
+        }
+
+        // D. Hashear y guardar nueva contraseña
+        $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
+        $user->setPassword($hashedPassword);
+
+        try {
+            $entityManager->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al actualizar la contraseña', 'detalle' => $e->getMessage()], 500);
+        }
+
+        return $this->json(['message' => 'Contraseña actualizada correctamente']);
     }
 }

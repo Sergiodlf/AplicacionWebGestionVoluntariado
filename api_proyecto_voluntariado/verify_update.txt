@@ -1,0 +1,24 @@
+[2026-01-12 08:40:26] Starting Verification for Volunteer Update (DNI: 11111111A)
+[2026-01-12 08:40:26] Sending PUT Request...
+[2026-01-12 08:40:26] Body: {"intereses":["Ayuda humanitaria"],"habilidades":["Cocina","Logistica"],"disponibilidad":["Fines de semana"],"zona":"Centro Historico"}
+[2026-01-12 08:42:18] Response Received:
+[2026-01-12 08:42:18] {
+    "message":  "Perfil actualizado correctamente",
+    "voluntario":  {
+                       "dni":  "11111111A",
+                       "nombre":  "Ana",
+                       "zona":  "Centro Historico",
+                       "habilidades":  [
+                                           "Cocina",
+                                           "Logistica"
+                                       ],
+                       "intereses":  [
+                                         "Ayuda humanitaria"
+                                     ],
+                       "disponibilidad":  [
+                                              "Fines de semana"
+                                          ]
+                   }
+}
+[2026-01-12 08:42:18] SUCCESS: Profile updated correctly.
+[2026-01-12 08:42:18] Verification Complete.

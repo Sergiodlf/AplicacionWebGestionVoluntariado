@@ -68,6 +68,7 @@ class VolunteerService
         $voluntario->setDisponibilidad($dto->disponibilidad ?? []);
         $voluntario->setEstadoVoluntario('PENDIENTE');
 
+        $this->entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
         $this->entityManager->persist($voluntario);
         $this->entityManager->flush();
 

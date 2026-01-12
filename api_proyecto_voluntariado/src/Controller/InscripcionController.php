@@ -17,10 +17,20 @@ use Symfony\Component\Routing\Annotation\Route;
 class InscripcionController extends AbstractController
 {
     #[Route('', name: 'get_all', methods: ['GET'])]
-    public function getAll(EntityManagerInterface $em): JsonResponse
+    public function getAll(Request $request, EntityManagerInterface $em): JsonResponse
     {
         try {
-            $inscripciones = $em->getRepository(Inscripcion::class)->findAll();
+            $estado = $request->query->get('estado');
+            $repo = $em->getRepository(Inscripcion::class);
+
+            if ($estado) {
+                // Support multiple statuses separated by comma (e.g., "PENDIENTE,CONFIRMADO")
+                $estados = array_map('strtoupper', array_map('trim', explode(',', $estado)));
+                $inscripciones = $repo->findBy(['estado' => $estados]);
+            } else {
+                // Default: get all
+                $inscripciones = $repo->findAll();
+            }
 
             $data = [];
             foreach ($inscripciones as $inscripcion) {
@@ -53,7 +63,6 @@ class InscripcionController extends AbstractController
 
             return $this->json($data);
         } catch (\Throwable $e) {
-            file_put_contents('C:\Users\leyre\.gemini\antigravity\brain\099ec777-b215-4cc2-b47d-571f4422020a\debug_error.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->json([
                 'error' => 'Error interno en el servidor',
                 'message' => $e->getMessage(),

@@ -1,0 +1,158 @@
+[2026-01-12 08:45:28] Starting Verification for Organization Update
+[2026-01-12 08:45:28] Fetching organizations...
+[2026-01-12 08:45:43] Testing with Organization CIF: A12345678
+[2026-01-12 08:45:43] Sending PUT Request to http://127.0.0.1:8000/api/organizations/A12345678...
+[2026-01-12 08:45:43] Body: {"localidad":"Ciudad Test","descripcion":"DescripciÃ³n actualizada por script de verificaciÃ³n","contacto":"Contacto TestScript"}
+[2026-01-12 08:45:44] Response Received:
+[2026-01-12 08:45:44] {
+    "cif":  "A12345678",
+    "nombre":  "Cruz Roja",
+    "email":  "admin@cruzroja.org",
+    "sector":  null,
+    "direccion":  "Calle Mayor 10",
+    "localidad":  "Ciudad Test",
+    "cp":  "28001",
+    "descripcion":  "Descripción actualizada por script de verificación",
+    "contacto":  "Contacto TestScript",
+    "estado":  "aprobado",
+    "actividades":  [
+                        {
+                            "codActividad":  2,
+                            "nombre":  "Campaña sanitaria",
+                            "estado":  "Pendiente",
+                            "estadoAprobacion":  "ACEPTADA",
+                            "estadoNew":  "Pendiente",
+                            "direccion":  "Centro Médico Local",
+                            "fechaInicio":  "2025-12-02T20:19:00+01:00",
+                            "fechaFin":  "2026-01-01T20:19:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+                                        "ODS2"
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  15,
+                            "nombre":  "Recogida de Alimentos",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  20,
+                            "nombre":  "Ayuda a ancianos",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  21,
+                            "nombre":  "Ayuda a ancianos",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  22,
+                            "nombre":  "Ayuda a ancianos",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  23,
+                            "nombre":  "Recogida de jugetes",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  24,
+                            "nombre":  "Recogida de jugetes",
+                            "estado":  "En Curso",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "En Curso",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-11-30T00:00:00+01:00",
+                            "fechaFin":  "2025-12-30T00:00:00+01:00",
+                            "maxParticipantes":  10,
+                            "ods":  [
+
+                                    ],
+                            "habilidades":  [
+
+                                            ]
+                        },
+                        {
+                            "codActividad":  25,
+                            "nombre":  "Test Actividad Pendiente",
+                            "estado":  "PENDIENTE",
+                            "estadoAprobacion":  "PENDIENTE",
+                            "estadoNew":  "PENDIENTE",
+                            "direccion":  "Sede Principal",
+                            "fechaInicio":  "2025-12-01T00:00:00+01:00",
+                            "fechaFin":  "2025-12-31T00:00:00+01:00",
+                            "maxParticipantes":  5,
+                            "ods":  [
+                                        "ODS1"
+                                    ],
+                            "habilidades":  [
+                                                "Test"
+                                            ]
+                        }
+                    ]
+}
+[2026-01-12 08:45:44] FAILURE: Data mismatch.
+[2026-01-12 08:45:44] Verification Complete.

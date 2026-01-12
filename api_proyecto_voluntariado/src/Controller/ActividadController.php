@@ -272,34 +272,59 @@ class ActividadController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
+        // Nuevo campo opcional para desambiguar 'PENDIENTE'
+        $tipo = $data['tipo'] ?? null; // 'aprobacion' o 'ejecucion'
 
         if (!$nuevoEstado) {
             return $this->json(['error' => 'Falta el campo "estado"'], 400);
         }
 
-        // Normalizar entrada
-        $nuevoEstadoUpper = strtoupper($nuevoEstado);
-        $estadosPermitidos = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ACEPTADA', 'ABIERTA'];
+        $nuevoEstadoUpper = strtoupper($nuevoEstado); // Normalizamos input
+        
+        // --- DEFINICIÓN DE LISTAS BLANCAS ---
+        $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
+        $estadosEjecucion = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'];
 
-        if (!in_array($nuevoEstadoUpper, $estadosPermitidos)) {
-            return $this->json([
-                'error' => 'Estado inválido',
-                'permitidos' => $estadosPermitidos
-            ], 400);
+        // --- LÓGICA INTELEGENTE DE ASIGNACIÓN ---
+        
+        // Caso 1: Forzado explícitamente por el cliente (ej: quiere poner Aprobación en PENDIENTE)
+        if ($tipo === 'aprobacion') {
+            if (!in_array($nuevoEstadoUpper, $estadosAprobacion)) {
+                return $this->json(['error' => "Estado de aprobación inválido: $nuevoEstadoUpper"], 400);
+            }
+            $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+            $campoActualizado = 'estadoAprobacion';
+
+        } elseif ($tipo === 'ejecucion') {
+            if (!in_array($nuevoEstadoUpper, $estadosEjecucion)) {
+                 return $this->json(['error' => "Estado de ejecución inválido: $nuevoEstadoUpper"], 400);
+            }
+            $actividad->setEstado($nuevoEstadoUpper);
+             $campoActualizado = 'estado';
+
+        } else {
+            // Caso 2: Auto-detección (Sin 'tipo')
+            // Prioridad a valores únicos de Aprobación
+            if (in_array($nuevoEstadoUpper, ['ACEPTADA', 'RECHAZADA'])) {
+                $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+                $campoActualizado = 'estadoAprobacion';
+                
+            } elseif (in_array($nuevoEstadoUpper, ['EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'])) {
+                $actividad->setEstado($nuevoEstadoUpper);
+                $campoActualizado = 'estado';
+
+            } elseif ($nuevoEstadoUpper === 'PENDIENTE') {
+                // AMBIGÜEDAD: 'PENDIENTE' existe en ambos.
+                // Decisión de diseño: Sin 'tipo', asumimos ESTADO (Ejecución) para no romper clientes antiguos.
+                $actividad->setEstado('PENDIENTE');
+                $campoActualizado = 'estado';
+            } else {
+                 return $this->json([
+                    'error' => 'Estado desconocido o inválido', 
+                    'valor' => $nuevoEstadoUpper
+                ], 400);
+            }
         }
-        
-        $mapaFormato = [
-            'PENDIENTE' => 'PENDIENTE',
-            'EN CURSO' => 'EN CURSO',
-            'FINALIZADO' => 'FINALIZADO',
-            'CANCELADO' => 'CANCELADO',
-            'ACEPTADA' => 'ACEPTADA',
-            'ABIERTA' => 'ABIERTA'
-        ];
-        
-        $estadoGuardar = $mapaFormato[$nuevoEstadoUpper] ?? $nuevoEstado;
-
-        $actividad->setEstado($estadoGuardar);
 
         try {
             $em->flush();
@@ -309,7 +334,8 @@ class ActividadController extends AbstractController
 
         return $this->json([
             'message' => 'Estado actualizado correctamente',
-            'nuevo_estado' => $actividad->getEstado()
+            'campo_actualizado' => $campoActualizado,
+            'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion()
         ]);
     }
 }

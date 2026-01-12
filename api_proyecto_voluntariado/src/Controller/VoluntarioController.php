@@ -115,4 +115,48 @@ class VoluntarioController extends AbstractController
 
         return $this->json($data);
     }
+    #[Route('/{dni}', name: 'api_voluntarios_update', methods: ['PUT'])]
+    public function update(string $dni, Request $request, VoluntarioRepository $voluntarioRepository, \Doctrine\ORM\EntityManagerInterface $em): JsonResponse
+    {
+        $voluntario = $voluntarioRepository->find($dni);
+
+        if (!$voluntario) {
+            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        // Actualización de campos básicos
+        if (isset($data['nombre'])) $voluntario->setNombre($data['nombre']);
+        if (isset($data['apellido1'])) $voluntario->setApellido1($data['apellido1']);
+        if (isset($data['apellido2'])) $voluntario->setApellido2($data['apellido2']);
+        if (isset($data['correo'])) $voluntario->setCorreo($data['correo']);
+        if (isset($data['zona'])) $voluntario->setZona($data['zona']);
+        if (isset($data['experiencia'])) $voluntario->setExperiencia($data['experiencia']);
+        if (isset($data['coche'])) $voluntario->setCoche($data['coche']);
+
+        // Actualización de campos JSON (Arrays)
+        if (isset($data['habilidades'])) $voluntario->setHabilidades($data['habilidades']);
+        if (isset($data['intereses'])) $voluntario->setIntereses($data['intereses']);
+        if (isset($data['idiomas'])) $voluntario->setIdiomas($data['idiomas']);
+        if (isset($data['disponibilidad'])) $voluntario->setDisponibilidad($data['disponibilidad']);
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al actualizar el perfil: ' . $e->getMessage()], 500);
+        }
+
+        return $this->json([
+            'message' => 'Perfil actualizado correctamente',
+            'voluntario' => [
+                'dni' => $voluntario->getDni(),
+                'nombre' => $voluntario->getNombre(),
+                'zona' => $voluntario->getZona(),
+                'habilidades' => $voluntario->getHabilidades(),
+                'intereses' => $voluntario->getIntereses(),
+                'disponibilidad' => $voluntario->getDisponibilidad()
+            ]
+        ]);
+    }
 }
