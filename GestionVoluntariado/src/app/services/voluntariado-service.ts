@@ -86,6 +86,7 @@ export class VoluntariadoService {
   }
 
   getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {
+    console.log(`Requesting activities for CIF: [${cif}], Status: ${estado}, Appr: ${estadoAprobacion}`);
     let params: any = { estadoAprobacion: estadoAprobacion };
     if (estado) {
       params.estado = estado;

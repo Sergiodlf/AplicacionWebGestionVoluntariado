@@ -164,6 +164,16 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Faltan credenciales (email y password)'], 400);
         }
 
+        // --- ACCESO PROVISIONAL ADMINISTRADOR (HARDCODED) ---
+        if ($email === 'admin@admin.com' && $password === 'admin123') {
+            return $this->json([
+                'message' => 'Login correcto (Admin)',
+                'id' => 'ADMIN01',
+                'tipo' => 'admin',
+                'nombre' => 'Administrador Sistema'
+            ]);
+        }
+
         // A. Buscar en tabla Voluntarios
         $user = $entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
         $tipoUsuario = 'voluntario';
