@@ -86,7 +86,9 @@
     </div>
 
     <!-- Filter Modal -->
-    <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showFilterModal()">
+    @if (showFilterModal()) {
+    <div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
+        <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeFilterModal()"></div>
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow-lg">
                 <div class="modal-header border-0 pb-0">
@@ -129,10 +131,12 @@
             </div>
         </div>
     </div>
+    }
 
     <!-- Activity Detail Modal -->
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);"
-        *ngIf="showActivityModal() && selectedActivity">
+    @if (showActivityModal() && selectedActivity) {
+    <div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
+        <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeActivityModal()"></div>
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-bottom-0 pb-0">
@@ -175,13 +179,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                        (click)="closeActivityModal()">Cerrar</button>
-                </div>
             </div>
         </div>
     </div>
+    }
 
     @if (showModal()) {
 

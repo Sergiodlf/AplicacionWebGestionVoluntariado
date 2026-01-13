@@ -1,4 +1,5 @@
-<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
+<div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
+    <div class="modal-backdrop fade show modal-backdrop-custom" (click)="close.emit()"></div>
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
@@ -6,20 +7,24 @@
                 <button type="button" class="btn-close" (click)="close.emit()"></button>
             </div>
             <div class="modal-body p-4">
+                <!-- ... content ... -->
 
                 <div class="mb-4">
                     <label class="form-label fw-bold text-muted">Voluntario</label>
-                    <div class="form-text mb-2 text-custom-blue" *ngIf="selectedActivityId">
+                    @if (selectedActivityId) {
+                    <div class="form-text mb-2 text-custom-blue">
                         <i class="bi bi-magic me-1"></i> Ordenados por afinidad con la actividad
                     </div>
+                    }
                     <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI">
                         <option value="" disabled selected>Selecciona un voluntario</option>
-                        <option *ngFor="let vol of volunteers" [value]="vol.dni"
-                            [style.fontWeight]="vol.matchScore > 50 ? 'bold' : 'normal'"
+                        @for (vol of volunteers; track vol.dni) {
+                        <option [value]="vol.dni" [style.fontWeight]="vol.matchScore > 50 ? 'bold' : 'normal'"
                             [class.text-success]="vol.matchScore > 70">
-                            {{ vol.matchScore !== undefined ? vol.matchScore + '% | ' : '' }} {{ vol.name }} {{
-                            vol.lastname }} - {{ vol.email }}
+                            {{ vol.matchScore !== undefined ? vol.matchScore + '% | ' : '' }} {{ vol.nombre }} {{
+                            vol.apellido1 }} - {{ vol.email }}
                         </option>
+                        }
                     </select>
                 </div>
 
@@ -28,47 +33,51 @@
                     <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedActivityId"
                         [disabled]="!!preselectedActivityId" (change)="onActivityChange()">
                         <option [ngValue]="null" disabled selected>Selecciona una actividad</option>
-                        <option *ngFor="let act of activities" [value]="act.codActividad">
+                        @for (act of activities; track act.codActividad) {
+                        <option [value]="act.codActividad">
                             {{ act.nombre }}
                         </option>
+                        }
                     </select>
                 </div>
 
                 <!-- Smart Matching Info -->
-                <div class="row g-3 p-3 bg-light rounded-4 mb-3" *ngIf="selectedVolunteer || selectedActivity">
-                    <div class="col-6" *ngIf="selectedVolunteer">
+                @if (selectedVolunteer || selectedActivity) {
+                <div class="row g-3 p-3 bg-light rounded-4 mb-3">
+                    @if (selectedVolunteer) {
+                    <div class="col-6">
                         <h6 class="fw-bold text-custom-blue mb-2">
-                            <i class="bi bi-person me-1"></i> {{ selectedVolunteer.name }} {{ selectedVolunteer.lastname
-                            }}
+                            <i class="bi bi-person me-1"></i> {{ selectedVolunteer.nombre }} {{
+                            selectedVolunteer.apellido1 }}
                         </h6>
-                        <div class="d-flex flex-wrap gap-1">
+                        <div class="d-flex flex-wrap gap-2">
                             <span *ngFor="let skill of selectedVolunteer.skills"
-                                class="badge bg-white text-dark border">
-                                {{ skill }}
+                                class="badge bg-white text-dark border px-2 py-1 fw-normal">
+                                {{ skill.nombre || skill }}
                             </span>
                             <small *ngIf="!selectedVolunteer.skills?.length" class="text-muted fst-italic">Sin
-                                habilidades registradas</small>
+                                habilidades</small>
                         </div>
                     </div>
+                    }
 
-                    <div class="col-6" *ngIf="selectedActivity">
+                    @if (selectedActivity) {
+                    <div class="col-6">
                         <h6 class="fw-bold text-custom-blue mb-2">
                             <i class="bi bi-activity me-1"></i> Requisitos
                         </h6>
-                        <div class="d-flex flex-wrap gap-1">
-                            <ng-container *ngIf="selectedActivity.habilidades; else noSkills">
-                                <span class="badge bg-custom-blue text-white"
-                                    *ngFor="let skill of (selectedActivity.habilidades.split ? selectedActivity.habilidades.split(',') : selectedActivity.habilidades)">
-                                    {{ skill }}
-                                </span>
-                            </ng-container>
-                            <ng-template #noSkills>
-                                <small class="text-muted fst-italic">Sin requisitos específicos</small>
-                            </ng-template>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span *ngFor="let need of selectedActivity.habilidades"
+                                class="badge bg-custom-blue text-white border-0 px-2 py-1 fw-normal">
+                                {{ need.nombre || need }}
+                            </span>
+                            <small *ngIf="!selectedActivity.habilidades?.length" class="text-muted fst-italic">Sin
+                                requisitos</small>
                         </div>
                     </div>
+                    }
                 </div>
-
+                }
             </div>
             <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" (click)="close.emit()">

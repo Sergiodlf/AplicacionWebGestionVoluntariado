@@ -1,12 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { VolunteerCardComponent } from '../../../components/Administrator/Volunteers/volunteer-card/volunteer-card.component';
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
 import { BehaviorSubject, combineLatest, of } from 'rxjs';
-import { map, switchMap, catchError, tap, startWith } from 'rxjs/operators';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { CategoryService } from '../../../services/category.service';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
@@ -27,8 +28,9 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
   templateUrl: './volunteers.component.html',
   styleUrl: './volunteers.component.css',
 })
-export class VolunteersComponent {
+export class VolunteersComponent implements OnInit, OnDestroy {
   private volunteerService = inject(VolunteerService);
+  private categoryService = inject(CategoryService);
   private refresh$ = new BehaviorSubject<boolean>(false);
 
   // Filter Criteria Subject
@@ -37,20 +39,20 @@ export class VolunteersComponent {
     habilidades: [],
     intereses: [],
     disponibilidad: [],
-    text: '' // Added text filter
+    text: ''
   });
 
-  searchTerm: string = ''; // Added for search functionality
+  searchTerm: string = '';
 
-  // Available Options for Filters (Mirrors VolunteerForm)
+  // Available Options
   availableZones: string[] = [
     'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
     'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
     'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
     'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
   ];
-  availableSkills: string[] = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Música', 'Marketing'];
-  availableInterests: string[] = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Deporte', 'Tecnología', 'Derechos Humanos', 'Mayores', 'Infancia'];
+  availableSkills: any[] = [];
+  availableInterests: any[] = [];
   availableAvailability: string[] = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
 
   // Temporary filter state for the modal
@@ -77,34 +79,29 @@ export class VolunteersComponent {
   filteredVolunteers$ = combineLatest([this.rawVolunteers$, this.filterCriteria$]).pipe(
     map(([volunteers, criteria]) => {
       return volunteers.filter(v => {
-        // Filter by Text (Name or Email)
         if (criteria.text) {
           const term = criteria.text.toLowerCase();
-          const matchesName = v.name?.toLowerCase().includes(term);
+          const matchesName = v.nombre?.toLowerCase().includes(term);
           const matchesEmail = v.email?.toLowerCase().includes(term);
           if (!matchesName && !matchesEmail) return false;
         }
 
-        // Filter by Zone
         if (criteria.zona && v.zona !== criteria.zona) return false;
 
-        // Filter by Skills (OR logic: if volunteer has ANY of the selected skills)
         if (criteria.habilidades.length > 0) {
-          const vSkills = Array.isArray(v.skills) ? v.skills : [];
-          const hasSkill = criteria.habilidades.some((s: string) => vSkills.includes(s));
+          const vSkillsNames = Array.isArray(v.habilidades) ? v.habilidades.map((s: any) => s.nombre || s) : [];
+          const hasSkill = criteria.habilidades.some((s: string) => vSkillsNames.includes(s));
           if (!hasSkill) return false;
         }
 
-        // Filter by Interests
         if (criteria.intereses.length > 0) {
-          const vInterests = Array.isArray(v.interests) ? v.interests : [];
-          const hasInterest = criteria.intereses.some((i: string) => vInterests.includes(i));
+          const vInterestsNames = Array.isArray(v.intereses) ? v.intereses.map((i: any) => i.nombre || i) : [];
+          const hasInterest = criteria.intereses.some((i: string) => vInterestsNames.includes(i));
           if (!hasInterest) return false;
         }
 
-        // Filter by Availability
         if (criteria.disponibilidad.length > 0) {
-          const vAvailability = Array.isArray(v.availability) ? v.availability : [];
+          const vAvailability = Array.isArray(v.disponibilidad) ? v.disponibilidad : [];
           const hasAvailability = criteria.disponibilidad.some((a: string) => vAvailability.includes(a));
           if (!hasAvailability) return false;
         }
@@ -126,31 +123,41 @@ export class VolunteersComponent {
 
   showModal = false;
   showFilterModal = false;
+  showCreateMatchModal = false;
+  selectedVolunteerForMatch: any = null;
+
+  ngOnInit() {
+    this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
+    this.categoryService.getIntereses().subscribe(data => this.availableInterests = data);
+  }
+
+  ngOnDestroy() {
+    this.setBodyScroll(false);
+  }
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
     this.activeTab = tab;
   }
 
-  showCreateMatchModal = false;
-  selectedVolunteerForMatch: any = null;
-
   openMatchModal(volunteer: any) {
     this.selectedVolunteerForMatch = volunteer;
     this.showCreateMatchModal = true;
+    this.setBodyScroll(true);
   }
 
   onMatchCreated() {
     this.showCreateMatchModal = false;
     this.selectedVolunteerForMatch = null;
-    // Optionally refresh volunteers or show success message
+    this.setBodyScroll(false);
+    this.refresh$.next(true);
   }
 
   onAddVolunteer() {
     this.showModal = true;
+    this.setBodyScroll(true);
   }
 
   openFilterModal() {
-    // Copy current applied filters to temp state
     const current = this.filterCriteria$.value;
     this.tempFilters = {
       zona: current.zona,
@@ -159,21 +166,21 @@ export class VolunteersComponent {
       disponibilidad: [...current.disponibilidad]
     };
     this.showFilterModal = true;
+    this.setBodyScroll(true);
   }
 
   closeFilterModal() {
     this.showFilterModal = false;
+    this.setBodyScroll(false);
   }
 
   applyFilters() {
-    // Merge temp filters with search term
     const current = this.filterCriteria$.value;
     this.filterCriteria$.next({
       ...current,
       ...this.tempFilters,
-      text: this.searchTerm // Update text filter
+      text: this.searchTerm
     });
-    // Check if modal is open before closing
     if (this.showFilterModal) {
       this.closeFilterModal();
     }
@@ -184,28 +191,29 @@ export class VolunteersComponent {
       zona: '',
       habilidades: [],
       intereses: [],
-      disponibilidad: []
+      disponibilidad: [],
+      text: ''
     });
+    this.searchTerm = '';
     this.closeFilterModal();
   }
 
-  // Helper to toggle items in arrays
-  toggleFilterItem(category: 'habilidades' | 'intereses' | 'disponibilidad', item: string) {
+  toggleFilterItem(category: 'habilidades' | 'intereses' | 'disponibilidad', item: any) {
     const list = this.tempFilters[category];
-    const index = list.indexOf(item);
+    const identifier = (category === 'disponibilidad') ? item : (item.nombre || item);
+    const index = list.indexOf(identifier);
     if (index === -1) {
-      list.push(item);
+      list.push(identifier);
     } else {
       list.splice(index, 1);
     }
   }
 
-  // Helper to check if item is selected
-  isFilterSelected(category: 'habilidades' | 'intereses' | 'disponibilidad', item: string): boolean {
-    return this.tempFilters[category].includes(item);
+  isFilterSelected(category: 'habilidades' | 'intereses' | 'disponibilidad', item: any): boolean {
+    const identifier = (category === 'disponibilidad') ? item : (item.nombre || item);
+    return this.tempFilters[category].includes(identifier);
   }
 
-  // Get active filter count for badge
   get activeFilterCount(): number {
     const c = this.filterCriteria$.value;
     let count = 0;
@@ -218,6 +226,15 @@ export class VolunteersComponent {
 
   closeModal() {
     this.showModal = false;
+    this.setBodyScroll(false);
+  }
+
+  private setBodyScroll(lock: boolean) {
+    if (lock) {
+      document.body.classList.add('body-modal-open');
+    } else {
+      document.body.classList.remove('body-modal-open');
+    }
   }
 
   onAccept(volunteer: any) {
@@ -237,7 +254,6 @@ export class VolunteersComponent {
   }
 
   handleCreateVolunteer(volunteerData: any) {
-    console.log('Parent received volunteer data:', volunteerData);
     const mappedVolunteer = {
       nombre: volunteerData.nombreCompleto,
       email: volunteerData.correo,
@@ -255,15 +271,14 @@ export class VolunteersComponent {
     };
 
     this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
-      next: (response) => {
-        console.log('Volunteer created successfully', response);
+      next: () => {
         this.refresh$.next(true);
         this.closeModal();
         alert('Voluntario creado con éxito');
       },
       error: (error) => {
         console.error('Error creating volunteer', error);
-        alert('Error al crear voluntario: ' + JSON.stringify(error));
+        alert('Error al crear voluntario');
       },
     });
   }

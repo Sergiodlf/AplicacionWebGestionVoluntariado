@@ -19,6 +19,7 @@ export interface Voluntariado {
   title?: string;
   skills?: string[];
   date?: string;
+  ciclo?: string;
   ods?: any[];
 }
 
@@ -39,7 +40,7 @@ export class VoluntariadoService {
 
   getAllVoluntariados(forceReload: boolean = false): Observable<Voluntariado[]> {
     if (this.actividadesSubject.value && !forceReload) {
-      return this.actividadesSubject.asObservable() as Observable<Voluntariado[]>;
+      return of(this.actividadesSubject.value);
     }
     return this.loadVoluntariados();
   }
@@ -53,7 +54,7 @@ export class VoluntariadoService {
 
   getAllInscripciones(forceReload: boolean = false): Observable<any[]> {
     if (this.inscripcionesSubject.value && !forceReload) {
-      return this.inscripcionesSubject.asObservable() as Observable<any[]>;
+      return of(this.inscripcionesSubject.value);
     }
     return this.loadInscripciones();
   }

@@ -11,16 +11,18 @@ import { CommonModule } from '@angular/common';
 export class VolunteerCardComponent {
   name = input.required<string>();
   email = input.required<string>();
-  skills = input<string[]>([]);
+  skills = input<any[]>([]);
   availability = input<string[]>([]);
-  interests = input<string[]>([]);
+  interests = input<any[]>([]);
+  languages = input<any[]>([]);
+  ciclo = input<string>('');
 
   @Output() onAccept = new EventEmitter<void>();
   @Output() onReject = new EventEmitter<void>();
   @Output() onAssign = new EventEmitter<void>();
 
   status = input<string>('PENDIENTE');
-  parseList(value: string | string[]): string[] {
+  parseList(value: any): any[] {
     if (Array.isArray(value)) {
       return value;
     }

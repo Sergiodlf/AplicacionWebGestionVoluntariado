@@ -1,127 +1,170 @@
 <div class="modal-backdrop-custom">
   <div class="modal-dialog-custom">
-    <div class="card border-0 shadow-sm rounded-4 p-4 position-relative modal-card">
+    <div class="card border-0 shadow-lg rounded-4 p-4 position-relative modal-card overflow-hidden">
+
 
       <!-- Botón cerrar -->
-      <button type="button" class="btn-close custom-close" aria-label="Close" (click)="onClose()"></button>
+      <button type="button" class="btn-close custom-close shadow-none" aria-label="Close" (click)="onClose()"></button>
 
-      <h3 class="text-center text-custom-blue mb-4">Crear Voluntariado</h3>
+      <div class="text-center mb-5 mt-2">
+        <h3 class="fw-bold text-custom-blue mb-0">Nuevo Voluntariado</h3>
+      </div>
 
-      <form (ngSubmit)="crear()">
+      <form (ngSubmit)="crear()" class="premium-form modal-form-scroll">
 
-        <div class="row g-3 mb-3">
-          <!-- Nombre -->
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Nombre</label>
-            <input type="text" class="form-control rounded-pill" [(ngModel)]="form.title" name="title"
-              placeholder="Ayuda en casas">
-          </div>
-
-          <!-- Organización -->
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Organización</label>
-            <input type="text" class="form-control rounded-pill" [(ngModel)]="form.organization" name="organization"
-              placeholder="ORG Vivienda">
-          </div>
-        </div>
-
-        <div class="row g-3 mb-3">
-          <!-- Sector -->
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Sector</label>
-            <select class="form-select rounded-pill" [(ngModel)]="form.sector" name="sector">
-              <option value="">Selecciona sector</option>
-              <option>Educación</option>
-              <option>Social</option>
-              <option>Sanitario</option>
-            </select>
-          </div>
-
-          <!-- Zona -->
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Zona</label>
-            <select class="form-select rounded-pill" [(ngModel)]="form.zone" name="zone">
-              <option value="">Selecciona zona</option>
-              <option>Pamplona</option>
-              <option>Tudela</option>
-              <option>Estella</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Descripción -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Descripción</label>
-          <textarea class="form-control rounded-4" rows="3" [(ngModel)]="form.description" name="description"
-            placeholder="Cuéntanos acerca de tus actividades y objetivos...">
-          </textarea>
-        </div>
-
-        <!-- FECHA INICIO / FECHA FIN -->
-        <div class="row g-3 mb-4">
-
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Fecha y hora de inicio</label>
-            <input type="datetime-local" class="form-control rounded-pill" [(ngModel)]="form.startDate"
-              name="startDate">
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Fecha y hora de fin</label>
-            <input type="datetime-local" class="form-control rounded-pill" [(ngModel)]="form.endDate" name="endDate">
-          </div>
-
-        </div>
-
-        <!-- Añadir habilidad -->
-        <div class="row g-3 mb-3 align-items-center">
-          <div class="col-md-6">
-            <div class="d-flex gap-2">
-              <input type="text" class="form-control rounded-pill" [(ngModel)]="form.skillInput" name="skillInput"
-                placeholder="Nueva habilidad">
-              <button type="button" class="btn btn-custom-blue text-white rounded-pill px-3" (click)="addSkill()">
-                + Añadir Habilidades
-              </button>
+        <div class="row g-4 mb-4 px-1">
+          <!-- Section: Information General -->
+          <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+              <div class="section-icon me-3" style="width: 36px; height: 36px; font-size: 1rem;">
+                <i class="bi bi-pencil-square"></i>
+              </div>
+              <h5 class="fw-bold text-custom-blue mb-0">Información General</h5>
+            </div>
+            <div>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="premium-label"><i class="bi bi-card-text"></i>Título</label>
+                  <input type="text" class="form-control premium-input shadow-none" [(ngModel)]="form.title"
+                    name="title" placeholder="Apoyo Escolar, Recogida de Alimentos...">
+                </div>
+                <div class="col-md-6">
+                  <label class="premium-label"><i class="bi bi-building"></i>Organización</label>
+                  <input type="text" class="form-control premium-input shadow-none" [(ngModel)]="form.organization"
+                    name="organization" placeholder="Nombre de la Organización">
+                </div>
+                <div class="col-md-6">
+                  <label class="premium-label"><i class="bi bi-grid"></i>Sector</label>
+                  <select class="form-select premium-input shadow-none" [(ngModel)]="form.sector" name="sector">
+                    <option value="">Selecciona Sector...</option>
+                    <option>Educación</option>
+                    <option>Social</option>
+                    <option>Sanitario</option>
+                    <option>Medio Ambiente</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Añadir ODS -->
-          <div class="col-md-6">
-            <div class="d-flex gap-2">
-              <input type="text" class="form-control rounded-pill" [(ngModel)]="form.odsInput" name="odsInput"
-                placeholder="Nuevo ODS o Meta">
-              <button type="button" class="btn btn-custom-blue text-white rounded-pill px-3" (click)="addOds()">
-                + Añadir ODS
-              </button>
+          <!-- Section: Ubicación y Horario -->
+          <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+              <div class="section-icon me-3" style="width: 36px; height: 36px; font-size: 1rem;">
+                <i class="bi bi-geo-alt"></i>
+              </div>
+              <h5 class="fw-bold text-custom-blue mb-0">Ubicación y Horario</h5>
+            </div>
+            <div>
+              <div class="row g-3">
+                <div class="col-md-12">
+                  <label class="premium-label"><i class="bi bi-map"></i>Zona / Ciudad</label>
+                  <select class="form-select premium-input shadow-none" [(ngModel)]="form.zone" name="zone">
+                    <option value="">Selecciona Zona/Ciudad...</option>
+                    <option>Pamplona</option>
+                    <option>Tudela</option>
+                    <option>Estella</option>
+                    <option>Remoto / Online</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="premium-label"><i class="bi bi-calendar-event"></i>Fecha Inicio</label>
+                  <input type="datetime-local" class="form-control premium-input shadow-none"
+                    [(ngModel)]="form.startDate" name="startDate">
+                </div>
+                <div class="col-md-6">
+                  <label class="premium-label"><i class="bi bi-calendar-check"></i>Fecha Fin</label>
+                  <input type="datetime-local" class="form-control premium-input shadow-none" [(ngModel)]="form.endDate"
+                    name="endDate">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Descripción -->
+          <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+              <div class="section-icon me-3" style="width: 36px; height: 36px; font-size: 1rem;">
+                <i class="bi bi-justify-left"></i>
+              </div>
+              <h5 class="fw-bold text-custom-blue mb-0">Descripción</h5>
+            </div>
+            <div>
+              <textarea class="form-control premium-input shadow-none" rows="3" [(ngModel)]="form.description"
+                name="description" placeholder="Describe las tareas y objetivos...">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- Section: Categorías y Requisitos -->
+          <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+              <div class="section-icon me-3" style="width: 36px; height: 36px; font-size: 1rem;">
+                <i class="bi bi-stars"></i>
+              </div>
+              <h5 class="fw-bold text-custom-blue mb-0">Requisitos y ODS</h5>
+            </div>
+            <div>
+              <div class="row g-2 mb-3">
+                <div class="col-9">
+                  <select class="form-select premium-input shadow-none" [(ngModel)]="form.selectedSkillId"
+                    name="skillId">
+                    <option value="">Añadir Habilidad Requerida...</option>
+                    <option *ngFor="let h of availableHabilidades" [value]="h.id">{{ h.nombre }}</option>
+                  </select>
+                </div>
+                <div class="col-3">
+                  <button type="button"
+                    class="btn btn-custom-blue text-white w-100 rounded-3 py-2 d-flex align-items-center justify-content-center"
+                    (click)="addSkill()" style="height: 48.4px;">
+                    <i class="bi bi-plus-lg fs-5"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="row g-2">
+                <div class="col-9">
+                  <select class="form-select premium-input shadow-none" [(ngModel)]="form.selectedOdsId" name="odsId">
+                    <option value="">Vincular con ODS...</option>
+                    <option *ngFor="let o of availableOds" [value]="o.id">{{ o.nombre }}</option>
+                  </select>
+                </div>
+                <div class="col-3">
+                  <button type="button"
+                    class="btn btn-custom-blue text-white w-100 rounded-3 py-2 d-flex align-items-center justify-content-center"
+                    (click)="addOds()" style="height: 48.4px;">
+                    <i class="bi bi-plus-lg fs-5"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Datos Añadidos Resume -->
+          <div class="col-12" *ngIf="form.skills.length > 0 || form.ods.length > 0">
+            <div class="added-items-container p-3 border rounded-4 bg-white shadow-sm">
+              <div class="d-flex flex-wrap gap-2">
+                <span *ngFor="let skill of form.skills"
+                  class="badge skill-tag px-3 py-2 rounded-pill fw-normal shadow-xs bg-custom-blue text-white pointer-cursor"
+                  (click)="removeSkill(skill)" title="Quitar">
+                  {{ skill.nombre }} <i class="bi bi-x ms-1"></i>
+                </span>
+                <span *ngFor="let od of form.ods"
+                  class="badge text-white px-3 py-2 rounded-pill fw-normal shadow-xs pointer-cursor"
+                  (click)="removeOds(od)" title="Quitar" [style.background-color]="od.color">
+                  {{ od.nombre }} <i class="bi bi-x ms-1"></i>
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-
-        <!-- Datos Añadidos -->
-        <div class="mb-4">
-          <label class="form-label fw-semibold">Datos Añadidos</label>
-          <div class="added-data-box rounded-4 p-2">
-            <ng-container *ngFor="let skill of form.skills">
-              <span class="tag-pill skill" (click)="removeSkill(skill)">
-                {{ skill }}
-              </span>
-            </ng-container>
-
-            <ng-container *ngFor="let od of form.ods">
-              <span class="tag-pill ods" (click)="removeOds(od)">
-                {{ od.name }}
-              </span>
-            </ng-container>
-          </div>
+        <div class="text-center pb-2 mt-2">
+          <button type="submit"
+            class="btn btn-custom-blue px-5 py-3 rounded-pill fw-bold text-white shadow-lg hover-lift submit-btn">
+            <i class="bi bi-send me-2"></i> Publicar Actividad
+          </button>
         </div>
-
-        <!-- Botón Crear -->
-        <button type="submit" class="btn btn-custom-blue w-100 rounded-pill py-2">
-          Crear
-        </button>
       </form>
-
     </div>
   </div>
 </div>

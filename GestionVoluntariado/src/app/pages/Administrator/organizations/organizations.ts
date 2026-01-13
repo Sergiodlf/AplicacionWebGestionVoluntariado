@@ -76,6 +76,15 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     if (this.updateSubscription) {
       this.updateSubscription.unsubscribe();
     }
+    this.setBodyScroll(false);
+  }
+
+  private setBodyScroll(lock: boolean) {
+    if (lock) {
+      document.body.classList.add('body-modal-open');
+    } else {
+      document.body.classList.remove('body-modal-open');
+    }
   }
 
   /**
@@ -163,16 +172,19 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
   onAddOrganization(): void {
     this.showModal.set(true);
+    this.setBodyScroll(true);
   }
 
   openFilterModal() {
     // Copy current state to temp
     this.tempFilters = { ...this.filterCriteria };
     this.showFilterModal.set(true);
+    this.setBodyScroll(true);
   }
 
   closeFilterModal() {
     this.showFilterModal.set(false);
+    this.setBodyScroll(false);
   }
 
   applyFilters() {
@@ -195,6 +207,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
   closeModal(): void {
     this.showModal.set(false);
+    this.setBodyScroll(false);
   }
 
   onFormSubmit(data: Organization): void {
@@ -206,10 +219,12 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   openActivityModal(activity: any) {
     this.selectedActivity = activity;
     this.showActivityModal.set(true);
+    this.setBodyScroll(true);
   }
 
   closeActivityModal() {
     this.showActivityModal.set(false);
     this.selectedActivity = null;
+    this.setBodyScroll(false);
   }
 }

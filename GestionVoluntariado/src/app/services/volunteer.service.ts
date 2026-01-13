@@ -5,20 +5,21 @@ import { map, tap } from 'rxjs/operators';
 import { Voluntario } from '../models/voluntario';
 
 export interface Volunteer {
-  name: string;
-  lastname: string;
+  nombre: string;
+  apellido1: string;
   email: string;
-  skills: string[];
-  availability: string[];
-  interests: string[];
+  habilidades: any[];
+  disponibilidad: string[];
+  intereses: any[];
   id?: number;
   status: string;
   dni?: string;
   birthDate?: string;
   experience?: string;
   hasCar?: boolean;
-  languages?: string;
-  zona?: string; // Added zona
+  languages?: any[];
+  zona?: string;
+  ciclo?: string;
 }
 
 @Injectable({
@@ -37,7 +38,7 @@ export class VolunteerService {
 
   getVolunteers(forceReload: boolean = false): Observable<Volunteer[]> {
     if (this.volunteersSubject.value && !forceReload) {
-      return this.volunteersSubject.asObservable() as Observable<Volunteer[]>;
+      return of(this.volunteersSubject.value);
     }
     return this.loadVolunteers();
   }
@@ -45,20 +46,21 @@ export class VolunteerService {
   loadVolunteers(): Observable<Volunteer[]> {
     return this.http.get<any[]>(this.apiGetUrl).pipe(
       map((volunteers: any[]) => volunteers.map((v: any) => ({
-        name: v.nombre,
-        lastname: v.apellido1,
+        nombre: v.nombre,
+        apellido1: v.apellido1,
         email: v.correo,
-        skills: this.parseJson(v.habilidades),
-        availability: this.parseJson(v.disponibilidad),
-        interests: this.parseJson(v.intereses),
+        habilidades: v.habilidades || [],
+        disponibilidad: this.parseJson(v.disponibilidad),
+        intereses: v.intereses || [],
         id: (v.inscripciones && v.inscripciones.length > 0) ? v.inscripciones[0].id_inscripcion : undefined,
         status: v.estado_voluntario || 'PENDIENTE',
         dni: v.dni,
         birthDate: v.fechaNacimiento,
         experience: v.experiencia,
         hasCar: v.coche,
-        languages: v.idiomas,
-        zona: v.zona // Map zona from backend
+        languages: this.parseJson(v.idiomas),
+        zona: v.zona,
+        ciclo: v.ciclo
       } as Volunteer))),
       tap(data => this.volunteersSubject.next(data))
     );

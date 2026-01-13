@@ -90,20 +90,16 @@ export class MisVoluntariadosOrganizacion implements OnInit {
             statusLabel = 'Completado';
           }
 
-          const mockOds = [
-            { id: 1, name: 'ODS 3', color: '#4C9F38' },
-            { id: 2, name: 'ODS 4', color: '#C5192D' }
-          ];
-
           return {
             ...item,
             category: cat,
             title: item.nombre,
             organization: orgName,
-            skills: item.habilidades ? (typeof item.habilidades === 'string' ? item.habilidades.split(',') : item.habilidades) : ['General'],
+            // Backend now returns objects for skills and ods
+            skills: item.habilidades || [],
             date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha pendiente',
             status: statusLabel,
-            ods: (item.ods && item.ods.length > 0) ? item.ods : mockOds
+            ods: item.ods || []
           };
         };
 
