@@ -28,11 +28,12 @@ class VoluntarioController extends AbstractController
                 'fechaNacimiento' => $voluntario->getFechaNacimiento() ? $voluntario->getFechaNacimiento()->format('Y-m-d') : null,
                 'experiencia' => $voluntario->getExperiencia(),
                 'coche' => $voluntario->isCoche(),
-                'habilidades' => $voluntario->getHabilidades(),
-                'intereses' => $voluntario->getIntereses(),
+                'habilidades' => $voluntario->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+                'intereses' => $voluntario->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
                 'idiomas' => $voluntario->getIdiomas(),
                 'estado_voluntario' => $voluntario->getEstadoVoluntario(),
                 'disponibilidad' => $voluntario->getDisponibilidad(),
+                'ciclo' => $voluntario->getCiclo() ? (string)$voluntario->getCiclo() : null,
                 
                 // INSCRIPCIONES (NUEVO)
                 'inscripciones' => $voluntario->getInscripciones()->map(function($inscripcion) {
@@ -106,11 +107,12 @@ class VoluntarioController extends AbstractController
             'fechaNacimiento' => $voluntario->getFechaNacimiento() ? $voluntario->getFechaNacimiento()->format('Y-m-d') : null,
             'experiencia' => $voluntario->getExperiencia(),
             'coche' => $voluntario->isCoche(),
-            'habilidades' => $voluntario->getHabilidades(),
-            'intereses' => $voluntario->getIntereses(),
+            'habilidades' => $voluntario->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+            'intereses' => $voluntario->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
             'idiomas' => $voluntario->getIdiomas(),
             'estado_voluntario' => $voluntario->getEstadoVoluntario(),
-            'disponibilidad' => $voluntario->getDisponibilidad()
+            'disponibilidad' => $voluntario->getDisponibilidad(),
+            'ciclo' => $voluntario->getCiclo() ? (string)$voluntario->getCiclo() : null
         ];
 
         return $this->json($data);

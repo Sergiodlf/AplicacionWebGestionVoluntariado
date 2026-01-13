@@ -11,11 +11,19 @@ class VolunteerService
 {
     private $entityManager;
     private $passwordHasher;
+    private $habilidadRepository;
+    private $interesRepository;
 
-    public function __construct(EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        UserPasswordHasherInterface $passwordHasher,
+        \App\Repository\HabilidadRepository $habilidadRepository,
+        \App\Repository\InteresRepository $interesRepository
+    ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
+        $this->habilidadRepository = $habilidadRepository;
+        $this->interesRepository = $interesRepository;
     }
 
     /**
@@ -62,8 +70,26 @@ class VolunteerService
         
         $voluntario->setExperiencia($dto->experiencia ?? 'Sin experiencia previa');
         $voluntario->setCoche($dto->coche ?? false);
-        $voluntario->setHabilidades($dto->habilidades ?? []);
-        $voluntario->setIntereses($dto->intereses ?? []);
+        
+        // Link Habilidades
+        if (!empty($dto->habilidades)) {
+            foreach ($dto->habilidades as $id) {
+                $h = $this->habilidadRepository->find($id);
+                if ($h) {
+                    $voluntario->addHabilidad($h);
+                }
+            }
+        }
+
+        // Link Intereses
+        if (!empty($dto->intereses)) {
+            foreach ($dto->intereses as $id) {
+                $i = $this->interesRepository->find($id);
+                if ($i) {
+                    $voluntario->addInterese($i);
+                }
+            }
+        }
         $voluntario->setIdiomas($dto->idiomas ?? []);
         $voluntario->setDisponibilidad($dto->disponibilidad ?? []);
         $voluntario->setEstadoVoluntario('PENDIENTE');

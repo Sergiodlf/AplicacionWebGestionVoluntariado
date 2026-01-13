@@ -9,10 +9,20 @@ use Doctrine\ORM\EntityManagerInterface;
 class ActivityService
 {
     private $entityManager;
+    private $odsRepository;
+    private $habilidadRepository;
+    private $necesidadRepository;
 
-    public function __construct(EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        \App\Repository\ODSRepository $odsRepository,
+        \App\Repository\HabilidadRepository $habilidadRepository,
+        \App\Repository\NecesidadRepository $necesidadRepository
+    ) {
         $this->entityManager = $entityManager;
+        $this->odsRepository = $odsRepository;
+        $this->habilidadRepository = $habilidadRepository;
+        $this->necesidadRepository = $necesidadRepository;
     }
 
     /**
@@ -30,38 +40,59 @@ class ActivityService
     }
 
     /**
-     * Creates a new activity using Raw SQL (as per project requirements).
+     * Creates a new activity using the ORM.
      */
-    public function createActivity(array $data, Organizacion $organizacion): bool
+    public function createActivity(array $data, Organizacion $organizacion): ?Actividad
     {
-        $conn = $this->entityManager->getConnection();
+        $actividad = new Actividad();
+        $actividad->setNombre($data['nombre']);
+        $actividad->setEstado($data['estado'] ?? 'En Curso');
+        $actividad->setEstadoAprobacion($data['estadoAprobacion'] ?? 'PENDIENTE');
+        $actividad->setOrganizacion($organizacion);
         
-        $sql = "
-            INSERT INTO ACTIVIDADES (
-                NOMBRE, ESTADO, ESTADO_APROBACION, CIF_EMPRESA, 
-                FECHA_INICIO, FECHA_FIN, MAX_PARTICIPANTES, 
-                DIRECCION, ODS, HABILIDADES
-            ) VALUES (
-                :nombre, :estado, :estadoAprobacion, :cif, 
-                :fInicio, :fFin, :maxP, 
-                :direccion, :ods, :habilidades
-            )
-        ";
+        if (isset($data['fechaInicio'])) {
+            $actividad->setFechaInicio(new \DateTime($data['fechaInicio']));
+        }
+        if (isset($data['fechaFin'])) {
+            $actividad->setFechaFin(new \DateTime($data['fechaFin']));
+        }
+        
+        $actividad->setMaxParticipantes($data['maxParticipantes']);
+        $actividad->setDireccion($data['direccion']);
 
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->executeStatement([
-            'nombre'           => $data['nombre'],
-            'estado'           => $data['estado'] ?? 'En Curso',
-            'estadoAprobacion' => $data['estadoAprobacion'] ?? 'PENDIENTE',
-            'cif'              => $organizacion->getCif(),
-            'fInicio'          => $data['fechaInicioSql'],
-            'fFin'             => $data['fechaFinSql'],
-            'maxP'             => $data['maxParticipantes'],
-            'direccion'        => $data['direccion'],
-            'ods'              => $data['odsJson'],
-            'habilidades'      => $data['habilidadesJson']
-        ]);
+        // Link ODS
+        if (!empty($data['odsIds'])) {
+            foreach ($data['odsIds'] as $id) {
+                $ods = $this->odsRepository->find($id);
+                if ($ods) {
+                    $actividad->addOd($ods);
+                }
+            }
+        }
 
-        return $result > 0;
+        // Link Habilidades
+        if (!empty($data['habilidadIds'])) {
+            foreach ($data['habilidadIds'] as $id) {
+                $h = $this->habilidadRepository->find($id);
+                if ($h) {
+                    $actividad->addHabilidad($h);
+                }
+            }
+        }
+
+        // Link Necesidades
+        if (!empty($data['necesidadIds'])) {
+            foreach ($data['necesidadIds'] as $id) {
+                $n = $this->necesidadRepository->find($id);
+                if ($n) {
+                    $actividad->addNecesidad($n);
+                }
+            }
+        }
+
+        $this->entityManager->persist($actividad);
+        $this->entityManager->flush();
+
+        return $actividad;
     }
 }
