@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
+
 #[ORM\Entity(repositoryClass: ActividadRepository::class)]
 #[ORM\Table(name: 'ACTIVIDADES')]
 class Actividad
@@ -80,9 +82,27 @@ class Actividad
     #[Groups(['org:read'])]
     private ?int $maxParticipantes = null;
 
-    #[ORM\Column(name: 'ODS', type: Types::TEXT, nullable: true)]
+    #[ORM\ManyToMany(targetEntity: ODS::class)]
+    #[ORM\JoinTable(name: 'ACTIVIDADES_ODS')]
+    #[ORM\JoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD')]
+    #[ORM\InverseJoinColumn(name: 'ODS_ID', referencedColumnName: 'id')]
     #[Groups(['org:read'])]
-    private ?string $ods = null;
+    private Collection $ods;
+
+    #[ORM\ManyToMany(targetEntity: Habilidad::class)]
+    #[ORM\JoinTable(name: 'ACTIVIDADES_HABILIDADES')]
+    #[ORM\JoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD')]
+    #[ORM\InverseJoinColumn(name: 'HABILIDAD_ID', referencedColumnName: 'id')]
+    #[Groups(['org:read'])]
+    private Collection $habilidades;
+
+    #[ORM\ManyToMany(targetEntity: Necesidad::class)]
+    #[ORM\JoinTable(name: 'ACTIVIDADES_NECESIDADES')]
+    #[ORM\JoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD')]
+    #[ORM\InverseJoinColumn(name: 'NECESIDAD_ID', referencedColumnName: 'id')]
+    #[Groups(['org:read'])]
+    private Collection $necesidades;
+
 
     // --- RELACIONES ---
 
@@ -99,7 +119,11 @@ class Actividad
     public function __construct()
     {
         $this->inscripciones = new ArrayCollection();
+        $this->ods = new ArrayCollection();
+        $this->habilidades = new ArrayCollection();
+        $this->necesidades = new ArrayCollection();
     }
+
 
     // --- GETTERS Y SETTERS ---
 
@@ -209,74 +233,72 @@ class Actividad
         return $this;
     }
 
-    public function getOds(): array
+    /**
+     * @return Collection<int, ODS>
+     */
+    public function getOds(): Collection
     {
-        if ($this->ods === null) {
-            return [];
-        }
-
-        // 1. Intentar JSON
-        $decoded = json_decode($this->ods, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-
-        // 2. Fallback: CSV (Legacy "ODS1, ODS2")
-        if (str_contains($this->ods, ',')) {
-            return array_map('trim', explode(',', $this->ods));
-        }
-
-        // 3. Fallback: String simple
-        $raw = trim($this->ods, '"\'');
-        return empty($raw) ? [] : [$raw];
+        return $this->ods;
     }
 
-    public function setOds(?array $ods): static
+    public function addOd(ODS $od): static
     {
-        if (empty($ods)) {
-            $this->ods = null;
-        } else {
-            $this->ods = json_encode($ods);
+        if (!$this->ods->contains($od)) {
+            $this->ods->add($od);
         }
         return $this;
     }
 
-    #[ORM\Column(name: 'HABILIDADES', type: Types::TEXT, nullable: true)]
-    #[Groups(['org:read'])]
-    private ?string $habilidades = null;
-
-    public function getHabilidades(): array
+    public function removeOd(ODS $od): static
     {
-        if ($this->habilidades === null) {
-            return [];
-        }
-
-        // Intentar decodificar JSON
-        $decoded = json_decode($this->habilidades, true);
-
-        // Si es JSON válido y es un array, devolverlo
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-
-        // FALLBACK: Si falla (por ejemplo, el usuario editó la BD a mano y puso "Cocina"),
-        // devolvemos el valor crudo como un único elemento del array.
-        // Limpiamos comillas extra si las hubiera.
-        $raw = trim($this->habilidades, '"\'');
-        
-        return empty($raw) ? [] : [$raw];
+        $this->ods->removeElement($od);
+        return $this;
     }
 
-    public function setHabilidades(?array $habilidades): static
+    /**
+     * @return Collection<int, Habilidad>
+     */
+    public function getHabilidades(): Collection
     {
-        if (empty($habilidades)) {
-            $this->habilidades = null;
-        } else {
-            // Guardamos siempre como JSON válido
-            $this->habilidades = json_encode($habilidades);
+        return $this->habilidades;
+    }
+
+    public function addHabilidad(Habilidad $habilidad): static
+    {
+        if (!$this->habilidades->contains($habilidad)) {
+            $this->habilidades->add($habilidad);
         }
         return $this;
     }
+
+    public function removeHabilidad(Habilidad $habilidad): static
+    {
+        $this->habilidades->removeElement($habilidad);
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Necesidad>
+     */
+    public function getNecesidades(): Collection
+    {
+        return $this->necesidades;
+    }
+
+    public function addNecesidad(Necesidad $necesidad): static
+    {
+        if (!$this->necesidades->contains($necesidad)) {
+            $this->necesidades->add($necesidad);
+        }
+        return $this;
+    }
+
+    public function removeNecesidad(Necesidad $necesidad): static
+    {
+        $this->necesidades->removeElement($necesidad);
+        return $this;
+    }
+
 
     public function getOrganizacion(): ?Organizacion
     {
