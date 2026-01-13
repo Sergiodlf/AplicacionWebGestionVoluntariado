@@ -10,9 +10,10 @@ import { CommonModule } from '@angular/common';
 export class VoluntariadoCard {
   @Input() title: string = '';
   @Input() organization: string = '';
-  @Input() skills: string[] = [];
+  @Input() skills: any[] = [];
   @Input() date: string = '';
-  @Input() ods: { id: number; name: string; color: string }[] = [];
+  @Input() ciclo: string = '';
+  @Input() ods: { id: number; nombre: string; color: string }[] = [];
   @Input() status: string = '';
 
   @Output() onAction = new EventEmitter<void>();

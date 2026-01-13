@@ -22,20 +22,14 @@ class AppFixtures extends Fixture
         $conn = $manager->getConnection();
 
         // --- DEFINICIÓN DE DATOS DEL FRONTEND ---
-        
         $sectores = ['Educación', 'Salud', 'Medio Ambiente', 'Comunitario'];
         $habilidades = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Idiomas', 'Música'];
         $intereses = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Deporte', 'Tecnología', 'Derechos Humanos', 'Mayores', 'Infancia'];
         $disponibilidad = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
         
-        $zonas = ['Pamplona', 'Tudela']; // Del combo box de Organizaciones
-        
         $nombresVol = ['Carlos', 'Ana', 'Lucia', 'Marcos', 'Elena', 'Javier', 'Sara', 'David', 'Laura', 'Pablo'];
         $apellidos = ['Lopez', 'Martinez', 'Ruiz', 'Gomez', 'Fernandez', 'Garcia', 'Perez', 'Sanchez', 'Diaz', 'Rodríguez'];
-        
-        // --- 1. CICLOS (ORM works) ---
-        echo "Cargando Ciclos Reales CIP Cuatrovientos (ORM)...\n";
-        
+
         $ciclosData = [
             ['nombre' => 'Administración y Finanzas', 'curso' => 2],
             ['nombre' => 'Asistencia a la Dirección', 'curso' => 2],
@@ -48,36 +42,93 @@ class AppFixtures extends Fixture
             ['nombre' => 'Comercio Internacional', 'curso' => 2],
         ];
 
-        $ciclosEntities = [];
+        // --- 1. SEED CATEGORIES (ODS, Habilidades, Intereses, Necesidades) ---
+        echo "Cargando Categorías (ODS, Habilidades, etc.)...\n";
 
+        $odsEntities = [];
+        $odsData = [
+            ['nombre' => 'Fin de la pobreza', 'color' => '#E5243B'],
+            ['nombre' => 'Hambre cero', 'color' => '#DDA63A'],
+            ['nombre' => 'Salud y bienestar', 'color' => '#4C9F38'],
+            ['nombre' => 'Educación de calidad', 'color' => '#C5192D'],
+            ['nombre' => 'Igualdad de género', 'color' => '#FF3A21'],
+            ['nombre' => 'Agua limpia y saneamiento', 'color' => '#26BDE2'],
+            ['nombre' => 'Energía asequible y no contaminante', 'color' => '#FCC30B'],
+            ['nombre' => 'Trabajo decente y crecimiento económico', 'color' => '#A21942'],
+            ['nombre' => 'Industria, innovación e infraestructura', 'color' => '#FD6925'],
+            ['nombre' => 'Reducción de las desigualdades', 'color' => '#DD1367'],
+            ['nombre' => 'Ciudades y comunidades sostenibles', 'color' => '#FD9D24'],
+            ['nombre' => 'Producción y consumo responsables', 'color' => '#BF8B2E'],
+            ['nombre' => 'Acción por el clima', 'color' => '#3F7E44'],
+            ['nombre' => 'Vida submarina', 'color' => '#0A97D9'],
+            ['nombre' => 'Vida de ecosistemas terrestres', 'color' => '#56C02B'],
+            ['nombre' => 'Paz, justicia e instituciones sólidas', 'color' => '#00689D'],
+            ['nombre' => 'Alianzas para lograr los objetivos', 'color' => '#19486A'],
+        ];
+
+        foreach ($odsData as $data) {
+            $ods = new \App\Entity\ODS();
+            $ods->setNombre($data['nombre']);
+            $ods->setColor($data['color']);
+            $manager->persist($ods);
+            $odsEntities[] = $ods;
+        }
+
+        $habilidadesEntities = [];
+        foreach ($habilidades as $hNombre) {
+            $h = new \App\Entity\Habilidad();
+            $h->setNombre($hNombre);
+            $manager->persist($h);
+            $habilidadesEntities[] = $h;
+        }
+
+        $interesesEntities = [];
+        foreach ($intereses as $iNombre) {
+            $i = new \App\Entity\Interes();
+            $i->setNombre($iNombre);
+            $manager->persist($i);
+            $interesesEntities[] = $i;
+        }
+
+        $necesidadesEntities = [];
+        $necesidadesData = ['Cocina', 'Manipulación de Alimentos', 'Primeros Auxilios', 'Medio Ambiente', 'Gestión de Equipos'];
+        foreach ($necesidadesData as $nNombre) {
+            $n = new \App\Entity\Necesidad();
+            $n->setNombre($nNombre);
+            $manager->persist($n);
+            $necesidadesEntities[] = $n;
+        }
+
+        $manager->flush();
+
+        // --- 2. CICLOS ---
+        echo "Cargando Ciclos...\n";
+        $ciclosEntities = [];
         foreach ($ciclosData as $cData) {
             $ciclo = new Ciclo();
             $ciclo->setCurso($cData['curso']);
             $ciclo->setNombre($cData['nombre']);
             $manager->persist($ciclo);
-            $ciclosEntities[] = $ciclo->getNombre(); // Keep track for volunteers
+            $ciclosEntities[] = $ciclo;
         }
         $manager->flush();
 
-        // --- 2. ORGANIZACIONES (ORM works) ---
-        echo "Cargando Organizaciones (ORM)...\n";
-        
-        // Organización 1: Aprobada
+        // --- 3. ORGANIZACIONES ---
+        echo "Cargando Organizaciones...\n";
         $org1 = new Organizacion();
         $org1->setCif('A12345678');
         $org1->setNombre('Cruz Roja');
         $org1->setDireccion('Calle Principal 123');
         $org1->setCp('28001');
-        $org1->setLocalidad('Pamplona'); // Valid option
+        $org1->setLocalidad('Pamplona');
         $org1->setDescripcion('Ayuda humanitaria y servicios sociales.');
         $org1->setContacto('Juan Perez');
         $org1->setEmail('contacto@cruzroja.es');
         $org1->setPassword($this->passwordHasher->hashPassword($org1, 'password123'));
         $org1->setEstado('Aprobado');
-        $org1->setSector($sectores[1]); // Salud
+        $org1->setSector($sectores[1]);
         $manager->persist($org1);
 
-        // Organización 2: Pendiente
         $org2 = new Organizacion();
         $org2->setCif('B87654321');
         $org2->setNombre('Greenpeace');
@@ -89,84 +140,73 @@ class AppFixtures extends Fixture
         $org2->setEmail('info@greenpeace.es');
         $org2->setPassword($this->passwordHasher->hashPassword($org2, 'password123'));
         $org2->setEstado('pendiente');
-        $org2->setSector($sectores[2]); // Medio Ambiente
+        $org2->setSector($sectores[2]);
         $manager->persist($org2);
-        
-        // Organización 3: Aleatoria
-        $org3 = new Organizacion();
-        $org3->setCif('C11122233');
-        $org3->setNombre('Asociación Vecinal');
-        $org3->setDireccion('Plaza del Pueblo 1');
-        $org3->setCp('31001');
-        $org3->setLocalidad('Tudela');
-        $org3->setDescripcion('Actividades para la comunidad local.');
-        $org3->setContacto('Luis Torres');
-        $org3->setEmail('vecinos@tudela.com');
-        $org3->setPassword($this->passwordHasher->hashPassword($org3, 'password123'));
-        $org3->setEstado('pendiente');
-        $org3->setSector($sectores[3]); // Comunitario
-        $manager->persist($org3);
 
         $manager->flush();
 
-        // --- 3. VOLUNTARIOS (SQL for simplicity with Arrays) ---
-        echo "Cargando Voluntarios (SQL)...\n";
-        
-        $passHash = $this->passwordHasher->hashPassword($org1, 'password123');
-        $values = [];
-        
-        // Generar 10 voluntarios
+        // --- 4. VOLUNTARIOS (ORM) ---
+        echo "Cargando Voluntarios (ORM)...\n";
         for ($i = 0; $i < 10; $i++) {
-            $dni = str_pad((string)$i, 8, '0', STR_PAD_LEFT) . chr(65 + $i); // 00000000A, 00000001B...
-            $nombre = $nombresVol[$i % count($nombresVol)];
-            $apellido1 = $apellidos[$i % count($apellidos)];
-            $apellido2 = $apellidos[($i + 1) % count($apellidos)];
-            $email = strtolower($nombre . '.' . $apellido1 . '@email.com');
-            $fechaNac = '200' . ($i % 5) . '0101'; // 2000-2004
+            $vol = new \App\Entity\Voluntario();
+            $dni = str_pad((string)$i, 8, '0', STR_PAD_LEFT) . chr(65 + $i);
+            $vol->setDni($dni);
+            $vol->setNombre($nombresVol[$i % count($nombresVol)]);
+            $vol->setApellido1($apellidos[$i % count($apellidos)]);
+            $vol->setApellido2($apellidos[($i + 1) % count($apellidos)]);
+            $vol->setCorreo(strtolower($vol->getNombre() . '.' . $vol->getApellido1() . $i . '@email.com'));
+            $vol->setPassword($this->passwordHasher->hashPassword($vol, 'password123'));
+            $vol->setCoche(true);
+            $vol->setFechaNacimiento(new \DateTime('2000-01-01'));
+            $vol->setEstadoVoluntario($i % 3 === 0 ? 'PENDIENTE' : 'ACTIVO');
+            $vol->setCiclo($ciclosEntities[$i % count($ciclosEntities)]);
             
-            // Random selections from frontend data
-            // JSON_UNESCAPED_UNICODE to ensure accents are stored correctly
-            $misHabilidades = json_encode([$habilidades[$i % count($habilidades)], $habilidades[($i + 3) % count($habilidades)]], JSON_UNESCAPED_UNICODE);
-            $misIntereses = json_encode([$intereses[$i % count($intereses)]], JSON_UNESCAPED_UNICODE);
-            $miDisponibilidad = json_encode([$disponibilidad[$i % count($disponibilidad)]], JSON_UNESCAPED_UNICODE);
+            // Random Availability and Idioms
+            $vDispo = [$disponibilidad[array_rand($disponibilidad)], $disponibilidad[array_rand($disponibilidad)]];
+            $vol->setDisponibilidad(array_unique($vDispo));
+
+            $vol->setIdiomas(['Español', 'Inglés']);
             
-            $estado = ($i % 3 === 0) ? 'PENDIENTE' : 'ACTIVO';
-            $curso = 2;
-            // Assign random cycle from the list
-            $ciclo = $ciclosEntities[$i % count($ciclosEntities)];
+            // Random Relations
+            $vol->addHabilidad($habilidadesEntities[$i % count($habilidadesEntities)]);
+            $vol->addInterese($interesesEntities[$i % count($interesesEntities)]);
             
-            $values[] = "('$dni', '$nombre', '$apellido1', '$apellido2', '$email', '$passHash', 1, '$fechaNac', '$estado', $curso, '$ciclo', '$misHabilidades', '$misIntereses', '$miDisponibilidad')";
+            $manager->persist($vol);
         }
+        $manager->flush();
 
-        $sqlVol = "INSERT INTO VOLUNTARIOS (DNI, NOMBRE, APELLIDO1, APELLIDO2, CORREO, PASSWORD, COCHE, FECHA_NACIMIENTO, ESTADO_VOLUNTARIO, CURSO_CICLOS, NOMBRE_CICLOS, HABILIDADES, INTERESES, DISPONIBILIDAD) VALUES " . implode(',', $values);
-        
-        $conn->executeStatement($sqlVol);
+        // --- 5. ACTIVIDADES (ORM) ---
+        echo "Cargando Actividades (ORM)...\n";
+        $act1 = new \App\Entity\Actividad();
+        $act1->setNombre('Reparto Alimentos');
+        $act1->setDireccion('Almacen central');
+        $act1->setFechaInicio(new \DateTime('2026-06-01 10:00:00'));
+        $act1->setFechaFin(new \DateTime('2026-06-01 14:00:00'));
+        $act1->setMaxParticipantes(10);
+        $act1->setEstado('ABIERTA');
+        $act1->setEstadoAprobacion('PENDIENTE');
+        $act1->setOrganizacion($org1);
+        $act1->addOd($odsEntities[0]);
+        $act1->addHabilidad($habilidadesEntities[5]);
+        $act1->addNecesidad($necesidadesEntities[0]);
+        $manager->persist($act1);
 
-        // --- 4. ACTIVIDADES ---
-        echo "Cargando Actividades (SQL)...\n";
-        
-        $ods1 = json_encode(['Fin de la pobreza'], JSON_UNESCAPED_UNICODE);
-        $ods2 = json_encode(['Vida submarina'], JSON_UNESCAPED_UNICODE);
-        
-        $necesidades1 = json_encode(['Cocina', 'Manipulación de Alimentos'], JSON_UNESCAPED_UNICODE);
-        $necesidades2 = json_encode(['Primeros Auxilios', 'Medio Ambiente'], JSON_UNESCAPED_UNICODE);
+        $act2 = new \App\Entity\Actividad();
+        $act2->setNombre('Limpieza Playa');
+        $act2->setDireccion('Playa del Sol');
+        $act2->setFechaInicio(new \DateTime('2026-07-15 09:00:00'));
+        $act2->setFechaFin(new \DateTime('2026-07-15 13:00:00'));
+        $act2->setMaxParticipantes(50);
+        $act2->setEstado('PENDIENTE');
+        $act2->setEstadoAprobacion('PENDIENTE');
+        $act2->setOrganizacion($org2);
+        $act2->addOd($odsEntities[13]);
+        $act2->addHabilidad($habilidadesEntities[2]);
+        $act2->addNecesidad($necesidadesEntities[3]);
+        $manager->persist($act2);
 
-        $sqlAct = "INSERT INTO ACTIVIDADES (NOMBRE, DIRECCION, FECHA_INICIO, FECHA_FIN, MAX_PARTICIPANTES, ESTADO, CIF_EMPRESA, ODS, ESTADO_APROBACION, HABILIDADES) VALUES 
-        ('Reparto Alimentos', 'Almacen central', '20260601 10:00:00', '20260601 14:00:00', 10, 'ABIERTA', 'A12345678', '$ods1', 'PENDIENTE', '$necesidades1'),
-        ('Limpieza Playa', 'Playa del Sol', '20260715 09:00:00', '20260715 13:00:00', 50, 'PENDIENTE', 'B87654321', '$ods2', 'PENDIENTE', '$necesidades2')";
+        $manager->flush();
 
-        $conn->executeStatement($sqlAct);
-
-        // --- 5. INSCRIPCIONES ---
-        echo "Cargando Inscripciones (SQL)...\n";
-        // Fetch ID of first activity
-        $idAct1 = $conn->fetchOne("SELECT TOP 1 CODACTIVIDAD FROM ACTIVIDADES WHERE NOMBRE = 'Reparto Alimentos'");
-        
-        if ($idAct1) {
-            // Register first volunteer to first activity
-             $conn->executeStatement("INSERT INTO INSCRIPCIONES (DNI_VOLUNTARIO, CODACTIVIDAD, ESTADO) VALUES ('00000000A', $idAct1, 'CONFIRMADA')");
-        }
-
-        echo "Fixtures cargadas correctamente (Mixto ORM/SQL).\n";
+        echo "Fixtures cargadas correctamente (ORM).\n";
     }
 }

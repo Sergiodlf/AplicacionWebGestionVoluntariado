@@ -7,7 +7,11 @@
             </div>
             <div>
                 <h5 class="fw-bold text-custom-blue mb-0">{{ organization.nombre }}</h5>
-                <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ organization.email }}</small>
+                <small class="text-muted">
+                    <i class="bi bi-envelope me-1"></i>
+                    <a href="mailto:{{ organization.email }}" class="text-muted text-decoration-none hover-blue">{{
+                        organization.email }}</a>
+                </small>
             </div>
         </div>
 

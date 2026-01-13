@@ -100,28 +100,17 @@ class ActividadController extends AbstractController
         $direccion = $dto->direccion ?? 'Sede Principal';
         $estado = 'En Curso';
 
-        // ODS (Array -> JSON)
-        $odsJson = null;
-        if (!empty($dto->ods)) {
-            $odsJson = json_encode($dto->ods);
-        }
-
-        // Habilidades (Array -> JSON)
-        $habilidadesJson = '[]';
-        if (!empty($dto->habilidades)) {
-            $habilidadesJson = json_encode($dto->habilidades);
-        }
-
-        // 4. INSERT MANUAL (Vía Service) (PV-Clean)
+        // 4. Create Activity via Service
         try {
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
-                'fechaInicioSql'   => $fechaInicioSql,
-                'fechaFinSql'      => $fechaFinSql,
+                'fechaInicio'      => $dto->fechaInicio,
+                'fechaFin'         => $dto->fechaFin,
                 'maxParticipantes' => $maxParticipantes,
                 'direccion'        => $direccion,
-                'odsJson'          => $odsJson,
-                'habilidadesJson' => $habilidadesJson
+                'odsIds'           => $dto->ods, // Now expected to be IDs from frontend
+                'habilidadIds'    => $dto->habilidades,
+                'necesidadIds'    => [] // Extend DTO if needed later
             ], $organizacion);
 
             if (!$created) {
@@ -152,9 +141,9 @@ class ActividadController extends AbstractController
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                 'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i:s') : null,
                 'maxParticipantes' => $actividad->getMaxParticipantes(),
-                'ods' => $actividad->getOds(), // Devolvemos el string guardado
-                'habilidades' => $actividad->getHabilidades(),
-                // 'organizacion' => ... (podríamos poner el objeto entero, pero evitamos recursión)
+                'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),
+                'habilidades'      => $actividad->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+                'necesidades'      => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
                 'nombre_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getNombre() : 'Organización Desconocida',
                 'cif_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getCif() : null,
             ];
@@ -250,8 +239,8 @@ class ActividadController extends AbstractController
                     'direccion' => $actividad->getDireccion(),
                     'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                     'maxParticipantes' => $actividad->getMaxParticipantes(),
-                    // 'ods' => $actividad->getOds(),
-                    // 'habilidades' => $actividad->getHabilidades(),
+                    'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),
+                    'habilidades'      => $actividad->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
                 ];
             }
 

@@ -7,7 +7,14 @@
       </div>
       <div>
         <h5 class="fw-bold text-custom-blue mb-0">{{ name() }}</h5>
-        <small class="text-muted"><i class="bi bi-envelope me-1"></i>{{ email() }}</small>
+        <small class="text-muted">
+          <i class="bi bi-envelope me-1"></i>
+          <a href="mailto:{{ email() }}" class="text-muted text-decoration-none hover-blue">{{ email() }}</a>
+        </small>
+        <small class="text-muted d-block">
+          <i class="bi bi-mortarboard me-1"></i>
+          {{ ciclo() || 'Sin ciclo asignado' }}
+        </small>
       </div>
     </div>
     <div class="d-flex gap-2">
@@ -37,7 +44,19 @@
       <i class="bi bi-gear text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Habilidades:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let skill of parseList(skills())" class="badge bg-light text-custom-blue border">{{ skill
+        <span *ngFor="let skill of parseList(skills())" class="badge bg-light text-custom-blue border">{{ skill.nombre
+          || skill
+          }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-2">
+    <div class="d-flex align-items-center">
+      <i class="bi bi-translate text-custom-blue me-2"></i>
+      <span class="fw-bold text-custom-blue me-2">Idiomas:</span>
+      <div class="d-flex gap-1 flex-wrap">
+        <span *ngFor="let lang of parseList(languages())" class="badge bg-light text-custom-blue border">{{ lang
           }}</span>
       </div>
     </div>
@@ -48,7 +67,9 @@
       <i class="bi bi-clock text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Disponibilidad:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let item of parseList(availability())" class="text-muted">{{ item }}</span>
+        <span *ngFor="let item of parseList(availability())" class="badge bg-light text-custom-blue border">
+          {{ item }}
+        </span>
       </div>
     </div>
   </div>
@@ -58,7 +79,8 @@
       <i class="bi bi-heart text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Intereses:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let interest of parseList(interests())" class="badge bg-light text-muted border">{{ interest
+        <span *ngFor="let interest of parseList(interests())" class="badge bg-light text-muted border">{{
+          interest.nombre || interest
           }}</span>
       </div>
     </div>

@@ -50,11 +50,17 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(name: 'NOMBRE_CICLOS', referencedColumnName: 'NOMBRE', nullable: true)]
     private ?Ciclo $ciclo = null;
 
-    #[ORM\Column(name: 'HABILIDADES', type: Types::TEXT, nullable: true)]
-    private ?string $habilidades = null;
+    #[ORM\ManyToMany(targetEntity: Habilidad::class)]
+    #[ORM\JoinTable(name: 'VOLUNTARIOS_HABILIDADES')]
+    #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
+    #[ORM\InverseJoinColumn(name: 'HABILIDAD_ID', referencedColumnName: 'id')]
+    private Collection $habilidades;
 
-    #[ORM\Column(name: 'INTERESES', type: Types::TEXT, nullable: true)]
-    private ?string $intereses = null;
+    #[ORM\ManyToMany(targetEntity: Interes::class)]
+    #[ORM\JoinTable(name: 'VOLUNTARIOS_INTERESES')]
+    #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
+    #[ORM\InverseJoinColumn(name: 'INTERES_ID', referencedColumnName: 'id')]
+    private Collection $intereses;
 
     #[ORM\Column(name: 'DISPONIBILIDAD', type: Types::TEXT, nullable: true)]
     private ?string $disponibilidad = null;
@@ -65,14 +71,17 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20)]
     private ?string $estadoVoluntario = 'PENDIENTE';
 
-    // RELACIÓN ONE-TO-MANY (Sustituye a ManyToMany)
     #[ORM\OneToMany(mappedBy: 'voluntario', targetEntity: Inscripcion::class, orphanRemoval: true)]
     private Collection $inscripciones;
+
 
     public function __construct()
     {
         $this->inscripciones = new ArrayCollection();
+        $this->habilidades = new ArrayCollection();
+        $this->intereses = new ArrayCollection();
     }
+
 
     // ... Resto de métodos de seguridad (getUserIdentifier, getRoles...) ...
     public function getUserIdentifier(): string { return (string) $this->correo; }
@@ -103,43 +112,50 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCoche(?bool $c): static { $this->coche = $c; return $this; }
     public function getCiclo(): ?Ciclo { return $this->ciclo; }
     public function setCiclo(?Ciclo $c): static { $this->ciclo = $c; return $this; }
-    public function getHabilidades(): array
+    /**
+     * @return Collection<int, Habilidad>
+     */
+    public function getHabilidades(): Collection
     {
-        if ($this->habilidades === null) {
-            return [];
-        }
-        $decoded = json_decode($this->habilidades, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-        $raw = trim($this->habilidades, '"\'');
-        return empty($raw) ? [] : [$raw];
+        return $this->habilidades;
     }
 
-    public function setHabilidades(?array $h): static
+    public function addHabilidad(Habilidad $h): static
     {
-        $this->habilidades = $h ? json_encode($h) : null;
+        if (!$this->habilidades->contains($h)) {
+            $this->habilidades->add($h);
+        }
         return $this;
     }
 
-    public function getIntereses(): array
+    public function removeHabilidad(Habilidad $h): static
     {
-        if ($this->intereses === null) {
-            return [];
-        }
-        $decoded = json_decode($this->intereses, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
-        }
-        $raw = trim($this->intereses, '"\'');
-        return empty($raw) ? [] : [$raw];
-    }
-
-    public function setIntereses(?array $i): static
-    {
-        $this->intereses = $i ? json_encode($i) : null;
+        $this->habilidades->removeElement($h);
         return $this;
     }
+
+    /**
+     * @return Collection<int, Interes>
+     */
+    public function getIntereses(): Collection
+    {
+        return $this->intereses;
+    }
+
+    public function addInterese(Interes $i): static
+    {
+        if (!$this->intereses->contains($i)) {
+            $this->intereses->add($i);
+        }
+        return $this;
+    }
+
+    public function removeInterese(Interes $i): static
+    {
+        $this->intereses->removeElement($i);
+        return $this;
+    }
+
 
     public function getDisponibilidad(): array
     {
