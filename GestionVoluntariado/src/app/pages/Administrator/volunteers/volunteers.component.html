@@ -64,8 +64,9 @@
             @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
             volunteer.email) {
             <div class="col-12 col-md-6">
-              <app-volunteer-card [name]="volunteer.name" [email]="volunteer.email" [skills]="volunteer.skills"
-                [availability]="volunteer.availability" [interests]="volunteer.interests" [status]="volunteer.status"
+              <app-volunteer-card [name]="volunteer.nombre" [email]="volunteer.email" [skills]="volunteer.habilidades"
+                [availability]="volunteer.disponibilidad" [interests]="volunteer.intereses"
+                [languages]="volunteer.languages || []" [ciclo]="volunteer.ciclo || ''" [status]="volunteer.status"
                 (onAccept)="onAccept(volunteer)" (onReject)="onReject(volunteer)"
                 (onAssign)="openMatchModal(volunteer)">
               </app-volunteer-card>
@@ -83,7 +84,9 @@
 </div>
 
 <!-- Filter Modal -->
-<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showFilterModal">
+@if (showFilterModal) {
+<div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
+  <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeFilterModal()"></div>
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content rounded-4 border-0 shadow-lg">
       <div class="modal-header border-0 pb-0">
@@ -91,7 +94,6 @@
         <button type="button" class="btn-close" (click)="closeFilterModal()"></button>
       </div>
       <div class="modal-body p-4">
-
         <div class="row g-4">
           <!-- Zone Filter -->
           <div class="col-md-6">
@@ -134,7 +136,7 @@
                 class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
                 [ngClass]="{'bg-custom-blue text-white': isFilterSelected('habilidades', item), 'bg-white text-dark': !isFilterSelected('habilidades', item)}"
                 style="cursor: pointer;" (click)="toggleFilterItem('habilidades', item)">
-                {{ item }}
+                {{ item.nombre || item }}
                 <i class="bi"
                   [ngClass]="{'bi-check-lg': isFilterSelected('habilidades', item), 'bi-plus-lg': !isFilterSelected('habilidades', item)}"></i>
               </span>
@@ -149,15 +151,13 @@
                 class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
                 [ngClass]="{'bg-warning text-dark': isFilterSelected('intereses', item), 'bg-white text-dark': !isFilterSelected('intereses', item)}"
                 style="cursor: pointer;" (click)="toggleFilterItem('intereses', item)">
-                {{ item }}
+                {{ item.nombre || item }}
                 <i class="bi"
                   [ngClass]="{'bi-check-lg': isFilterSelected('intereses', item), 'bi-plus-lg': !isFilterSelected('intereses', item)}"></i>
               </span>
             </div>
           </div>
-
         </div>
-
       </div>
       <div class="modal-footer border-0 justify-content-between px-4 pb-4">
         <button type="button" class="btn btn-outline-danger px-4 rounded-pill" (click)="resetFilters()">
@@ -170,9 +170,12 @@
     </div>
   </div>
 </div>
+}
 
 <!-- Add Volunteer Modal -->
-<div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showModal">
+@if (showModal) {
+<div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
+  <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeModal()"></div>
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header border-0">
@@ -188,6 +191,7 @@
     </div>
   </div>
 </div>
+}
 
 <!-- Match Creation Modal -->
 <app-create-match-modal *ngIf="showCreateMatchModal" [preselectedVolunteer]="selectedVolunteerForMatch"

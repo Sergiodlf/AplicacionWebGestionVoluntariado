@@ -41,3 +41,13 @@
         border-top: 0 !important;
     }
 }
+
+.hover-blue {
+    transition: color 0.2s ease;
+}
+
+.hover-blue:hover {
+    color: #1a237e !important;
+    text-decoration: underline !important;
+    cursor: pointer;
+}

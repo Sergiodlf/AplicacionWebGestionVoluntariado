@@ -81,8 +81,8 @@
                         @for (item of volunteeringData; track item.id) {
                         <div class="col-12 col-md-6">
                             <app-voluntariado-card [title]="item.title" [organization]="item.organization"
-                                [skills]="item.skills" [date]="item.date" [ods]="item.ods" [status]="item.status"
-                                (onAction)="onAction(item)">
+                                [skills]="item.skills" [date]="item.date" [ciclo]="item.ciclo" [ods]="item.ods"
+                                [status]="item.status" (onAction)="onAction(item)">
                             </app-voluntariado-card>
                         </div>
                         }

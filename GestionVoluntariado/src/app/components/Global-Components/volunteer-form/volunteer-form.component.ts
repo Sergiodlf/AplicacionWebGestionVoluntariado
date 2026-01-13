@@ -1,30 +1,44 @@
 import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { CategoryService, Category } from '../../../services/category.service';
 
 @Component({
   selector: 'app-volunteer-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './volunteer-form.component.html',
   styleUrl: './volunteer-form.component.css'
 })
 export class VolunteerFormComponent implements OnInit {
   @Input() submitLabel: string = 'Registrarme';
+  @Input() isModal: boolean = true;
   @Output() onSubmit = new EventEmitter<any>();
   errorMessage: string = '';
 
   private fb = inject(FormBuilder);
   private volunteerService = inject(VolunteerService);
+  private categoryService = inject(CategoryService);
 
-  ngOnInit() {
-    console.log('VolunteerFormComponent initialized');
-    this.volunteerService.getCiclos().subscribe({
-      next: (data) => this.availableCiclos = data,
-      error: (err) => console.error('Error fetching cycles:', err)
-    });
-  }
+  availableCiclos: any[] = [];
+  availableSkills: Category[] = [];
+  availableInterests: Category[] = [];
+
+  availableDays: string[] = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  availableSlots: string[] = ['Mañana', 'Tarde', 'Noche', 'Todo el día'];
+
+  selectedDay: string = '';
+  selectedSlot: string = '';
+  selectedIdioma: string = '';
+
+  availableLanguages: string[] = ['Español', 'Inglés', 'Francés', 'Alemán', 'Italiano', 'Portugués', 'Euskera', 'Catalán', 'Gallego', 'Chino'];
+  availableZones: string[] = [
+    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
+    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
+    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
+    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
+  ];
 
   volunteerForm: FormGroup = this.fb.group({
     nombreCompleto: ['', Validators.required],
@@ -37,86 +51,95 @@ export class VolunteerFormComponent implements OnInit {
     experiencia: [''],
     coche: [''],
     idiomas: [[]],
-    habilidades: [[]],
-    intereses: [[]],
+    habilidades: [[]], // This will store IDs
+    intereses: [[]],   // This will store IDs
     disponibilidad: [[]]
   });
 
-  availableZones: string[] = [
-    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
-    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
-    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
-    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
-  ];
-  availableCiclos: any[] = []; // Will be populated from DB
-
-  availableSkills: string[] = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Conducción', 'Música', 'Marketing'];
-  availableInterests: string[] = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Deporte', 'Tecnología', 'Derechos Humanos', 'Mayores', 'Infancia'];
-  availableAvailability: string[] = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
-  availableLanguages: string[] = ['Español', 'Inglés', 'Francés', 'Alemán', 'Italiano', 'Portugués', 'Euskera', 'Catalán', 'Gallego', 'Chino'];
-
-  addedSkills: string[] = [];
-  addedInterests: string[] = [];
+  addedSkills: Category[] = [];
+  addedInterests: Category[] = [];
   addedAvailability: string[] = [];
   addedIdiomas: string[] = [];
 
+  ngOnInit() {
+    this.volunteerService.getCiclos().subscribe({
+      next: (data) => this.availableCiclos = data,
+      error: (err) => console.error('Error fetching cycles:', err)
+    });
+
+    this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
+    this.categoryService.getIntereses().subscribe(data => this.availableInterests = data);
+  }
+
+  get canAddAvailability(): boolean {
+    return !!this.selectedDay && !!this.selectedSlot;
+  }
+
   // Generic toggle method for all lists
-  addItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: string) {
-    if (!value) return;
+  addItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: any) {
+    if (!value && listName !== 'disponibilidad') return;
 
-    let targetList: string[] = [];
-    if (listName === 'habilidades') targetList = this.addedSkills;
-    if (listName === 'intereses') targetList = this.addedInterests;
-    if (listName === 'disponibilidad') targetList = this.addedAvailability;
-    if (listName === 'idiomas') targetList = this.addedIdiomas;
-
-    if (!targetList.includes(value)) {
-      targetList.push(value);
-      this.volunteerForm.patchValue({ [listName]: targetList });
+    if (listName === 'habilidades') {
+      if (!this.addedSkills.find(s => s.id === value.id)) {
+        this.addedSkills.push(value);
+        this.volunteerForm.patchValue({ habilidades: this.addedSkills.map(s => s.id) });
+      }
+    } else if (listName === 'intereses') {
+      if (!this.addedInterests.find(i => i.id === value.id)) {
+        this.addedInterests.push(value);
+        this.volunteerForm.patchValue({ intereses: this.addedInterests.map(i => i.id) });
+      }
+    } else if (listName === 'disponibilidad') {
+      const val = `${this.selectedDay} ${this.selectedSlot}`;
+      if (!this.addedAvailability.includes(val)) {
+        this.addedAvailability.push(val);
+        this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
+      }
+      this.selectedDay = '';
+      this.selectedSlot = '';
+    } else if (listName === 'idiomas') {
+      if (!this.addedIdiomas.includes(value)) {
+        this.addedIdiomas.push(value);
+        this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
+      }
+      this.selectedIdioma = '';
     }
   }
 
-  removeItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: string) {
-    let targetList: string[] = [];
-    if (listName === 'habilidades') targetList = this.addedSkills;
-    if (listName === 'intereses') targetList = this.addedInterests;
-    if (listName === 'disponibilidad') targetList = this.addedAvailability;
-    if (listName === 'idiomas') targetList = this.addedIdiomas;
-
-    const index = targetList.indexOf(value);
-    if (index !== -1) {
-      targetList.splice(index, 1);
-      this.volunteerForm.patchValue({ [listName]: targetList });
+  removeItem(listName: 'habilidades' | 'intereses' | 'disponibilidad' | 'idiomas', value: any) {
+    if (listName === 'habilidades') {
+      this.addedSkills = this.addedSkills.filter(s => s.id !== value.id);
+      this.volunteerForm.patchValue({ habilidades: this.addedSkills.map(s => s.id) });
+    } else if (listName === 'intereses') {
+      this.addedInterests = this.addedInterests.filter(i => i.id !== value.id);
+      this.volunteerForm.patchValue({ intereses: this.addedInterests.map(i => i.id) });
+    } else if (listName === 'disponibilidad') {
+      this.addedAvailability = this.addedAvailability.filter(v => v !== value);
+      this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
+    } else if (listName === 'idiomas') {
+      this.addedIdiomas = this.addedIdiomas.filter(v => v !== value);
+      this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
     }
   }
 
-  // Specific getters for template helper (optional, can just use arrays directly)
+  isAdded(listName: 'habilidades' | 'intereses', item: Category): boolean {
+    if (listName === 'habilidades') return !!this.addedSkills.find(s => s.id === item.id);
+    if (listName === 'intereses') return !!this.addedInterests.find(i => i.id === item.id);
+    return false;
+  }
 
   onRegister() {
-    this.errorMessage = ''; // Clear previous errors
-    try {
-      console.log('Register called');
-
-      if (this.volunteerForm.valid) {
-        this.onSubmit.emit(this.volunteerForm.value);
-      } else {
-        console.log('Form is invalid. Controls errors:');
-        let errorMsg = 'Por favor, revise los siguientes campos obligatorios:\n';
-        Object.keys(this.volunteerForm.controls).forEach(key => {
-          const controlErrors = this.volunteerForm.get(key)?.errors;
-          if (controlErrors) {
-            // Translate key to human readable if possible or just use key
-            const errorString = '- ' + key;
-            console.log(errorString);
-            errorMsg += errorString + '\n';
-          }
-        });
-        this.errorMessage = errorMsg;
-        // Scroll to error message if needed, but it's near the button so it should be visible
-      }
-    } catch (error) {
-      console.error('Error in onRegister:', error);
-      this.errorMessage = 'Error crítico: ' + error;
+    this.errorMessage = '';
+    if (this.volunteerForm.valid) {
+      this.onSubmit.emit(this.volunteerForm.value);
+    } else {
+      let errorMsg = 'Por favor, revise los campos obligatorios:\n';
+      Object.keys(this.volunteerForm.controls).forEach(key => {
+        if (this.volunteerForm.get(key)?.errors) {
+          errorMsg += '- ' + key + '\n';
+        }
+      });
+      this.errorMessage = errorMsg;
     }
   }
 }

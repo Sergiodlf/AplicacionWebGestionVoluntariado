@@ -23,7 +23,7 @@ export class OrganizationService {
 
   getOrganizations(forceReload: boolean = false): Observable<Organization[]> {
     if (this.organizationsSubject.value && !forceReload) {
-      return this.organizationsSubject.asObservable() as Observable<Organization[]>;
+      return of(this.organizationsSubject.value);
     }
     return this.loadOrganizations();
   }

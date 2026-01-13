@@ -11,9 +11,9 @@ import { CommonModule } from '@angular/common';
 export class VolunteeringCardComponent {
   @Input() title: string = '';
   @Input() organization: string = '';
-  @Input() skills: string[] = [];
+  @Input() skills: any[] = [];
   @Input() date: string = '';
-  @Input() ods: { id: number, name: string, color: string }[] = [];
+  @Input() ods: any[] = [];
   @Input() status: string = '';
 
   @Output() onAction = new EventEmitter<void>();

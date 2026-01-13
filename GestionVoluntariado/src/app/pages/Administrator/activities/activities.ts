@@ -8,6 +8,7 @@ import { VolunteeringCardComponent } from '../../../components/Administrator/Vol
 import { VoluntariadoService, Voluntariado } from '../../../services/voluntariado-service';
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
+import { CategoryService, Category } from '../../../services/category.service';
 
 @Component({
   selector: 'app-activities',
@@ -27,6 +28,7 @@ import { CreateMatchModalComponent } from '../../../components/Administrator/Mat
 })
 export class ActivitiesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
+  private categoryService = inject(CategoryService);
   activeTab: 'left' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
@@ -41,7 +43,7 @@ export class ActivitiesComponent implements OnInit {
   searchTerm: string = ''; // Bound to search input
   filters = {
     date: '',
-    skill: '',
+    skills: [] as string[],
     organization: '',
     ods: [] as string[]
   };
@@ -49,16 +51,18 @@ export class ActivitiesComponent implements OnInit {
   // Temp filters for modal
   tempFilters = {
     date: '',
-    skill: '',
+    skills: [] as string[],
     organization: '',
     ods: [] as string[]
   };
 
   availableOrganizations: string[] = [];
   availableODS: string[] = Array.from({ length: 17 }, (_, i) => `ODS ${i + 1}`);
+  availableSkills: Category[] = [];
 
   ngOnInit() {
     this.loadActivities();
+    this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
   }
 
   loadActivities() {
@@ -71,25 +75,9 @@ export class ActivitiesComponent implements OnInit {
           id: item.codActividad || item.id, // Fallback if interface differs slightly
           title: item.nombre,
           organization: item.nombre_organizacion || 'Organización (API)',
-          skills: this.parseJson(item.habilidades).length > 0 ? this.parseJson(item.habilidades) : ['General'],
+          skills: item.habilidades || [],
           date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
-          ods: Array.isArray(item.ods)
-            ? item.ods.map((o: any) => {
-              if (typeof o === 'object' && o !== null) {
-                return {
-                  id: o.id || 0,
-                  name: o.name || o.nombre || 'ODS',
-                  color: o.color || '#00c851'
-                };
-              } else {
-                return {
-                  id: 0,
-                  name: `ODS ${o}`,
-                  color: '#00c851'
-                };
-              }
-            })
-            : (typeof item.ods === 'string' ? [{ id: 0, name: item.ods, color: '#00c851' }] : [{ id: 4, name: 'ODS 4', color: '#00c851' }])
+          ods: item.ods || []
         }));
 
         // Extract Filter Options
@@ -118,7 +106,7 @@ export class ActivitiesComponent implements OnInit {
 
   // Filter Methods
   openFilterModal() {
-    this.tempFilters = { ...this.filters, ods: [...this.filters.ods] };
+    this.tempFilters = { ...this.filters, ods: [...this.filters.ods], skills: [...this.filters.skills] };
     this.showFilterModal = true;
   }
 
@@ -129,7 +117,7 @@ export class ActivitiesComponent implements OnInit {
   applyFilters() {
     // If called from modal, commit temps. If called from search, use current filters.
     if (this.showFilterModal) {
-      this.filters = { ...this.tempFilters, ods: [...this.tempFilters.ods] };
+      this.filters = { ...this.tempFilters, ods: [...this.tempFilters.ods], skills: [...this.tempFilters.skills] };
     }
 
     console.log('Applying filters:', this.filters, 'Search:', this.searchTerm);
@@ -149,10 +137,10 @@ export class ActivitiesComponent implements OnInit {
         matchesDate = itemDate === filterDate;
       }
 
-      // Filter by Skill (Modal)
-      if (this.filters.skill) {
-        const term = this.filters.skill.toLowerCase();
-        matchesSkill = item.skills && item.skills.some((s: string) => s.toLowerCase().includes(term));
+      // Filter by Skills (Modal)
+      if (this.filters.skills.length > 0) {
+        const itemSkillsNames = (item.skills || []).map((s: any) => (s.nombre || s).toLowerCase());
+        matchesSkill = this.filters.skills.every(f => itemSkillsNames.some((s: string) => s.includes(f.toLowerCase())));
       }
 
       // Filter by Organization
@@ -162,8 +150,8 @@ export class ActivitiesComponent implements OnInit {
 
       // Filter by ODS
       if (this.filters.ods.length > 0) {
-        // item.ods is array of objects {id, name, color}
-        const itemOdsNames = item.ods.map((o: any) => o.name);
+        // item.ods is array of objects {id, nombre, color}
+        const itemOdsNames = item.ods.map((o: any) => o.nombre);
         // Check if ANY of selected ODS is present
         matchesODS = this.filters.ods.some(f => itemOdsNames.includes(f));
       }
@@ -173,7 +161,7 @@ export class ActivitiesComponent implements OnInit {
         const term = this.searchTerm.toLowerCase();
         matchesSearch = item.title.toLowerCase().includes(term) ||
           item.organization.toLowerCase().includes(term) ||
-          (item.skills && item.skills.some((s: string) => s.toLowerCase().includes(term)));
+          (item.skills && item.skills.some((s: any) => (s.nombre || s).toLowerCase().includes(term)));
 
       }
 
@@ -186,8 +174,8 @@ export class ActivitiesComponent implements OnInit {
   }
 
   resetFilters() {
-    this.filters = { date: '', skill: '', organization: '', ods: [] };
-    this.tempFilters = { date: '', skill: '', organization: '', ods: [] };
+    this.filters = { date: '', skills: [], organization: '', ods: [] };
+    this.tempFilters = { date: '', skills: [], organization: '', ods: [] };
     this.searchTerm = '';
     this.applyFilters();
   }
@@ -205,10 +193,23 @@ export class ActivitiesComponent implements OnInit {
     return this.tempFilters.ods.includes(odsName);
   }
 
+  toggleSkillFilter(skillName: string) {
+    const idx = this.tempFilters.skills.indexOf(skillName);
+    if (idx === -1) {
+      this.tempFilters.skills.push(skillName);
+    } else {
+      this.tempFilters.skills.splice(idx, 1);
+    }
+  }
+
+  isSkillSelected(skillName: string): boolean {
+    return this.tempFilters.skills.includes(skillName);
+  }
+
   get activeFilterCount(): number {
     let count = 0;
     if (this.filters.date) count++;
-    if (this.filters.skill) count++;
+    if (this.filters.skills.length > 0) count++;
     if (this.filters.organization) count++;
     count += this.filters.ods.length;
     return count;

@@ -81,23 +81,14 @@ export class MisVoluntariados implements OnInit {
             statusLabel = 'Completado';
           }
 
-          const mockOds = [
-            { id: 1, name: 'ODS 5', color: '#FF3A21' },
-            { id: 2, name: 'ODS 10', color: '#DD1367' }
-          ];
-
           return {
             ...v,
             title: v.nombre,
             organization: v.organizacion,
-            skills: Array.isArray(v.habilidades) ? v.habilidades : [],
+            skills: v.habilidades || [],
             date: v.fechaInicio,
             status: statusLabel,
-            ods: (v.ods && v.ods.length > 0) ? v.ods.map((o: string) => ({
-              id: 0,
-              name: o,
-              color: this.getOdsColor(o)
-            })) : mockOds
+            ods: v.ods || []
           };
         };
 
@@ -174,15 +165,6 @@ export class MisVoluntariados implements OnInit {
   }
 
 
-  getOdsColor(ods: string): string {
-    const colors: { [key: string]: string } = {
-      'ODS1': '#ff4444',
-      'ODS2': '#ffbb33',
-      'ODS3': '#00c851',
-      'ODS4': '#33b5e5',
-    };
-    return colors[ods] || '#9e9e9e';
-  }
 
   onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
     this.activeTab = tab;

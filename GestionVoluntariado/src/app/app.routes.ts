@@ -10,6 +10,7 @@ import { DashboardComponent } from './pages/Administrator/dashboard/dashboard';
 import { MatchesComponent } from './pages/Administrator/matches/matches';
 import { OrganizationsComponent } from './pages/Administrator/organizations/organizations';
 import { ActivitiesComponent } from './pages/Administrator/activities/activities';
+import { CategoriesComponent } from './pages/Administrator/categories/categories';
 
 import { Voluntariados } from './pages/Volunteer/voluntariados/voluntariados';
 import { MisVoluntariados } from './pages/Volunteer/mis-voluntariados/mis-voluntariados';
@@ -27,7 +28,8 @@ export const routes: Routes = [
   { path: 'admin/organizations', component: OrganizationsComponent },
   { path: 'admin/activities', component: ActivitiesComponent },
   { path: 'admin/matches', component: MatchesComponent },
-  { path: 'volunteer/voluntariados', component: Voluntariados},
-  { path: 'volunteer/mis-voluntariados', component: MisVoluntariados},
-  { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion}
+  { path: 'admin/categories', component: CategoriesComponent },
+  { path: 'volunteer/voluntariados', component: Voluntariados },
+  { path: 'volunteer/mis-voluntariados', component: MisVoluntariados },
+  { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion }
 ];

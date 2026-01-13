@@ -127,17 +127,14 @@
                                 <span *ngFor="let item of selectedVolunteering.ods"
                                     class="badge text-white px-3 py-2 rounded-pill"
                                     [style.backgroundColor]="item.color">
-                                    {{ item.name }}
+                                    {{ item.nombre }}
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-top-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                    (click)="closeInfoModal()">Cerrar</button>
-            </div>
+            <!-- Removed redundant Cerrar button -->
         </div>
     </div>
 </div>
@@ -174,10 +171,15 @@
                     <!-- Skills Filter -->
                     <div class="col-12">
                         <label class="form-label fw-bold text-dark mb-2">Habilidades</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-0"><i class="bi bi-gear"></i></span>
-                            <input type="text" class="form-control bg-light border-0"
-                                placeholder="Ej. Educación, Primeros Auxilios" [(ngModel)]="tempFilters.skill">
+                        <div class="d-flex flex-wrap gap-2">
+                            <span *ngFor="let item of availableSkills"
+                                class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
+                                [ngClass]="{'bg-custom-blue text-white': isSkillSelected(item.nombre), 'bg-white text-dark': !isSkillSelected(item.nombre)}"
+                                style="cursor: pointer;" (click)="toggleSkillFilter(item.nombre)">
+                                {{ item.nombre }}
+                                <i class="bi"
+                                    [ngClass]="{'bi-check-lg': isSkillSelected(item.nombre), 'bi-plus-lg': !isSkillSelected(item.nombre)}"></i>
+                            </span>
                         </div>
                     </div>
 

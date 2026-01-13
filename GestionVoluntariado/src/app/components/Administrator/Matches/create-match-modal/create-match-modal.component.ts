@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VolunteerService } from '../../../../services/volunteer.service';
@@ -16,7 +16,7 @@ import { VoluntariadoService } from '../../../../services/voluntariado-service';
     }
   `]
 })
-export class CreateMatchModalComponent implements OnInit {
+export class CreateMatchModalComponent implements OnInit, OnDestroy {
     @Output() close = new EventEmitter<void>();
     @Output() matchCreated = new EventEmitter<void>();
     @Input() preselectedActivityId: number | null = null;
@@ -39,6 +39,19 @@ export class CreateMatchModalComponent implements OnInit {
             this.selectedVolunteerDnI = this.preselectedVolunteer.dni;
         }
         this.loadData();
+        this.setBodyScroll(true);
+    }
+
+    ngOnDestroy() {
+        this.setBodyScroll(false);
+    }
+
+    private setBodyScroll(lock: boolean) {
+        if (lock) {
+            document.body.classList.add('body-modal-open');
+        } else {
+            document.body.classList.remove('body-modal-open');
+        }
     }
 
     loadData() {
@@ -82,6 +95,7 @@ export class CreateMatchModalComponent implements OnInit {
             next: () => {
                 alert('Match creado con éxito');
                 this.isLoading = false;
+                this.setBodyScroll(false);
                 this.matchCreated.emit();
                 this.close.emit();
             },
@@ -98,8 +112,8 @@ export class CreateMatchModalComponent implements OnInit {
     }
     // ... (existing methods)
 
-    // Helper to parse potential JSON or CSV
-    private parseList(value: any): string[] {
+    // Helper to parse potential JSON, CSV or Objects
+    private parseList(value: any): any[] {
         if (!value) return [];
         if (Array.isArray(value)) return value;
         if (typeof value === 'string') {
@@ -112,7 +126,7 @@ export class CreateMatchModalComponent implements OnInit {
             }
             return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
         }
-        return [String(value)];
+        return [value];
     }
 
     calculateMatchScore(volunteer: any, activity: any): number {
@@ -124,9 +138,10 @@ export class CreateMatchModalComponent implements OnInit {
         const volunteerSkills = this.parseList(volunteer.skills || volunteer.habilidades);
 
         if (activityNeeds.length > 0) {
-            const matches = activityNeeds.filter(need =>
-                volunteerSkills.some(skill => skill.toLowerCase().includes(need.toLowerCase()))
-            );
+            const matches = activityNeeds.filter(need => {
+                const needName = (need.nombre || need).toLowerCase();
+                return volunteerSkills.some(skill => (skill.nombre || skill).toLowerCase().includes(needName));
+            });
             score += (matches.length / activityNeeds.length) * 40;
         } else {
             // If activity has no specific needs, give full points for this section? Or partial?

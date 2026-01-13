@@ -35,8 +35,8 @@ export class MatchesComponent implements OnInit {
     this.loadMatches();
   }
 
-  // Helper to safely parse JSON or CSV lists
-  private parseList(value: any): string[] {
+  // Helper to safely parse JSON, CSV or Objects
+  private parseList(value: any): any[] {
     if (!value) return [];
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
@@ -49,7 +49,7 @@ export class MatchesComponent implements OnInit {
       }
       return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
     }
-    return [String(value)];
+    return [value];
   }
 
   loadMatches(forceReload: boolean = false) {
@@ -59,20 +59,20 @@ export class MatchesComponent implements OnInit {
         this.matches = data.map(item => ({
           id: item.id_inscripcion,
           volunteer: {
-            name: item.nombre_voluntario || 'Voluntario',
+            nombre: item.nombre_voluntario || 'Voluntario',
             email: item.email_voluntario || 'email@example.com',
             skills: this.parseList(item.habilidades_voluntario),
             availability: this.parseList(item.disponibilidad_voluntario).join(', ') || 'No especificada',
             interests: this.parseList(item.intereses_voluntario)
           },
           organization: {
-            name: item.nombre_actividad || 'Actividad',
+            nombre: item.nombre_actividad || 'Actividad',
             email: item.email_organizacion || 'org@example.com',
             description: item.descripcion_actividad || '',
             schedule: item.horario || 'No especificado',
-            needs: this.parseList(item.habilidades_actividad) // Using generic parseList
+            needs: this.parseList(item.habilidades_actividad)
           },
-          status: item.estado
+          status: item.status || item.estado
         }));
         this.applyFilters();
       },
@@ -102,8 +102,8 @@ export class MatchesComponent implements OnInit {
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       list = list.filter(m =>
-        m.volunteer.name.toLowerCase().includes(term) ||
-        m.organization.name.toLowerCase().includes(term) ||
+        m.volunteer.nombre.toLowerCase().includes(term) ||
+        m.organization.nombre.toLowerCase().includes(term) ||
         m.volunteer.email.toLowerCase().includes(term)
       );
     }

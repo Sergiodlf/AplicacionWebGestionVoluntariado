@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
+import { CategoryService, ODS, Category } from '../../../services/category.service';
 
 @Component({
   selector: 'app-crear-voluntariado-modal',
@@ -10,10 +11,13 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
   templateUrl: './crear-voluntariado-modal.html',
   styleUrl: './crear-voluntariado-modal.css',
 })
-export class CrearVoluntariadoModal {
+export class CrearVoluntariadoModal implements OnInit, OnDestroy {
   @Input() cifOrganization: string = '';
   @Output() close = new EventEmitter<void>();
   @Output() created = new EventEmitter<any>();
+
+  availableOds: ODS[] = [];
+  availableHabilidades: Category[] = [];
 
   form = {
     title: '',
@@ -23,38 +27,63 @@ export class CrearVoluntariadoModal {
     description: '',
     startDate: '',
     endDate: '',
-    skillInput: '',
-    odsInput: '',
-    skills: [] as string[],
-    ods: [] as { id: number; name: string; color: string }[],
+    selectedSkillId: '' as string | number,
+    selectedOdsId: '' as string | number,
+    skills: [] as Category[],
+    ods: [] as ODS[],
   };
 
-  constructor(private voluntariadoService: VoluntariadoService) { }
+  constructor(
+    private voluntariadoService: VoluntariadoService,
+    private categoryService: CategoryService
+  ) { }
 
-  addSkill() {
-    const value = this.form.skillInput.trim();
-    if (!value) return;
-    this.form.skills.push(value);
-    this.form.skillInput = '';
+  ngOnInit() {
+    this.categoryService.getODS().subscribe(ods => {
+      this.availableOds = ods;
+    });
+    this.categoryService.getHabilidades().subscribe(h => {
+      this.availableHabilidades = h;
+    });
+    this.setBodyScroll(true);
   }
 
-  removeSkill(skill: string) {
-    this.form.skills = this.form.skills.filter((s) => s !== skill);
+  ngOnDestroy() {
+    this.setBodyScroll(false);
+  }
+
+  private setBodyScroll(lock: boolean) {
+    if (lock) {
+      document.body.classList.add('body-modal-open');
+    } else {
+      document.body.classList.remove('body-modal-open');
+    }
+  }
+
+  addSkill() {
+    if (!this.form.selectedSkillId) return;
+    const skill = this.availableHabilidades.find(h => h.id == this.form.selectedSkillId);
+    if (skill && !this.form.skills.find(s => s.id === skill.id)) {
+      this.form.skills.push(skill);
+    }
+    this.form.selectedSkillId = '';
+  }
+
+  removeSkill(skill: Category) {
+    this.form.skills = this.form.skills.filter((s) => s.id !== skill.id);
   }
 
   addOds() {
-    const value = this.form.odsInput.trim();
-    if (!value) return;
-    this.form.ods.push({
-      id: this.form.ods.length + 1,
-      name: value,
-      color: '#00c851', // color por defecto, puedes cambiarlo
-    });
-    this.form.odsInput = '';
+    if (!this.form.selectedOdsId) return;
+    const ods = this.availableOds.find(o => o.id == this.form.selectedOdsId);
+    if (ods && !this.form.ods.find(o => o.id === ods.id)) {
+      this.form.ods.push(ods);
+    }
+    this.form.selectedOdsId = '';
   }
 
-  removeOds(ods: any) {
-    this.form.ods = this.form.ods.filter((o) => o !== ods);
+  removeOds(ods: ODS) {
+    this.form.ods = this.form.ods.filter((o) => o.id !== ods.id);
   }
 
   crear() {
@@ -70,8 +99,8 @@ export class CrearVoluntariadoModal {
       maxParticipantes: 10,
       estado: 'Pendiente',
       sector: this.form.sector,
-      habilidades: this.form.skills.join(','),
-      ods: this.form.ods
+      habilidades: this.form.skills.map(s => s.id),
+      ods: this.form.ods.map(o => o.id)
     };
 
     console.log('Sending payload:', payload);
@@ -89,6 +118,7 @@ export class CrearVoluntariadoModal {
   }
 
   onClose() {
+    this.setBodyScroll(false);
     this.close.emit();
   }
 }

@@ -41,13 +41,9 @@ export class Voluntariados implements OnInit {
             codAct: v.codActividad, // Map ID
             title: v.nombre,
             organization: v.nombre_organizacion, // Map Organization Name
-            skills: Array.isArray(v.habilidades) ? v.habilidades : [], // Handle array directly
+            skills: v.habilidades || [],
             date: v.fechaInicio,
-            ods: Array.isArray(v.ods) ? v.ods.map((o: string) => ({
-              id: 0,
-              name: o,
-              color: this.getOdsColor(o)
-            })) : []
+            ods: v.ods || []
           } as Voluntariado;
         });
         this.filterData();
@@ -111,15 +107,4 @@ export class Voluntariados implements OnInit {
     });
   }
 
-  getOdsColor(ods: string): string {
-    // Simple mock mapping
-    const colors: { [key: string]: string } = {
-      'ODS1': '#ff4444',
-      'ODS2': '#ffbb33',
-      'ODS3': '#00c851',
-      'ODS4': '#33b5e5',
-      // Add defaults or hash function
-    };
-    return colors[ods] || '#9e9e9e'; // Default grey
-  }
 }
