@@ -60,6 +60,7 @@ Para mantener la estabilidad del código, implementamos una estrategia de **Git 
 3.  **Base de Datos:**
     ```bash
     php bin/console doctrine:database:create
+    php bin/console make:migration
     php bin/console doctrine:migrations:migrate
     php bin/console doctrine:fixtures:load  # (Opcional: Cargar datos de prueba)
     ```
