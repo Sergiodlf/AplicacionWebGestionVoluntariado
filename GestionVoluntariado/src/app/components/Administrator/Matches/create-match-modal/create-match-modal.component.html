@@ -52,11 +52,11 @@
                             selectedVolunteer.apellido1 }}
                         </h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <span *ngFor="let skill of selectedVolunteer.skills"
+                            <span *ngFor="let skill of selectedVolunteer.habilidades"
                                 class="badge bg-white text-dark border px-2 py-1 fw-normal">
                                 {{ skill.nombre || skill }}
                             </span>
-                            <small *ngIf="!selectedVolunteer.skills?.length" class="text-muted fst-italic">Sin
+                            <small *ngIf="!selectedVolunteer.habilidades?.length" class="text-muted fst-italic">Sin
                                 habilidades</small>
                         </div>
                     </div>

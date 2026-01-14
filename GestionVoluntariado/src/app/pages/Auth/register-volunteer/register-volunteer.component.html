@@ -5,7 +5,7 @@
         <h3 class="fw-bold text-custom-blue">Registro de Voluntario</h3>
       </div>
 
-      <app-volunteer-form submitLabel="Registrarme" [isModal]="false"></app-volunteer-form>
+      <app-volunteer-form submitLabel="Registrarme" [isModal]="false" (onSubmit)="handleRegister($event)"></app-volunteer-form>
 
       <div class="text-center mt-5 pt-3 border-top">
         <p class="text-muted mb-0">
