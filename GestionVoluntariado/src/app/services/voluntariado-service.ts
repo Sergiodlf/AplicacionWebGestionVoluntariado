@@ -82,7 +82,12 @@ export class VoluntariadoService {
     if (estado) {
       params.estado = estado;
     }
-    const fullUrl = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    let fullUrl = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    if (estado) {
+      // Use the specific endpoint requested by user
+      fullUrl = `${fullUrl}/estado`;
+      params.estado = estado;
+    }
     return this.http.get<any[]>(fullUrl, { params });
   }
 

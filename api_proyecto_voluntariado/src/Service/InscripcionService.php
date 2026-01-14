@@ -24,7 +24,7 @@ class InscripcionService
         $conn = $this->entityManager->getConnection();
         $sql = "
             SELECT COUNT(*) as total 
-            FROM VOLUNTARIOS_ACTIVIDADES 
+            FROM INSCRIPCIONES 
             WHERE CODACTIVIDAD = :actividadId
             AND ESTADO IN ('PENDIENTE', 'CONFIRMADO', 'CONFIRMADA', 'ACEPTADA', 'EN_CURSO', 'EN CURSO')
         ";
@@ -57,7 +57,7 @@ class InscripcionService
         $inscripcion = new Inscripcion();
         $inscripcion->setActividad($actividad);
         $inscripcion->setVoluntario($voluntario);
-        $inscripcion->setFechaInscripcion(new \DateTime());
+        // $inscripcion->setFechaInscripcion(new \DateTime());
         $inscripcion->setEstado('PENDIENTE');
 
         $this->entityManager->persist($inscripcion);
