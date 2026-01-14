@@ -23,7 +23,7 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
     VolunteerFormComponent,
     CreateMatchModalComponent,
     Navbar,
-    SidebarComponent
+    SidebarComponent,
   ],
   templateUrl: './volunteers.component.html',
   styleUrl: './volunteers.component.css',
@@ -39,28 +39,56 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     habilidades: [],
     intereses: [],
     disponibilidad: [],
-    text: ''
+    text: '',
   });
 
   searchTerm: string = '';
 
   // Available Options
   availableZones: string[] = [
-    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
-    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
-    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
-    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
+    'Casco Viejo',
+    'Ensanche',
+    'San Juan',
+    'Iturrama',
+    'Rochapea',
+    'Txantrea',
+    'Azpiligaña',
+    'Milagrosa',
+    'Buztintxuri',
+    'Mendillorri',
+    'Sarriguren',
+    'Barañáin',
+    'Burlada',
+    'Villava',
+    'Uharte',
+    'Berriozar',
+    'Ansoáin',
+    'Noáin',
+    'Zizur Mayor',
+    'Mutilva',
   ];
   availableSkills: any[] = [];
   availableInterests: any[] = [];
-  availableAvailability: string[] = ['Lunes Mañana', 'Lunes Tarde', 'Martes Mañana', 'Martes Tarde', 'Miércoles Mañana', 'Miércoles Tarde', 'Jueves Mañana', 'Jueves Tarde', 'Viernes Mañana', 'Viernes Tarde', 'Fines de Semana'];
+  availableAvailability: string[] = [
+    'Lunes Mañana',
+    'Lunes Tarde',
+    'Martes Mañana',
+    'Martes Tarde',
+    'Miércoles Mañana',
+    'Miércoles Tarde',
+    'Jueves Mañana',
+    'Jueves Tarde',
+    'Viernes Mañana',
+    'Viernes Tarde',
+    'Fines de Semana',
+  ];
 
   // Temporary filter state for the modal
   tempFilters: any = {
     zona: '',
     habilidades: [],
     intereses: [],
-    disponibilidad: []
+    disponibilidad: [],
   };
 
   // Main data stream
@@ -78,7 +106,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   // Filtered stream
   filteredVolunteers$ = combineLatest([this.rawVolunteers$, this.filterCriteria$]).pipe(
     map(([volunteers, criteria]) => {
-      return volunteers.filter(v => {
+      return volunteers.filter((v) => {
         if (criteria.text) {
           const term = criteria.text.toLowerCase();
           const matchesName = v.nombre?.toLowerCase().includes(term);
@@ -89,20 +117,26 @@ export class VolunteersComponent implements OnInit, OnDestroy {
         if (criteria.zona && v.zona !== criteria.zona) return false;
 
         if (criteria.habilidades.length > 0) {
-          const vSkillsNames = Array.isArray(v.habilidades) ? v.habilidades.map((s: any) => s.nombre || s) : [];
+          const vSkillsNames = Array.isArray(v.habilidades)
+            ? v.habilidades.map((s: any) => s.nombre || s)
+            : [];
           const hasSkill = criteria.habilidades.some((s: string) => vSkillsNames.includes(s));
           if (!hasSkill) return false;
         }
 
         if (criteria.intereses.length > 0) {
-          const vInterestsNames = Array.isArray(v.intereses) ? v.intereses.map((i: any) => i.nombre || i) : [];
+          const vInterestsNames = Array.isArray(v.intereses)
+            ? v.intereses.map((i: any) => i.nombre || i)
+            : [];
           const hasInterest = criteria.intereses.some((i: string) => vInterestsNames.includes(i));
           if (!hasInterest) return false;
         }
 
         if (criteria.disponibilidad.length > 0) {
           const vAvailability = Array.isArray(v.disponibilidad) ? v.disponibilidad : [];
-          const hasAvailability = criteria.disponibilidad.some((a: string) => vAvailability.includes(a));
+          const hasAvailability = criteria.disponibilidad.some((a: string) =>
+            vAvailability.includes(a)
+          );
           if (!hasAvailability) return false;
         }
 
@@ -127,12 +161,12 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   selectedVolunteerForMatch: any = null;
 
   ngOnInit() {
-    this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
-    this.categoryService.getIntereses().subscribe(data => this.availableInterests = data);
+    this.categoryService.getHabilidades().subscribe((data) => (this.availableSkills = data));
+    this.categoryService.getIntereses().subscribe((data) => (this.availableInterests = data));
   }
 
   ngOnDestroy() {
-    this.setBodyScroll(false);
+    this.unlockBody();
   }
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
@@ -142,36 +176,12 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   openMatchModal(volunteer: any) {
     this.selectedVolunteerForMatch = volunteer;
     this.showCreateMatchModal = true;
-    this.setBodyScroll(true);
   }
 
   onMatchCreated() {
     this.showCreateMatchModal = false;
     this.selectedVolunteerForMatch = null;
-    this.setBodyScroll(false);
     this.refresh$.next(true);
-  }
-
-  onAddVolunteer() {
-    this.showModal = true;
-    this.setBodyScroll(true);
-  }
-
-  openFilterModal() {
-    const current = this.filterCriteria$.value;
-    this.tempFilters = {
-      zona: current.zona,
-      habilidades: [...current.habilidades],
-      intereses: [...current.intereses],
-      disponibilidad: [...current.disponibilidad]
-    };
-    this.showFilterModal = true;
-    this.setBodyScroll(true);
-  }
-
-  closeFilterModal() {
-    this.showFilterModal = false;
-    this.setBodyScroll(false);
   }
 
   applyFilters() {
@@ -179,11 +189,9 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     this.filterCriteria$.next({
       ...current,
       ...this.tempFilters,
-      text: this.searchTerm
+      text: this.searchTerm,
     });
-    if (this.showFilterModal) {
-      this.closeFilterModal();
-    }
+    this.closeModal('filter');
   }
 
   resetFilters() {
@@ -192,15 +200,14 @@ export class VolunteersComponent implements OnInit, OnDestroy {
       habilidades: [],
       intereses: [],
       disponibilidad: [],
-      text: ''
+      text: '',
     });
     this.searchTerm = '';
-    this.closeFilterModal();
   }
 
   toggleFilterItem(category: 'habilidades' | 'intereses' | 'disponibilidad', item: any) {
     const list = this.tempFilters[category];
-    const identifier = (category === 'disponibilidad') ? item : (item.nombre || item);
+    const identifier = category === 'disponibilidad' ? item : item.nombre || item;
     const index = list.indexOf(identifier);
     if (index === -1) {
       list.push(identifier);
@@ -210,7 +217,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   }
 
   isFilterSelected(category: 'habilidades' | 'intereses' | 'disponibilidad', item: any): boolean {
-    const identifier = (category === 'disponibilidad') ? item : (item.nombre || item);
+    const identifier = category === 'disponibilidad' ? item : item.nombre || item;
     return this.tempFilters[category].includes(identifier);
   }
 
@@ -224,17 +231,24 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     return count;
   }
 
-  closeModal() {
-    this.showModal = false;
-    this.setBodyScroll(false);
+  openModal(type: 'add' | 'filter') {
+    if (type === 'add') this.showModal = true;
+    if (type === 'filter') this.showFilterModal = true;
+    this.lockBody();
   }
 
-  private setBodyScroll(lock: boolean) {
-    if (lock) {
-      document.body.classList.add('body-modal-open');
-    } else {
-      document.body.classList.remove('body-modal-open');
-    }
+  closeModal(type: 'add' | 'filter') {
+    if (type === 'add') this.showModal = false;
+    if (type === 'filter') this.showFilterModal = false;
+    this.unlockBody();
+  }
+
+  private lockBody() {
+    document.body.classList.add('body-modal-open');
+  }
+
+  private unlockBody() {
+    document.body.classList.remove('body-modal-open');
   }
 
   onAccept(volunteer: any) {
@@ -273,7 +287,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
       next: () => {
         this.refresh$.next(true);
-        this.closeModal();
+        this.closeModal('add');
         alert('Voluntario creado con éxito');
       },
       error: (error) => {
