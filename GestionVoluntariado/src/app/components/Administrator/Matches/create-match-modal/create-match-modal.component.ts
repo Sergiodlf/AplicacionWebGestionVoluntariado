@@ -10,11 +10,7 @@ import { VoluntariadoService } from '../../../../services/voluntariado-service';
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './create-match-modal.component.html',
-    styles: [`
-    .modal-backdrop-custom {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-  `]
+    styleUrl: './create-match-modal.component.css',
 })
 export class CreateMatchModalComponent implements OnInit, OnDestroy {
     @Output() close = new EventEmitter<void>();
@@ -39,19 +35,9 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
             this.selectedVolunteerDnI = this.preselectedVolunteer.dni;
         }
         this.loadData();
-        this.setBodyScroll(true);
     }
 
     ngOnDestroy() {
-        this.setBodyScroll(false);
-    }
-
-    private setBodyScroll(lock: boolean) {
-        if (lock) {
-            document.body.classList.add('body-modal-open');
-        } else {
-            document.body.classList.remove('body-modal-open');
-        }
     }
 
     loadData() {
@@ -95,7 +81,6 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
             next: () => {
                 alert('Match creado con éxito');
                 this.isLoading = false;
-                this.setBodyScroll(false);
                 this.matchCreated.emit();
                 this.close.emit();
             },

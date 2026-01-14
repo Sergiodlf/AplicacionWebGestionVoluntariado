@@ -1,5 +1,8 @@
-<div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
-    <div class="modal-backdrop fade show modal-backdrop-custom" (click)="close.emit()"></div>
+<!-- Backdrop -->
+<div class="custom-backdrop" (click)="close.emit()"></div>
+
+<!-- Modal -->
+<div class="modal fade show d-block" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
@@ -7,8 +10,6 @@
                 <button type="button" class="btn-close" (click)="close.emit()"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- ... content ... -->
-
                 <div class="mb-4">
                     <label class="form-label fw-bold text-muted">Voluntario</label>
                     @if (selectedActivityId) {
