@@ -18,9 +18,9 @@
       </button>
 
       <button *ngIf="status.trim().toUpperCase() !== 'PENDIENTE'"
-        class="btn btn-outline-custom-blue btn-sm rounded-circle d-flex align-items-center justify-content-center"
-        style="width: 32px; height: 32px;" (click)="onAssign.emit()" title="Asignar voluntario">
-        <i class="bi bi-person-plus fs-6"></i>
+        class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill d-flex align-items-center text-nowrap"
+        (click)="onAssign.emit()" title="Asignar voluntario">
+        <i class="bi bi-person-plus fs-6"> Asignar voluntario</i>
       </button>
 
       <button *ngIf="status.trim().toUpperCase() === 'PENDIENTE'"

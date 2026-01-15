@@ -195,14 +195,14 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   }
 
   resetFilters() {
-    this.filterCriteria$.next({
+    this.tempFilters = {
       zona: '',
       habilidades: [],
       intereses: [],
       disponibilidad: [],
-      text: '',
-    });
+    };
     this.searchTerm = '';
+    this.applyFilters();
   }
 
   toggleFilterItem(category: 'habilidades' | 'intereses' | 'disponibilidad', item: any) {
