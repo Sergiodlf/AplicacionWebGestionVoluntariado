@@ -114,6 +114,65 @@ paths:
         '409':
           description: El CIF o Email ya existen
 
+  /organizations/{cif}:
+    put:
+      tags:
+        - Organizaciones
+      summary: Actualizar datos de organización
+      parameters:
+        - name: cif
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                email:
+                  type: string
+                sector:
+                  type: string
+                direccion:
+                  type: string
+                localidad:
+                  type: string
+                cp:
+                  type: string
+                descripcion:
+                  type: string
+                contacto:
+                  type: string
+      responses:
+        '200':
+          description: Organización actualizada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizacionDetalle'
+        '404':
+          description: Organización no encontrada
+    delete:
+      tags:
+        - Organizaciones
+      summary: Eliminar organización
+      parameters:
+        - name: cif
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Organización eliminada (sin contenido)
+        '404':
+          description: Organización no encontrada
+
   /organizations/{cif}/state:
     patch:
       tags:
@@ -327,7 +386,10 @@ paths:
                 estado:
                   type: string
                   enum: [PENDIENTE, EN CURSO, FINALIZADO, CANCELADO]
-                  description: Nuevo estado de la actividad (case-insensitive).
+                tipo:
+                  type: string
+                  enum: [ejecucion, aprobacion]
+                  description: "Tipo de estado a cambiar (opcional)"
       responses:
         '200':
           description: Estado actualizado.
@@ -605,20 +667,25 @@ components:
     LoginResponse:
       type: object
       properties:
-        token:
+        message:
           type: string
-        rol:
-          type: string
-          example: "ROLE_VOLUNTARIO"
+          example: "Login correcto"
         id:
           type: string
           description: "DNI o CIF del usuario logueado"
           example: "12345678Z"
+        tipo:
+          type: string
+          enum: ["voluntario", "organizacion", "admin"]
+          example: "voluntario"
+        nombre:
+          type: string
+          example: "Juan Pérez"
 
     # --- MODELO REGISTRO VOLUNTARIO ---
     VoluntarioRegistro:
       type: object
-      required: [nombreCompleto, dni, correo, password]
+      required: [nombreCompleto, dni, correo, password, zona, ciclo, fechaNacimiento]
       properties:
         nombreCompleto:
           type: string
@@ -708,7 +775,7 @@ components:
     # --- MODELO REGISTRO ORGANIZACIÓN ---
     OrganizacionRegistro:
       type: object
-      required: [cif, nombre, email, password]
+      required: [cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto]
       properties:
         cif:
           type: string
@@ -801,18 +868,36 @@ components:
           type: integer
         nombre:
           type: string
-        organizacion:
-          type: object
-          properties:
-            nombre:
-              type: string
-            cif:
-              type: string
-        descripcion:
+        estado:
+          type: string
+        estadoAprobacion:
+          type: string
+        direccion:
           type: string
         fechaInicio:
           type: string
-          format: date
+          format: date-time
+        fechaFin:
+          type: string
+          format: date-time
+        maxParticipantes:
+          type: integer
+        cif_organizacion:
+          type: string
+        nombre_organizacion:
+          type: string
+        ods:
+          type: array
+          items:
+            type: object
+        habilidades:
+          type: array
+          items:
+            type: object
+        necesidades:
+          type: array
+          items:
+            type: object
 
     # --- MODELO INSCRIPCIÓN ---
     InscripcionRequest:
@@ -865,6 +950,10 @@ components:
     ActividadInscritaDetalle:
       type: object
       properties:
+        id_inscripcion:
+          type: integer
+        estado_inscripcion:
+          type: string
         codActividad:
           type: integer
         nombre:
@@ -879,8 +968,16 @@ components:
           format: date-time
         organizacion:
           type: string
-        id_inscripcion:
-          type: integer
+        estado_actividad:
+          type: string
+        ods:
+          type: array
+          items:
+            type: object
+        habilidades:
+          type: array
+          items:
+            type: object
 
     # --- MODELO ACTUALIZAR ESTADO ---
     UpdateEstadoRequest:
@@ -901,14 +998,19 @@ components:
           type: string
         nombre_voluntario:
           type: string
+        email_voluntario:
+          type: string
+        habilidades_voluntario:
+          type: array
+          items:
+            type: object
         codActividad:
           type: integer
         nombre_actividad:
           type: string
-        estado:
+        email_organizacion:
           type: string
-          example: "PENDIENTE"
-        estadoAprobacion:
+        estado:
           type: string
           example: "PENDIENTE"
 
