@@ -84,6 +84,22 @@ export class ActivitiesComponent implements OnInit {
           // Check approval status first
           const approvalStatus = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
 
+          // Date-based status calculation
+          let computedStatus = 'En curso';
+          const now = new Date();
+          const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
+          const end = item.fechaFin ? new Date(item.fechaFin) : null;
+
+          if (start && now < start) {
+            computedStatus = 'Sin comenzar';
+          } else if (end && now > end) {
+            computedStatus = 'Completado';
+          }
+
+          // FORCE 'PENDIENTE' status for UI if approval is pending
+          // Otherwise use the computed date-based status
+          const finalStatus = approvalStatus === 'PENDIENTE' ? 'Pendiente' : computedStatus;
+
           return {
             ...item,
             id: item.codActividad || item.id,
@@ -92,8 +108,7 @@ export class ActivitiesComponent implements OnInit {
             skills: item.habilidades || [],
             date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
             ods: item.ods || [],
-            // FORCE 'PENDIENTE' status for UI if approval is pending, regardless of internal 'estado'
-            estado: approvalStatus === 'PENDIENTE' ? 'PENDIENTE' : (item.estado || approvalStatus)
+            estado: finalStatus
           };
         };
 

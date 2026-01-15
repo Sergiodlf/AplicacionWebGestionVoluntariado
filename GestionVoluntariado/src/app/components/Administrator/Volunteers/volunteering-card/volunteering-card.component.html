@@ -62,4 +62,13 @@
       </div>
     </div>
   </div>
+
+  <div class="status-pill" [ngClass]="{
+      'sin-comenzar': status === 'Sin comenzar',
+      'en-curso': status === 'En curso',
+      'completado': status === 'Completado',
+      'pendiente': status === 'Pendiente'
+    }">
+    {{ status }}
+  </div>
 </div>

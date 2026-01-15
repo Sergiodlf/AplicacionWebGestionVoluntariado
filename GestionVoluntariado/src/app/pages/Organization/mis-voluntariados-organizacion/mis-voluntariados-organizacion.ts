@@ -89,20 +89,26 @@ export class MisVoluntariadosOrganizacion implements OnInit {
 
         const mapItem = (item: any, cat: string) => {
           let statusLabel = '';
+          let buttonText = '';
 
-          // Labels only for Aceptados (middle)
+          // Labels only for Aceptados (middle) where lifecycle matters
           if (cat === 'middle') {
-            const rawStatus = (item.estado || '').toUpperCase();
+            const now = new Date();
+            const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
+            const end = item.fechaFin ? new Date(item.fechaFin) : null;
 
-            if (rawStatus === 'PENDIENTE' || rawStatus === 'ABIERTA') {
+            if (start && now < start) {
               statusLabel = 'Sin comenzar';
-            } else if (rawStatus === 'EN_CURSO' || rawStatus === 'EN CURSO') {
-              statusLabel = 'En curso';
-            } else if (rawStatus === 'COMPLETADA' || rawStatus === 'CERRADA') {
+            } else if (end && now > end) {
               statusLabel = 'Completado';
             } else {
-              statusLabel = item.estado;
+              statusLabel = 'En curso';
             }
+
+            // buttonText removed
+          } else if (cat === 'left') {
+            // Pendientes
+            buttonText = 'Aceptar';
           }
 
           return {
@@ -112,7 +118,8 @@ export class MisVoluntariadosOrganizacion implements OnInit {
             organization: orgName,
             skills: item.habilidades || [],
             date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha pendiente',
-            status: statusLabel,
+            status: statusLabel, // Computed date-based status
+            buttonText: buttonText,
             ods: item.ods || []
           };
         };

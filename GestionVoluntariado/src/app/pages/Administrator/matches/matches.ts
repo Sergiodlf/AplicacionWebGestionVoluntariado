@@ -26,7 +26,7 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
 export class MatchesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
 
-  activeTab: 'left' | 'middle' | 'right' = 'left';
+  activeTab: 'left' | 'middle' = 'left';
   matches: any[] = [];
   showCreateModal = false;
   searchTerm: string = ''; // Added search term
@@ -93,9 +93,6 @@ export class MatchesComponent implements OnInit {
       case 'middle':
         list = this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO');
         break;
-      case 'right':
-        list = this.matches.filter(m => ['RECHAZADA', 'RECHAZADO', 'COMPLETADA', 'FINALIZADA'].includes(m.status));
-        break;
     }
 
     // Then filter by search term (Logical AND)
@@ -119,12 +116,9 @@ export class MatchesComponent implements OnInit {
     return this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO').length;
   }
 
-  get countRejected() {
-    return this.matches.filter(m => ['RECHAZADA', 'RECHAZADO', 'COMPLETADA', 'FINALIZADA'].includes(m.status)).length;
-  }
-
   onTabChange(tab: 'left' | 'middle' | 'right') {
-    this.activeTab = tab;
+    if (tab === 'right') return;
+    this.activeTab = tab as 'left' | 'middle';
     this.applyFilters();
   }
 

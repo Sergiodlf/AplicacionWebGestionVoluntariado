@@ -73,7 +73,15 @@ paths:
       tags:
         - Organizaciones
       summary: Listar todas las organizaciones
-      description: Devuelve la lista completa de organizaciones registradas.
+      description: Devuelve la lista completa de organizaciones registradas, opcionalmente filtrada por estado.
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [pendiente, aprobado, rechazado]
+          required: false
+          description: Filtrar organizaciones por su estado.
       responses:
         '200':
           description: Lista recuperada con éxito
@@ -501,7 +509,15 @@ paths:
       tags:
         - Voluntarios
       summary: Listar todos los voluntarios
-      description: Devuelve la lista completa de voluntarios registrados.
+      description: Devuelve la lista completa de voluntarios registrados, opcionalmente filtrada por estado.
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [PENDIENTE, ACEPTADO, RECHAZADA]
+          required: false
+          description: Filtrar voluntarios por su estado en la plataforma.
       responses:
         '200':
           description: Lista recuperada con éxito

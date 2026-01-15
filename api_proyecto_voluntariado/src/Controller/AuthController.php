@@ -48,8 +48,8 @@ class AuthController extends AbstractController
 
 
         // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS ---
-        if (!$dto->dni || !$dto->email || !$dto->nombre || !$dto->password) {
-            return $this->json(['error' => 'Faltan campos obligatorios (dni, email, nombre, password)'], 400);
+        if (!$dto->dni || !$dto->email || !$dto->nombre || !$dto->password || !$dto->zona || !$dto->ciclo || !$dto->fechaNacimiento) {
+            return $this->json(['error' => 'Faltan campos obligatorios (dni, email, nombre, password, zona, ciclo, fechaNacimiento)'], 400);
         }
 
         // --- VALIDACIÓN DE FORMATO DE EMAIL (PV-41) ---

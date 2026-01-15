@@ -82,7 +82,8 @@
                         <div class="col-12 col-md-6">
                             <app-voluntariado-card [title]="item.title" [organization]="item.organization"
                                 [skills]="item.skills" [date]="item.date" [ciclo]="item.ciclo" [ods]="item.ods"
-                                [status]="item.status" [isOrganization]="true" (onAction)="onAction(item)">
+                                [status]="item.status" [isOrganization]="true" [buttonText]="item.buttonText"
+                                (onAction)="onAction(item)">
                             </app-voluntariado-card>
                         </div>
                         }
