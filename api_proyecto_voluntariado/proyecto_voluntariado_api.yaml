@@ -209,13 +209,7 @@ paths:
             type: string
           required: true
           description: CIF de la organización
-        - in: query
-          name: estado
-          schema:
-            type: string
-            enum: [PENDIENTE, EN_CURSO, FINALIZADO, CANCELADO, Pendiente, En Curso, Finalizado, Cancelado]
-          required: false
-          description: Filtra las actividades por su fase de ejecución (ej. 'En Curso').
+
         - in: query
           name: estadoAprobacion
           schema:
@@ -240,7 +234,15 @@ paths:
       tags:
         - Actividades
       summary: Listar todas las actividades
-      description: Devuelve la lista de actividades disponibles.
+      description: Devuelve la lista de actividades disponibles, opcionalmente filtrada por estado de aprobación.
+      parameters:
+        - in: query
+          name: estadoAprobacion
+          schema:
+            type: string
+            enum: [PENDIENTE, ACEPTADA, RECHAZADA]
+          required: false
+          description: Filtrar actividades por su estado de aprobación.
       responses:
         '200':
           description: Lista recuperada con éxito

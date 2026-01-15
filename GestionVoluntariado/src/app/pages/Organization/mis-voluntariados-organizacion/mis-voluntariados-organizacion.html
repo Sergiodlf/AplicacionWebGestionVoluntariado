@@ -23,9 +23,9 @@
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Mis Voluntariados</h2>
 
-                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="" middleLabel="En Curso"
-                        rightLabel="Completados" [leftCount]="countPending" [middleCount]="countMiddle"
-                        [rightCount]="countRight" (optionChanged)="onTabChange($event)">
+                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="" middleLabel="Aceptados"
+                        rightLabel="" [leftCount]="countPending" [middleCount]="countAccepted" [rightCount]="0"
+                        (optionChanged)="onTabChange($event)">
                     </app-status-toggle-voluntariado>
                 </div>
 
@@ -82,7 +82,7 @@
                         <div class="col-12 col-md-6">
                             <app-voluntariado-card [title]="item.title" [organization]="item.organization"
                                 [skills]="item.skills" [date]="item.date" [ciclo]="item.ciclo" [ods]="item.ods"
-                                [status]="item.status" (onAction)="onAction(item)">
+                                [status]="item.status" [isOrganization]="true" (onAction)="onAction(item)">
                             </app-voluntariado-card>
                         </div>
                         }

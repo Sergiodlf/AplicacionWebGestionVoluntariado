@@ -9,6 +9,7 @@ import { VoluntariadoService, Voluntariado } from '../../../services/voluntariad
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { CategoryService, Category } from '../../../services/category.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-activities',
@@ -66,32 +67,59 @@ export class ActivitiesComponent implements OnInit {
   }
 
   loadActivities() {
-    console.log('ActivitiesComponent: calling getAllVoluntariados()...');
-    this.voluntariadoService.getAllVoluntariados().subscribe({
-      next: (data) => {
-        console.log('ActivitiesComponent: Data received from API:', data);
-        this.volunteeringOpportunities = data.map((item: any) => ({
-          ...item,
-          id: item.codActividad || item.id, // Fallback if interface differs slightly
-          title: item.nombre,
-          organization: item.nombre_organizacion || 'Organización (API)',
-          skills: item.habilidades || [],
-          date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
-          ods: item.ods || []
-        }));
+    console.log('ActivitiesComponent: calling getAllVoluntariadosFiltered()...');
 
-        // Extract Filter Options
+    const pending$ = this.voluntariadoService.getAllVoluntariadosFiltered('PENDIENTE');
+    const accepted$ = this.voluntariadoService.getAllVoluntariadosFiltered('ACEPTADA');
+
+    forkJoin([pending$, accepted$]).subscribe({
+      next: ([pendingRes, acceptedRes]) => {
+        // Helper to safely check status handling property variations
+        const checkApproval = (item: any, expected: string) => {
+          const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+          return val === expected;
+        };
+
+        const mapActivity = (item: any) => {
+          // Check approval status first
+          const approvalStatus = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+
+          return {
+            ...item,
+            id: item.codActividad || item.id,
+            title: item.nombre,
+            organization: item.nombre_organizacion || item.nombreOrganizacion || 'Organización',
+            skills: item.habilidades || [],
+            date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
+            ods: item.ods || [],
+            // FORCE 'PENDIENTE' status for UI if approval is pending, regardless of internal 'estado'
+            estado: approvalStatus === 'PENDIENTE' ? 'PENDIENTE' : (item.estado || approvalStatus)
+          };
+        };
+
+        // Robust client-side filtering
+        this.pendingOpportunities = pendingRes
+          .filter(i => checkApproval(i, 'PENDIENTE'))
+          .map(mapActivity);
+
+        this.acceptedOpportunities = acceptedRes
+          .filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'))
+          .map(mapActivity);
+
+        console.log('Admin Pending Loaded:', this.pendingOpportunities.length);
+        console.log('Admin Accepted Loaded:', this.acceptedOpportunities.length);
+
+        // Populate common list for filtering
+        this.volunteeringOpportunities = [...this.pendingOpportunities, ...this.acceptedOpportunities];
+
+        // Extract Options for filters (from ALL loaded data)
         const orgs = new Set<string>();
         this.volunteeringOpportunities.forEach(op => {
           if (op.organization) orgs.add(op.organization);
         });
         this.availableOrganizations = Array.from(orgs).sort();
 
-        // Calculate filtered lists
-        this.pendingOpportunities = this.volunteeringOpportunities.filter(o => o.estado?.toUpperCase() === 'PENDIENTE');
-        this.acceptedOpportunities = this.volunteeringOpportunities.filter(o => o.estado?.toUpperCase() === 'ABIERTA' || o.estado?.toUpperCase() === 'ACEPTADA' || o.estado?.toUpperCase() === 'EN CURSO');
-
-        this.applyFilters(); // Apply initial empty filters
+        this.applyFilters();
       },
       error: (err) => {
         console.error('ActivitiesComponent: Error fetching activities:', err);

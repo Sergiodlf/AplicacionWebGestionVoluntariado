@@ -57,6 +57,13 @@ export class OrganizationFormComponent implements OnInit {
             sector: new FormControl('Educación', Validators.required),
             localidad: new FormControl('Pamplona', Validators.required),
 
+            cp: new FormControl('', [
+                Validators.required,
+                Validators.pattern(/^[0-9]{5}$/)
+            ]),
+
+            contacto: new FormControl('', Validators.required),
+
             descripcion: new FormControl('', [
                 Validators.required,
                 Validators.minLength(20),

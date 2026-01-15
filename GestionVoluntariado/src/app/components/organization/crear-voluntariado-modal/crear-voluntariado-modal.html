@@ -30,8 +30,11 @@
                 </div>
                 <div class="col-md-6">
                   <label class="premium-label"><i class="bi bi-building"></i>Organización</label>
-                  <input type="text" class="form-control premium-input shadow-none" [(ngModel)]="form.organization"
-                    name="organization" placeholder="Nombre de la Organización">
+                  <select class="form-select premium-input shadow-none" [(ngModel)]="form.selectedCif"
+                    name="organizationCif" [disabled]="!!cifOrganization">
+                    <option value="">Selecciona Organización...</option>
+                    <option *ngFor="let org of availableOrganizations" [value]="org.cif">{{ org.nombre }}</option>
+                  </select>
                 </div>
                 <div class="col-md-6">
                   <label class="premium-label"><i class="bi bi-grid"></i>Sector</label>
@@ -69,12 +72,12 @@
                 </div>
                 <div class="col-md-6">
                   <label class="premium-label"><i class="bi bi-calendar-event"></i>Fecha Inicio</label>
-                  <input type="datetime-local" class="form-control premium-input shadow-none"
-                    [(ngModel)]="form.startDate" name="startDate">
+                  <input type="date" class="form-control premium-input shadow-none" [(ngModel)]="form.startDate"
+                    name="startDate">
                 </div>
                 <div class="col-md-6">
                   <label class="premium-label"><i class="bi bi-calendar-check"></i>Fecha Fin</label>
-                  <input type="datetime-local" class="form-control premium-input shadow-none" [(ngModel)]="form.endDate"
+                  <input type="date" class="form-control premium-input shadow-none" [(ngModel)]="form.endDate"
                     name="endDate">
                 </div>
               </div>

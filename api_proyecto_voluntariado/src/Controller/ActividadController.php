@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\ActivityService;
 use App\Service\InscripcionService;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/actividades', name: 'api_actividades_')]
 class ActividadController extends AbstractController
@@ -98,17 +99,22 @@ class ActividadController extends AbstractController
         }
 
         $direccion = $dto->direccion ?? 'Sede Principal';
-        $estado = 'En Curso';
+        
+        // Determinar estado inicial basado en fecha
+        // $fInicio ya fue instanciado arriba (líneas 67 o 70)
+        $now = new \DateTime();
+        $estadoCalculado = ($fInicio > $now) ? 'PENDIENTE' : 'ABIERTA';
 
         // 4. Create Activity via Service
         try {
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
+                'estado'           => $estadoCalculado, // Forzar estado explícito
                 'fechaInicio'      => $dto->fechaInicio,
                 'fechaFin'         => $dto->fechaFin,
                 'maxParticipantes' => $maxParticipantes,
                 'direccion'        => $direccion,
-                'odsIds'           => $dto->ods, // Now expected to be IDs from frontend
+                'odsIds'           => $dto->ods, 
                 'habilidadIds'    => $dto->habilidades,
                 'necesidadIds'    => [] // Extend DTO if needed later
             ], $organizacion);
@@ -125,9 +131,14 @@ class ActividadController extends AbstractController
     
     // LISTAR TODAS
     #[Route('', name: 'list', methods: ['GET'])]
-    public function list(EntityManagerInterface $em): JsonResponse
+    public function list(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $actividades = $em->getRepository(Actividad::class)->findAll();
+        $criteria = [];
+        if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
+            $criteria['estadoAprobacion'] = $estadoAprobacion;
+        }
+
+        $actividades = $em->getRepository(Actividad::class)->findBy($criteria);
         
         $data = [];
         foreach ($actividades as $actividad) {
@@ -218,9 +229,6 @@ class ActividadController extends AbstractController
 
             // Filtros opcionales de Actividad
             // 1. Estado de ejecución (Pendiente, En Curso, Finalizado...)
-            if ($estado = $request->query->get('estado')) {
-                $criteria['estado'] = $estado;
-            }
             // 2. Estado de aprobación del organizador (ACEPTADA, PENDIENTE, RECHAZADA)
             if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
                 $criteria['estadoAprobacion'] = $estadoAprobacion;

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { CategoryService, ODS, Category } from '../../../services/category.service';
+import { OrganizationService } from '../../../services/organization.service';
+import { Organization } from '../../../models/organizationModel';
 
 @Component({
   selector: 'app-crear-voluntariado-modal',
@@ -18,10 +20,11 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
 
   availableOds: ODS[] = [];
   availableHabilidades: Category[] = [];
+  availableOrganizations: Organization[] = [];
 
   form = {
     title: '',
-    organization: '',
+    selectedCif: '', // Changed from string name to selected CIF
     sector: '',
     zone: '',
     description: '',
@@ -35,7 +38,8 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
 
   constructor(
     private voluntariadoService: VoluntariadoService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private organizationService: OrganizationService
   ) { }
 
   ngOnInit() {
@@ -45,6 +49,28 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
     this.categoryService.getHabilidades().subscribe(h => {
       this.availableHabilidades = h;
     });
+
+    // Load Accepted Organizations
+    this.organizationService.getOrganizations().subscribe(orgs => {
+      console.log('Raw Organizations fetched:', orgs);
+
+      this.availableOrganizations = orgs.filter(o => {
+        const estado = (o.estado || '').toLowerCase();
+        // Include if Accepted OR if it matches the forced CIF (e.g. the logged-in org itself)
+        const isAccepted = estado === 'aprobado' || estado === 'aceptada' || estado === 'aceptado' || estado === 'confirmado';
+        const isForced = this.cifOrganization && o.cif === this.cifOrganization;
+
+        return isAccepted || isForced;
+      });
+
+      console.log('Filtered Organizations:', this.availableOrganizations);
+
+      // If Input cifOrganization is provided, try to pre-select it
+      if (this.cifOrganization) {
+        this.form.selectedCif = this.cifOrganization;
+      }
+    });
+
     this.setBodyScroll(true);
   }
 
@@ -87,14 +113,17 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
   }
 
   crear() {
-    if (!this.form.title) return;
+    if (!this.form.title || !this.form.selectedCif || !this.form.startDate || !this.form.endDate || !this.form.sector || !this.form.zone) {
+      alert('Por favor rellena todos los campos obligatorios (Título, Organización, Fechas, Sector, Zona).');
+      return;
+    }
 
     const payload = {
       nombre: this.form.title,
-      cifOrganizacion: this.cifOrganization,
-      descripcion: this.form.description,
-      fechaInicio: this.form.startDate,
-      fechaFin: this.form.endDate,
+      cifOrganizacion: this.form.selectedCif, // Use selected CIF
+      descripcion: this.form.description || '', // Ensure string
+      fechaInicio: this.form.startDate ? this.form.startDate.substring(0, 10) : '',
+      fechaFin: this.form.endDate ? this.form.endDate.substring(0, 10) : '',
       direccion: this.form.zone,
       maxParticipantes: 10,
       estado: 'Pendiente',
@@ -103,16 +132,18 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
       ods: this.form.ods.map(o => o.id)
     };
 
-    console.log('Sending payload:', payload);
+    console.log('Enviando actividad:', payload);
 
     this.voluntariadoService.crearActividad(payload).subscribe({
       next: (res) => {
-        console.log('Activity created:', res);
+        console.log('Actividad creada:', res);
+        alert('Actividad creada con éxito');
         this.created.emit(res);
         this.onClose();
       },
       error: (err) => {
-        console.error('Error creating activity:', err);
+        console.error('Error creando actividad:', err);
+        alert('Hubo un error al crear la actividad. Consulta la consola.');
       }
     });
   }
