@@ -59,15 +59,20 @@ export class MisVoluntariados implements OnInit {
 
   loadAllData() {
     this.isLoading = true;
-    forkJoin({
-      pending: this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'PENDIENTE'),
-      accepted: this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'CONFIRMADO'),
-      ongoing: this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'EN_CURSO'),
-      completed: this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'COMPLETADA')
-    }).subscribe({
-      next: (result) => {
-        this.countPending = result.pending.length;
-        this.countAccepted = result.accepted.length;
+
+    this.voluntariadoService.getMyInscripciones(this.currentDNI).subscribe({
+      next: (allData) => {
+        // Filter locally
+        const pending = allData.filter(v => ['PENDIENTE', 'ABIERTA', 'Solicitado'].includes(v.estado_inscripcion || v.estado));
+        const accepted = allData.filter(v => ['CONFIRMADO', 'ACEPTADA', 'CONFIRMADA'].includes(v.estado_inscripcion || v.estado));
+        const ongoing = allData.filter(v => ['EN_CURSO', 'EN CURSO'].includes(v.estado_inscripcion || v.estado));
+        const completed = allData.filter(v => ['COMPLETADA', 'FINALIZADO'].includes(v.estado_inscripcion || v.estado));
+
+        this.countPending = pending.length;
+        this.countAccepted = accepted.length; // Will be merged display but tracked? 
+        // Actually we merge accepted, ongoing, completed into "Accepted/Second tab" usually
+        const acceptedGroup = [...accepted, ...ongoing, ...completed];
+        this.countAccepted = acceptedGroup.length;
 
         const mapItem = (v: any) => {
           let statusLabel = v.estado_inscripcion || v.estado;
@@ -94,10 +99,8 @@ export class MisVoluntariados implements OnInit {
         };
 
         this.allVolunteeringData = [
-          ...result.pending.map(v => ({ ...mapItem(v), category: 'left' })),
-          ...result.accepted.map(v => ({ ...mapItem(v), category: 'second' })),
-          ...result.ongoing.map(v => ({ ...mapItem(v), category: 'second' })), // Merged into Accepted
-          ...result.completed.map(v => ({ ...mapItem(v), category: 'second' })) // Merged into Accepted
+          ...pending.map(v => ({ ...mapItem(v), category: 'left' })),
+          ...acceptedGroup.map(v => ({ ...mapItem(v), category: 'second' }))
         ];
 
         // Recalculate counts based on merged categories
