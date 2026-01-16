@@ -43,6 +43,18 @@
                 </div>
 
                 <div class="col-md-6">
+                    <label class="premium-label"><i class="bi bi-person"></i>Persona de Contacto</label>
+                    <input type="text" class="form-control premium-input shadow-none" placeholder="Nombre completo"
+                        formControlName="contacto"
+                        [ngClass]="{'is-invalid': f['contacto'].invalid && f['contacto'].touched}">
+                    @if (f['contacto'].invalid && f['contacto'].touched) {
+                    <div class="invalid-feedback">
+                        @if (f['contacto'].errors?.['required']) { <span>El contacto es obligatorio.</span> }
+                    </div>
+                    }
+                </div>
+
+                <div class="col-md-6">
                     <label class="premium-label"><i class="bi bi-envelope"></i>Correo Electrónico</label>
                     <input type="email" class="form-control premium-input shadow-none" placeholder="contacto@gmail.com"
                         autocomplete="off" formControlName="email"
@@ -105,6 +117,18 @@
                         [ngClass]="{'is-invalid': f['direccion'].invalid && f['direccion'].touched}">
                     @if (f['direccion'].errors?.['required'] && f['direccion'].touched) {
                     <div class="invalid-feedback"><span>La dirección es obligatoria.</span></div>
+                    }
+                </div>
+
+                <div class="col-md-6">
+                    <label class="premium-label"><i class="bi bi-mailbox"></i>Código Postal</label>
+                    <input type="text" class="form-control premium-input shadow-none" placeholder="31001"
+                        formControlName="cp" [ngClass]="{'is-invalid': f['cp'].invalid && f['cp'].touched}">
+                    @if (f['cp'].invalid && f['cp'].touched) {
+                    <div class="invalid-feedback">
+                        @if (f['cp'].errors?.['required']) { <span>El CP es obligatorio.</span> }
+                        @if (f['cp'].errors?.['pattern']) { <span>Debe ser un código postal válido (5 dígitos).</span> }
+                    </div>
                     }
                 </div>
 

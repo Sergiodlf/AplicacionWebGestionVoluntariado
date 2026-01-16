@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
@@ -45,6 +45,14 @@ export class VoluntariadoService {
     return this.loadVoluntariados();
   }
 
+  getAllVoluntariadosFiltered(estadoAprobacion?: string): Observable<Voluntariado[]> {
+    let params = new HttpParams();
+    if (estadoAprobacion) {
+      params = params.set('estadoAprobacion', estadoAprobacion);
+    }
+    return this.http.get<Voluntariado[]>(this.apiUrl, { params });
+  }
+
   loadVoluntariados(): Observable<Voluntariado[]> {
     return this.http.get<Voluntariado[]>(this.apiUrl).pipe(
       tap(data => this.actividadesSubject.next(data))
@@ -82,15 +90,22 @@ export class VoluntariadoService {
     if (estado) {
       params.estado = estado;
     }
-    const fullUrl = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    let fullUrl = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    if (estado) {
+      // Use the specific endpoint requested by user
+      fullUrl = `${fullUrl}/estado`;
+      params.estado = estado;
+    }
     return this.http.get<any[]>(fullUrl, { params });
   }
 
   getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {
     console.log(`Requesting activities for CIF: [${cif}], Status: ${estado}, Appr: ${estadoAprobacion}`);
-    let params: any = { estadoAprobacion: estadoAprobacion };
+    let params = new HttpParams()
+      .set('estadoAprobacion', estadoAprobacion);
+
     if (estado) {
-      params.estado = estado;
+      params = params.set('estado', estado);
     }
     return this.http.get<any[]>(`${this.apiUrl}/organizacion/${cif}`, { params });
   }

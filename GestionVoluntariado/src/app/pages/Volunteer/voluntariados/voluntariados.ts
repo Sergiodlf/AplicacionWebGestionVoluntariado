@@ -4,18 +4,16 @@ import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarVolunteer } from '../../../components/Volunteer/sidebar-volunteer/sidebar-volunteer';
 import { VoluntariadoService, Voluntariado } from '../../../services/voluntariado-service';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
-import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 
 @Component({
   selector: 'app-voluntariados',
-  imports: [CommonModule, Navbar, SidebarVolunteer, VoluntariadoCard, StatusToggleComponent],
+  imports: [CommonModule, Navbar, SidebarVolunteer, VoluntariadoCard],
   templateUrl: './voluntariados.html',
   styleUrl: './voluntariados.css',
 })
 export class Voluntariados implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
 
-  activeTab: 'left' | 'middle' | 'right' = 'left';
   // Fetch from session or fallback
   currentDNI = localStorage.getItem('user_id') || '00000000A';
 
@@ -34,7 +32,6 @@ export class Voluntariados implements OnInit {
     // 1. Get all available activities
     this.voluntariadoService.getAllVoluntariados().subscribe({
       next: (data) => {
-        console.log('API Response /api/actividades:', data);
         this.allVoluntariados = data.map((v: any) => {
           return {
             ...v,
@@ -52,7 +49,8 @@ export class Voluntariados implements OnInit {
     });
 
     // 2. Get my inscriptions (pending matches)
-    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI, 'PENDIENTE').subscribe({
+    // FIX: Fetch ALL inscriptions (not just PENDIENTE) to ensure duplicate check works for Confirmed/Accepted too.
+    this.voluntariadoService.getInscripcionesVoluntario(this.currentDNI).subscribe({
       next: (data: any[]) => {
         this.myInscripciones = data;
         this.filterData();
@@ -66,43 +64,44 @@ export class Voluntariados implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'middle' | 'right') {
-    this.activeTab = tab;
-    this.filterData();
-  }
 
   filterData() {
-    if (this.activeTab === 'left') {
-      // "Todos" / "Available"
-      // Show all, or maybe exclude those already signed up? 
-      // User requirement: "Todos" -> "todas las actividades"
-      this.displayedVoluntariados = this.allVoluntariados;
-    } else {
-      // "Pendientes"
-      // Filter activities that match the inscription IDs
-      // Assuming inscription endpoint returns list of Activities (or Objects with codActividad)
-      const signedUpIds = this.myInscripciones.map(i => i.codActividad || i.codAct || i.id_actividad);
-      this.displayedVoluntariados = this.allVoluntariados.filter(v => signedUpIds.includes(v.codAct));
-    }
+    // Simplified: Show all available activities
+    this.displayedVoluntariados = this.allVoluntariados;
   }
 
   onAction(item: any) {
-    if (this.activeTab === 'left') { // If in "Todos", action is "Apuntarse"
-      this.inscribirse(item);
-    }
+    this.inscribirse(item);
   }
 
   inscribirse(item: Voluntariado) {
+    // 0. Pre-check: Check if already signed up locally
+    // We check against 'myInscripciones'. The API might return 'actividad' (name) or 'id_actividad'/'codActividad'.
+    // 0. Pre-check: Check if already signed up locally
+    // We check against 'myInscripciones'. The API might return 'actividad' (name) or 'id_actividad'/'codActividad'.
+
+    const alreadySignedUp = this.myInscripciones.some(i => {
+      const matchId = (i.codActividad && i.codActividad === item.codAct) || (i.id_actividad && i.id_actividad === item.codAct);
+      const matchName = (i.actividad && i.actividad === item.title) || (i.nombre && i.nombre === item.title);
+      return matchId || matchName;
+    });
+
+    if (alreadySignedUp) {
+      alert('Ya estás inscrito en el voluntariado: ' + item.title);
+      return;
+    }
+
     this.voluntariadoService.inscribirVoluntario(this.currentDNI, item.codAct).subscribe({
       next: (res) => {
-        console.log('Inscripción exitosa', res);
         alert('Te has apuntado correctamente!');
         // Refresh data to update "Pendientes"
         this.loadData();
       },
       error: (err) => {
         console.error('Error al inscribirse', err);
-        alert('Error al apuntarse. Verifica que no estés ya inscrito.');
+        // Try to show more specific error from backend if available
+        const serverMsg = err.error?.message || err.error?.error || '';
+        alert(`Error al apuntarse. ${serverMsg} Verifica que no estés ya inscrito.`);
       }
     });
   }

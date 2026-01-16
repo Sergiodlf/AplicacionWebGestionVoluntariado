@@ -9,6 +9,8 @@ import { VoluntariadoService, Voluntariado } from '../../../services/voluntariad
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { CategoryService, Category } from '../../../services/category.service';
+import { NotificationService } from '../../../services/notification.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-activities',
@@ -29,6 +31,7 @@ import { CategoryService, Category } from '../../../services/category.service';
 export class ActivitiesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
   private categoryService = inject(CategoryService);
+  private notificationService = inject(NotificationService);
   activeTab: 'left' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
@@ -66,32 +69,74 @@ export class ActivitiesComponent implements OnInit {
   }
 
   loadActivities() {
-    console.log('ActivitiesComponent: calling getAllVoluntariados()...');
-    this.voluntariadoService.getAllVoluntariados().subscribe({
-      next: (data) => {
-        console.log('ActivitiesComponent: Data received from API:', data);
-        this.volunteeringOpportunities = data.map((item: any) => ({
-          ...item,
-          id: item.codActividad || item.id, // Fallback if interface differs slightly
-          title: item.nombre,
-          organization: item.nombre_organizacion || 'Organización (API)',
-          skills: item.habilidades || [],
-          date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
-          ods: item.ods || []
-        }));
+    console.log('ActivitiesComponent: calling getAllVoluntariadosFiltered()...');
 
-        // Extract Filter Options
+    const pending$ = this.voluntariadoService.getAllVoluntariadosFiltered('PENDIENTE');
+    const accepted$ = this.voluntariadoService.getAllVoluntariadosFiltered('ACEPTADA');
+
+    forkJoin([pending$, accepted$]).subscribe({
+      next: ([pendingRes, acceptedRes]) => {
+        // Helper to safely check status handling property variations
+        const checkApproval = (item: any, expected: string) => {
+          const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+          return val === expected;
+        };
+
+        const mapActivity = (item: any) => {
+          // Check approval status first
+          const approvalStatus = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+
+          // Date-based status calculation
+          let computedStatus = 'En curso';
+          const now = new Date();
+          const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
+          const end = item.fechaFin ? new Date(item.fechaFin) : null;
+
+          if (start && now < start) {
+            computedStatus = 'Sin comenzar';
+          } else if (end && now > end) {
+            computedStatus = 'Completado';
+          }
+
+          // FORCE 'PENDIENTE' status for UI if approval is pending
+          // Otherwise use the computed date-based status
+          const finalStatus = approvalStatus === 'PENDIENTE' ? 'Pendiente' : computedStatus;
+
+          return {
+            ...item,
+            id: item.codActividad || item.id,
+            title: item.nombre,
+            organization: item.nombre_organizacion || item.nombreOrganizacion || 'Organización',
+            skills: item.habilidades || [],
+            date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
+            ods: item.ods || [],
+            estado: finalStatus
+          };
+        };
+
+        // Robust client-side filtering
+        this.pendingOpportunities = pendingRes
+          .filter(i => checkApproval(i, 'PENDIENTE'))
+          .map(mapActivity);
+
+        this.acceptedOpportunities = acceptedRes
+          .filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'))
+          .map(mapActivity);
+
+        console.log('Admin Pending Loaded:', this.pendingOpportunities.length);
+        console.log('Admin Accepted Loaded:', this.acceptedOpportunities.length);
+
+        // Populate common list for filtering
+        this.volunteeringOpportunities = [...this.pendingOpportunities, ...this.acceptedOpportunities];
+
+        // Extract Options for filters (from ALL loaded data)
         const orgs = new Set<string>();
         this.volunteeringOpportunities.forEach(op => {
           if (op.organization) orgs.add(op.organization);
         });
         this.availableOrganizations = Array.from(orgs).sort();
 
-        // Calculate filtered lists
-        this.pendingOpportunities = this.volunteeringOpportunities.filter(o => o.estado?.toUpperCase() === 'PENDIENTE');
-        this.acceptedOpportunities = this.volunteeringOpportunities.filter(o => o.estado?.toUpperCase() === 'ABIERTA' || o.estado?.toUpperCase() === 'ACEPTADA' || o.estado?.toUpperCase() === 'EN CURSO');
-
-        this.applyFilters(); // Apply initial empty filters
+        this.applyFilters();
       },
       error: (err) => {
         console.error('ActivitiesComponent: Error fetching activities:', err);
@@ -220,16 +265,16 @@ export class ActivitiesComponent implements OnInit {
     if (item.estado?.toUpperCase() === 'PENDIENTE') {
       this.voluntariadoService.actualizarEstadoActividad(item.id, 'ACEPTADA').subscribe({
         next: () => {
-          alert('Actividad aceptada con éxito');
+          this.notificationService.showSuccess('Actividad aceptada con éxito');
           this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities()); // Reload with force refresh
         },
         error: (err) => {
           console.error('Error updating activity status:', err);
-          alert('Error al aceptar la actividad');
+          this.notificationService.showError('Error al aceptar la actividad');
         }
       });
     } else {
-      alert('Esta actividad ya ha sido procesada.');
+      this.notificationService.showInfo('Esta actividad ya ha sido procesada.');
     }
   }
 
@@ -257,6 +302,7 @@ export class ActivitiesComponent implements OnInit {
     this.voluntariadoService.crearActividad(newVoluntariado).subscribe(() => {
       this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities());
       this.modalCrearActividadOpen = false;
+      this.notificationService.showSuccess('Actividad creada con éxito');
     });
   }
 
@@ -271,7 +317,7 @@ export class ActivitiesComponent implements OnInit {
 
   onMatchCreated() {
     this.showAssignModal = false;
-    alert('Voluntario asignado correctamente');
+    this.notificationService.showSuccess('Voluntario asignado correctamente');
   }
   parseJson(value: any): string[] {
     if (!value) return [];

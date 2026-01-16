@@ -5,7 +5,8 @@
                 <h3 class="fw-bold text-custom-blue">Registro de Organización</h3>
             </div>
 
-            <app-organization-form submitLabel="Registrar Organización" [isModal]="false"></app-organization-form>
+            <app-organization-form submitLabel="Registrar Organización" [isModal]="false"
+                (onSubmit)="onRegistrationSuccess($event)"></app-organization-form>
 
             <div class="text-center mt-5 pt-3 border-top">
                 <p class="text-muted mb-0">

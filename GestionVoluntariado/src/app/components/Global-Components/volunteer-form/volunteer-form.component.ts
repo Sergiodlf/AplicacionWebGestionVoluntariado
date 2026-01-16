@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { VolunteerService } from '../../../services/volunteer.service';
 import { CategoryService, Category } from '../../../services/category.service';
 
@@ -48,15 +48,15 @@ export class VolunteerFormComponent implements OnInit {
     dni: ['', [Validators.required, Validators.maxLength(9)]],
     correo: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
-    zona: [''],
-    ciclo: [''],
-    fechaNacimiento: [''],
+    zona: ['', Validators.required],
+    ciclo: ['', Validators.required],
+    fechaNacimiento: ['', Validators.required],
     experiencia: [''],
     coche: [''],
-    idiomas: [[]],
-    habilidades: [[]], // This will store IDs
-    intereses: [[]],   // This will store IDs
-    disponibilidad: [[]]
+    idiomas: new FormControl<string[]>([]),
+    habilidades: new FormControl<number[]>([]),
+    intereses: new FormControl<number[]>([]),
+    disponibilidad: new FormControl<string[]>([])
   });
 
   addedSkills: Category[] = [];
@@ -65,6 +65,9 @@ export class VolunteerFormComponent implements OnInit {
   addedIdiomas: string[] = [];
 
   ngOnInit() {
+    this.addedIdiomas = [];
+    this.addedAvailability = [];
+
     this.volunteerService.getCiclos().subscribe({
       next: (data) => this.availableCiclos = data,
       error: (err) => console.error('Error fetching cycles:', err)
@@ -155,14 +158,14 @@ export class VolunteerFormComponent implements OnInit {
       const val = `${this.selectedDay} ${this.selectedSlot}`;
       if (!this.addedAvailability.includes(val)) {
         this.addedAvailability.push(val);
-        this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
+        this.volunteerForm.patchValue({ disponibilidad: [...this.addedAvailability] });
       }
       this.selectedDay = '';
       this.selectedSlot = '';
     } else if (listName === 'idiomas') {
       if (!this.addedIdiomas.includes(value)) {
         this.addedIdiomas.push(value);
-        this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
+        this.volunteerForm.patchValue({ idiomas: [...this.addedIdiomas] });
       }
       this.selectedIdioma = '';
     }
@@ -177,10 +180,10 @@ export class VolunteerFormComponent implements OnInit {
       this.volunteerForm.patchValue({ intereses: this.addedInterests.map(i => i.id) });
     } else if (listName === 'disponibilidad') {
       this.addedAvailability = this.addedAvailability.filter(v => v !== value);
-      this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
+      this.volunteerForm.patchValue({ disponibilidad: [...this.addedAvailability] });
     } else if (listName === 'idiomas') {
       this.addedIdiomas = this.addedIdiomas.filter(v => v !== value);
-      this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
+      this.volunteerForm.patchValue({ idiomas: [...this.addedIdiomas] });
     }
   }
 
@@ -192,14 +195,23 @@ export class VolunteerFormComponent implements OnInit {
 
   onRegister() {
     this.errorMessage = '';
+
     if (this.volunteerForm.valid) {
-      const formData = this.volunteerForm.value;
+      // Create valid payload manually to guarantee arrays are included
+      const formValue = this.volunteerForm.value;
+      const finalPayload = {
+        ...formValue,
+        idiomas: [...this.addedIdiomas], // Force local array
+        disponibilidad: [...this.addedAvailability], // Force local array
+        habilidades: this.addedSkills.map(s => s.id),
+        intereses: this.addedInterests.map(i => i.id)
+      };
 
       if (this.isEdit && this.initialData) {
         // If it's an edit, we call updateProfile
         // The DNI is usually the identifier
         const identifier = this.initialData.dni || this.initialData.email;
-        this.volunteerService.updateProfile(identifier, formData).subscribe({
+        this.volunteerService.updateProfile(identifier, finalPayload).subscribe({
           next: (response) => {
             this.onSubmit.emit(response);
           },
@@ -210,7 +222,7 @@ export class VolunteerFormComponent implements OnInit {
         });
       } else {
         // Otherwise, it's a registration (handled by the parent)
-        this.onSubmit.emit(formData);
+        this.onSubmit.emit(finalPayload);
       }
     } else {
       let errorMsg = 'Por favor, revise los campos obligatorios:\n';

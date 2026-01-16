@@ -17,3 +17,41 @@
     background-color: #172e6e;
     border-color: #172e6e;
 }
+
+/* Status Pill Styles */
+.status-pill {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    z-index: 10;
+
+    /* Default */
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.status-pill.sin-comenzar {
+    background-color: #E6E6E6;
+    color: #555555;
+}
+
+.status-pill.en-curso {
+    background-color: #DCFCE7;
+    color: #34A853;
+}
+
+.status-pill.pendiente {
+    background-color: #FFF4E5;
+    color: #B76E00;
+    border: 1px solid #FFD599;
+}
+
+.status-pill.completado {
+    background-color: #E0E7FF;
+    color: #4F46E5;
+}

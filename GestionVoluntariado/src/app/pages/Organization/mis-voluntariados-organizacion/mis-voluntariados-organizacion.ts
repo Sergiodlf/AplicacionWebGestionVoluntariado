@@ -18,7 +18,7 @@ import { forkJoin } from 'rxjs';
   styleUrl: './mis-voluntariados-organizacion.css',
 })
 export class MisVoluntariadosOrganizacion implements OnInit {
-  activeTab: 'left' | 'middle' | 'right' = 'left';
+  activeTab: 'left' | 'middle' = 'left';
   tabLabel = 'Pendientes';
   volunteeringData: any[] = [];
   allVolunteeringData: any[] = [];
@@ -42,8 +42,7 @@ export class MisVoluntariadosOrganizacion implements OnInit {
 
   // Counts
   countPending = 0;
-  countMiddle = 0;
-  countRight = 0;
+  countAccepted = 0;
 
   // CIF de prueba: si no es organización, usamos Cruz Roja por defecto para evitar 404 en pruebas
   public readonly TEST_CIF = (localStorage.getItem('user_role') === 'organizacion'
@@ -60,34 +59,56 @@ export class MisVoluntariadosOrganizacion implements OnInit {
     this.isLoading = true;
     console.log('Fetching activities for CIF:', this.TEST_CIF);
 
-    this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, undefined, undefined).subscribe({
-      next: (results: any[]) => {
-        // En este componente, 'left' (Pendientes) incluye:
-        // 1. Actividades ACEPTADAS que están en estado PENDIENTE o ABIERTA
-        // 2. Actividades que aún están en revisión (Aprobación PENDIENTE)
+    const pending$ = this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, undefined, 'PENDIENTE');
+    const accepted$ = this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, undefined, 'ACEPTADA');
 
-        const pendingReal = results.filter(i =>
-          (i.estado === 'PENDIENTE' || i.estado === 'ABIERTA') &&
-          i.estadoAprobacion === 'ACEPTADA'
-        );
-        const inReview = results.filter(i => i.estadoAprobacion === 'PENDIENTE');
+    forkJoin([pending$, accepted$]).subscribe({
+      next: ([pendingRes, acceptedRes]) => {
+        console.log('RAW Returned Pending:', pendingRes);
+        console.log('RAW Returned Accepted:', acceptedRes);
 
-        const inCourse = results.filter(i => (i.estado === 'EN_CURSO' || i.estado === 'En Curso') && i.estadoAprobacion === 'ACEPTADA');
-        const completed = results.filter(i => (i.estado === 'COMPLETADA' || i.estado === 'CERRADA') && i.estadoAprobacion === 'ACEPTADA');
+        // Helper to safely check status handling property variations
+        const checkApproval = (item: any, expected: string) => {
+          const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+          console.log(`Checking item ${item.nombre} [${item.codActividad}]: Val=${val}, Expected=${expected}, Match=${val === expected}`);
+          return val === expected;
+        };
 
-        this.countPending = pendingReal.length + inReview.length;
-        this.countMiddle = inCourse.length;
-        this.countRight = completed.length;
+        // Validation: Filter again client-side in case the API returns mixed results
+        // We strictly enforce that 'accepted' tab ONLY contains confirmed/accepted items
+        const pendingResults = pendingRes.filter(i => checkApproval(i, 'PENDIENTE'));
+        const acceptedResults = acceptedRes.filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'));
+
+        console.log('Filtered Pending:', pendingResults);
+        console.log('Filtered Accepted:', acceptedResults);
+
+        this.countPending = pendingResults.length;
+        this.countAccepted = acceptedResults.length;
 
         const orgName = localStorage.getItem('user_name') || 'Mi Organización';
 
-        // Map and merge all for easier filtering
         const mapItem = (item: any, cat: string) => {
-          let statusLabel = item.estado;
-          if (statusLabel === 'ABIERTA' || statusLabel === 'PENDIENTE') {
-            statusLabel = 'Pendiente';
-          } else if (statusLabel === 'COMPLETADA' || statusLabel === 'CERRADA') {
-            statusLabel = 'Completado';
+          let statusLabel = '';
+          let buttonText = '';
+
+          // Labels only for Aceptados (middle) where lifecycle matters
+          if (cat === 'middle') {
+            const now = new Date();
+            const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
+            const end = item.fechaFin ? new Date(item.fechaFin) : null;
+
+            if (start && now < start) {
+              statusLabel = 'Sin comenzar';
+            } else if (end && now > end) {
+              statusLabel = 'Completado';
+            } else {
+              statusLabel = 'En curso';
+            }
+
+            // buttonText removed
+          } else if (cat === 'left') {
+            // Pendientes
+            buttonText = 'Aceptar';
           }
 
           return {
@@ -95,19 +116,17 @@ export class MisVoluntariadosOrganizacion implements OnInit {
             category: cat,
             title: item.nombre,
             organization: orgName,
-            // Backend now returns objects for skills and ods
             skills: item.habilidades || [],
             date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha pendiente',
-            status: statusLabel,
+            status: statusLabel, // Computed date-based status
+            buttonText: buttonText,
             ods: item.ods || []
           };
         };
 
         this.allVolunteeringData = [
-          ...pendingReal.map((i: any) => mapItem(i, 'left')),
-          ...inReview.map((i: any) => mapItem(i, 'left')),
-          ...inCourse.map((i: any) => mapItem(i, 'middle')),
-          ...completed.map((i: any) => mapItem(i, 'right'))
+          ...pendingResults.map((i: any) => mapItem(i, 'left')),
+          ...acceptedResults.map((i: any) => mapItem(i, 'middle'))
         ];
 
         this.extractFilterOptions();
@@ -116,10 +135,8 @@ export class MisVoluntariadosOrganizacion implements OnInit {
       },
       error: (err) => {
         console.error('Error loading organization activities:', err);
-        // Si hay error (como el 404), intentamos cargar al menos el nombre de la organización
         this.isLoading = false;
         if (err.status === 404) {
-          console.warn('La organización no existe o el CIF es de un voluntario. Usando datos vacíos para evitar errores visuales.');
           this.allVolunteeringData = [];
           this.applyFilters();
         }
@@ -187,16 +204,13 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   }
 
   onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
-    // Map 'second' to 'left' if it ever happens
-    if (tab === 'second' || tab === 'left') {
+    // We only use 'left' (Pendientes) and 'middle' (Aceptados) now
+    if (tab === 'left') {
       this.activeTab = 'left';
       this.tabLabel = 'Pendientes';
     } else if (tab === 'middle') {
       this.activeTab = 'middle';
-      this.tabLabel = 'En Curso';
-    } else if (tab === 'right') {
-      this.activeTab = 'right';
-      this.tabLabel = 'Completados';
+      this.tabLabel = 'Aceptados';
     }
 
     this.applyFilters();

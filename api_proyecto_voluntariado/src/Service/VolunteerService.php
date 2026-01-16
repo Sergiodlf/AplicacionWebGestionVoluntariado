@@ -13,17 +13,20 @@ class VolunteerService
     private $passwordHasher;
     private $habilidadRepository;
     private $interesRepository;
+    private $cicloRepository;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         UserPasswordHasherInterface $passwordHasher,
         \App\Repository\HabilidadRepository $habilidadRepository,
-        \App\Repository\InteresRepository $interesRepository
+        \App\Repository\InteresRepository $interesRepository,
+        \App\Repository\CicloRepository $cicloRepository
     ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->habilidadRepository = $habilidadRepository;
         $this->interesRepository = $interesRepository;
+        $this->cicloRepository = $cicloRepository;
     }
 
     /**
@@ -46,6 +49,9 @@ class VolunteerService
      */
     public function registerVolunteer(RegistroVoluntarioDTO $dto): Voluntario
     {
+        error_log('Registering volunteer: ' . $dto->email);
+        error_log('Disponibilidad received: ' . json_encode($dto->disponibilidad));
+
         $voluntario = new Voluntario();
         $voluntario->setDni($dto->dni);
         $voluntario->setCorreo($dto->email);
@@ -70,6 +76,16 @@ class VolunteerService
         
         $voluntario->setExperiencia($dto->experiencia ?? 'Sin experiencia previa');
         $voluntario->setCoche($dto->coche ?? false);
+
+        // Handle Ciclo
+        if ($dto->ciclo) {
+            $cicloEntity = $this->cicloRepository->findOneBy(['nombre' => $dto->ciclo]);
+            if ($cicloEntity) {
+                $voluntario->setCiclo($cicloEntity);
+            } else {
+                error_log("Ciclo not found: " . $dto->ciclo);
+            }
+        }
         
         // Link Habilidades
         if (!empty($dto->habilidades)) {

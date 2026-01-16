@@ -56,7 +56,8 @@ Para mantener la estabilidad del código, implementamos una estrategia de **Git 
     composer install
     ```
 2.  **Configurar entorno:**
-    Copiar `.env` a `.env.local` y configurar `DATABASE_URL`.
+    - Asegurarse de que `.env` / `.env.local` y `DATABASE_URL` tenga su usuario y contraseña corresponiente.
+    - Asegurarse de que no haya ningún archivo `.php` en la carptea `/migrations`.
 3.  **Base de Datos:**
     ```bash
     php bin/console doctrine:database:create

@@ -12,9 +12,14 @@ use Symfony\Component\Routing\Annotation\Route;
 class VoluntarioController extends AbstractController
 {
     #[Route('', name: 'api_voluntarios_list', methods: ['GET'])]
-    public function getAllVoluntarios(VoluntarioRepository $voluntarioRepository): JsonResponse
+    public function getAllVoluntarios(Request $request, VoluntarioRepository $voluntarioRepository): JsonResponse
     {
-        $voluntarios = $voluntarioRepository->findAll();
+        $criteria = [];
+        if ($estado = $request->query->get('estado')) {
+            $criteria['estadoVoluntario'] = $estado;
+        }
+
+        $voluntarios = $voluntarioRepository->findBy($criteria);
 
         $data = [];
         foreach ($voluntarios as $voluntario) {

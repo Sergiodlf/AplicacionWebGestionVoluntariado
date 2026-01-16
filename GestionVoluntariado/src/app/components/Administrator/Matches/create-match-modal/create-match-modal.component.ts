@@ -4,17 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { VolunteerService } from '../../../../services/volunteer.service';
 import { ActividadService } from '../../../../services/actividad';
 import { VoluntariadoService } from '../../../../services/voluntariado-service';
+import { NotificationService } from '../../../../services/notification.service';
 
 @Component({
     selector: 'app-create-match-modal',
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './create-match-modal.component.html',
-    styles: [`
-    .modal-backdrop-custom {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-  `]
+    styleUrl: './create-match-modal.component.css',
 })
 export class CreateMatchModalComponent implements OnInit, OnDestroy {
     @Output() close = new EventEmitter<void>();
@@ -25,6 +22,7 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
     private volunteerService = inject(VolunteerService);
     private actividadService = inject(ActividadService);
     private voluntariadoService = inject(VoluntariadoService);
+    private notificationService = inject(NotificationService);
 
     volunteers: any[] = [];
     activities: any[] = [];
@@ -39,19 +37,9 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
             this.selectedVolunteerDnI = this.preselectedVolunteer.dni;
         }
         this.loadData();
-        this.setBodyScroll(true);
     }
 
     ngOnDestroy() {
-        this.setBodyScroll(false);
-    }
-
-    private setBodyScroll(lock: boolean) {
-        if (lock) {
-            document.body.classList.add('body-modal-open');
-        } else {
-            document.body.classList.remove('body-modal-open');
-        }
     }
 
     loadData() {
@@ -86,25 +74,24 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
 
     onSubmit() {
         if (!this.selectedVolunteerDnI || !this.selectedActivityId) {
-            alert('Por favor selecciona un voluntario y una actividad');
+            this.notificationService.showError('Por favor selecciona un voluntario y una actividad');
             return;
         }
 
         this.isLoading = true;
         this.voluntariadoService.inscribirVoluntario(this.selectedVolunteerDnI, this.selectedActivityId).subscribe({
             next: () => {
-                alert('Match creado con éxito');
+                this.notificationService.showSuccess('Match creado con éxito');
                 this.isLoading = false;
-                this.setBodyScroll(false);
                 this.matchCreated.emit();
                 this.close.emit();
             },
             error: (err) => {
                 console.error('Error creating match', err);
                 if (err.status === 409) {
-                    alert('Este voluntario ya tiene una solicitud para esta actividad.');
+                    this.notificationService.showWarning('Este voluntario ya tiene una solicitud para esta actividad.');
                 } else {
-                    alert('Error al crear el match: ' + (err.error?.message || 'Inténtalo de nuevo.'));
+                    this.notificationService.showError('Error al crear el match: ' + (err.error?.message || 'Inténtalo de nuevo.'));
                 }
                 this.isLoading = false;
             }

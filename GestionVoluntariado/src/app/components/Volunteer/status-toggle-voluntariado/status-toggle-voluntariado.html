@@ -13,13 +13,13 @@
   </div>
 
   <!-- Middle Option -->
-  <div class="toggle-option" [class.active]="active === 'middle'" (click)="setOption('middle')">
+  <div *ngIf="middleLabel" class="toggle-option" [class.active]="active === 'middle'" (click)="setOption('middle')">
     {{ middleLabel }}
     <span class="badge">{{ middleCount }}</span>
   </div>
 
   <!-- Right Option -->
-  <div class="toggle-option" [class.active]="active === 'right'" (click)="setOption('right')">
+  <div *ngIf="rightLabel" class="toggle-option" [class.active]="active === 'right'" (click)="setOption('right')">
     {{ rightLabel }}
     <span class="badge">{{ rightCount }}</span>
   </div>

@@ -27,10 +27,15 @@ class OrganizacionController extends AbstractController
      * @return JsonResponse La lista de organizaciones serializada.
      */
     #[Route('/api/organizations', name: 'api_organizations_list', methods: ['GET'])]
-    public function getOrganizations(OrganizacionRepository $organizacionRepository): JsonResponse
+    public function getOrganizations(Request $request, OrganizacionRepository $organizacionRepository): JsonResponse
     {
-        // 1. Obtiene todas las organizaciones de la base de datos.
-        $organizaciones = $organizacionRepository->findAll();
+        // 1. Obtiene las organizaciones, aplicando filtro opcional por estado.
+        $criteria = [];
+        if ($estado = $request->query->get('estado')) {
+            $criteria['estado'] = $estado;
+        }
+
+        $organizaciones = $organizacionRepository->findBy($criteria);
 
         // 2. Serializa el array de objetos a JSON y lo devuelve.
         // Se usa 'org:read' para enviar solo los campos públicos (excluyendo el password).

@@ -183,6 +183,14 @@ class InscripcionController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('/voluntario/{dni}/inscripciones/estado', name: 'get_inscripciones_voluntario_estado_legacy', methods: ['GET'])]
+    public function getInscripcionesVoluntarioByEstadoLegacy(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        // This endpoint supports the legacy/requested format where filtered status is passed via query param ?estado=
+        // essentially identical to getInscripcionesVoluntario but explicit path.
+        return $this->getInscripcionesVoluntario($dni, $request, $em);
+    }
+
     #[Route('/voluntario/{dni}/inscripciones', name: 'get_inscripciones_voluntario', methods: ['GET'])]
     public function getInscripcionesVoluntario(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
     {

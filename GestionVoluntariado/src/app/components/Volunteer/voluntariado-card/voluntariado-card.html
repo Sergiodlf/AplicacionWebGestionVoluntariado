@@ -7,17 +7,27 @@
       </div>
     </div>
     @if(status === ''){
+    @if(!isOrganization) {
     <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
       Apuntarse
     </button>
+    }
     }@else {
+    @if(buttonText) {
+    <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill"
+      (click)="onAction.emit(); $event.stopPropagation()">
+      {{ buttonText }}
+    </button>
+    } @else {
     <div class="status-pill" [ngClass]="{
-    'pendiente': status === 'Pendiente',
-    'completado': status === 'Completado'
-  }">
+      'sin-comenzar': status === 'Sin comenzar',
+      'en-curso': status === 'En curso',
+      'completado': status === 'Completado',
+      'pendiente': status === 'Pendiente'
+    }">
       {{ status }}
     </div>
-
+    }
     }
 
   </div>
@@ -61,4 +71,15 @@
       </div>
     </div>
   </div>
+
+  @if(status !== '' && buttonText) {
+  <div class="status-pill" [ngClass]="{
+      'sin-comenzar': status === 'Sin comenzar',
+      'en-curso': status === 'En curso',
+      'completado': status === 'Completado',
+      'pendiente': status === 'Pendiente'
+    }">
+    {{ status }}
+  </div>
+  }
 </div>

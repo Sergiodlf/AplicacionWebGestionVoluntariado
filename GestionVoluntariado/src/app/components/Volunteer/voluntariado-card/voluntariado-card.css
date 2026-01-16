@@ -19,17 +19,27 @@
 }
 
 /* --- Estilo base: EN CURSO --- */
+/* --- Estilo base: EN CURSO --- */
 .status-pill {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-
   padding: 6px 16px;
   border-radius: 20px;
   font-weight: 600;
   font-size: 0.9rem;
+  z-index: 10;
 
   /* En Curso por defecto */
+  background-color: #DCFCE7;
+  color: #34A853;
+}
+
+/* Sin Comenzar */
+.status-pill.sin-comenzar {
+  background-color: #E6E6E6;
+  color: #555555;
+}
+
+/* En Curso */
+.status-pill.en-curso {
   background-color: #DCFCE7;
   color: #34A853;
 }

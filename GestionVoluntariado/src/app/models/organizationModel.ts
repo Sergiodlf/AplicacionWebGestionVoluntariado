@@ -9,6 +9,8 @@ export interface Organization {
   sector: string;
   direccion: string;
   localidad: string;
+  cp: string;         // Nuevo campo requerido por backend
+  contacto: string;   // Nuevo campo requerido por backend
   descripcion: string;
   actividades?: any[];
   contacto?: string;

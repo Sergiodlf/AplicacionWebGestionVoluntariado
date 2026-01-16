@@ -1,5 +1,8 @@
-<div class="modal fade show" role="dialog" aria-modal="true" style="display: block;">
-    <div class="modal-backdrop fade show modal-backdrop-custom" (click)="close.emit()"></div>
+<!-- Backdrop -->
+<div class="custom-backdrop" (click)="close.emit()"></div>
+
+<!-- Modal -->
+<div class="modal fade show d-block" role="dialog" aria-modal="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
@@ -7,8 +10,6 @@
                 <button type="button" class="btn-close" (click)="close.emit()"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- ... content ... -->
-
                 <div class="mb-4">
                     <label class="form-label fw-bold text-muted">Voluntario</label>
                     @if (selectedActivityId) {
@@ -16,7 +17,7 @@
                         <i class="bi bi-magic me-1"></i> Ordenados por afinidad con la actividad
                     </div>
                     }
-                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI">
+                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI" [disabled]="!!preselectedVolunteer" >
                         <option value="" disabled selected>Selecciona un voluntario</option>
                         @for (vol of volunteers; track vol.dni) {
                         <option [value]="vol.dni" [style.fontWeight]="vol.matchScore > 50 ? 'bold' : 'normal'"
@@ -51,11 +52,11 @@
                             selectedVolunteer.apellido1 }}
                         </h6>
                         <div class="d-flex flex-wrap gap-2">
-                            <span *ngFor="let skill of selectedVolunteer.skills"
+                            <span *ngFor="let skill of selectedVolunteer.habilidades"
                                 class="badge bg-white text-dark border px-2 py-1 fw-normal">
                                 {{ skill.nombre || skill }}
                             </span>
-                            <small *ngIf="!selectedVolunteer.skills?.length" class="text-muted fst-italic">Sin
+                            <small *ngIf="!selectedVolunteer.habilidades?.length" class="text-muted fst-italic">Sin
                                 habilidades</small>
                         </div>
                     </div>

@@ -11,8 +11,8 @@ export class StatusToggleVoluntariado {
 
   @Input() leftLabel: string = 'Pendientes';
   @Input() secondLabel: string = ''; // New option between left and middle
-  @Input() middleLabel: string = 'En Curso';
-  @Input() rightLabel: string = 'Completados';
+  @Input() middleLabel: string = '';
+  @Input() rightLabel: string = '';
 
   @Input() leftCount: number = 0;
   @Input() secondCount: number = 0;

@@ -15,6 +15,8 @@ export class VoluntariadoCard {
   @Input() ciclo: string = '';
   @Input() ods: { id: number; nombre: string; color: string }[] = [];
   @Input() status: string = '';
+  @Input() isOrganization: boolean = false;
+  @Input() buttonText: string = '';
 
   @Output() onAction = new EventEmitter<void>();
 }

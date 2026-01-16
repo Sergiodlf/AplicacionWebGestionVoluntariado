@@ -24,7 +24,7 @@ import { CommonModule } from '@angular/common';
         <span *ngIf="middleCount !== undefined" class="badge bg-white text-custom-blue rounded-pill ms-1">{{ middleCount }}</span>
       </button>
 
-      <button 
+      <button *ngIf="rightLabel"
         class="btn rounded-pill px-4 py-2 fw-bold transition-all"
         [ngClass]="{'bg-custom-blue text-white': activeOption === 'right', 'text-muted bg-transparent': activeOption !== 'right'}"
         (click)="selectOption('right')">

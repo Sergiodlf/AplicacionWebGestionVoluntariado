@@ -7,10 +7,7 @@
 
         <!-- Header Section -->
         <div class="d-flex flex-column align-items-center mb-5">
-          <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
-          <app-status-toggle leftLabel="Todos" rightLabel="Pendientes" [leftCount]="allVoluntariados.length"
-            [rightCount]="myInscripciones.length" (optionChanged)="onTabChange($event)">
-          </app-status-toggle>
+          <h2 class="text-custom-blue fw-bold mb-4">Voluntariados Disponibles</h2>
         </div>
 
         <!-- Subheader & Search -->
@@ -18,7 +15,7 @@
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center text-dark">
               <i class="bi bi-people me-2 fs-4"></i>
-              <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Disponibles' : 'Pendientes' }}</h4>
+              <h4 class="fw-bold mb-0">Listado de Voluntariados</h4>
             </div>
 
             <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end">
@@ -41,11 +38,11 @@
           <div class="col-md-6" *ngFor="let item of displayedVoluntariados">
             <app-voluntariado-card [title]="item.title || item.nombre"
               [organization]="item.organization || item.organizacion" [skills]="item.skills || []"
-              [date]="item.date || ''" [ciclo]="item.ciclo || ''" [ods]="item.ods || []"
-              [status]="activeTab === 'right' ? 'Pendiente' : ''" (onAction)="onAction(item)">
+              [date]="item.date || ''" [ciclo]="item.ciclo || ''" [ods]="item.ods || []" (onAction)="onAction(item)">
             </app-voluntariado-card>
           </div>
         </div>
+
       </div>
     </div>
   </div>

@@ -31,8 +31,6 @@ export class MisVoluntariados implements OnInit {
   // Dynamic counts
   countPending = 0;
   countAccepted = 0;
-  countOngoing = 0;
-  countCompleted = 0;
 
   showFilterModal = signal(false);
   tempFilters = {
@@ -70,15 +68,18 @@ export class MisVoluntariados implements OnInit {
       next: (result) => {
         this.countPending = result.pending.length;
         this.countAccepted = result.accepted.length;
-        this.countOngoing = result.ongoing.length;
-        this.countCompleted = result.completed.length;
 
         const mapItem = (v: any) => {
           let statusLabel = v.estado_inscripcion || v.estado;
-          if (statusLabel === 'PENDIENTE' || statusLabel === 'ABIERTA' || statusLabel === 'Solicitado') {
-            statusLabel = 'Pendiente';
-          } else if (statusLabel === 'COMPLETADA' || statusLabel === 'CONFIRMADO' || statusLabel === 'CONFIRMADA') {
+          // Map backend status to user-friendly status
+          if (['CONFIRMADO', 'ACEPTADA', 'CONFIRMADA'].includes(statusLabel)) {
+            statusLabel = 'Sin comenzar';
+          } else if (['EN_CURSO', 'EN CURSO'].includes(statusLabel)) {
+            statusLabel = 'En curso';
+          } else if (['COMPLETADA', 'FINALIZADO'].includes(statusLabel)) {
             statusLabel = 'Completado';
+          } else if (['PENDIENTE', 'ABIERTA', 'Solicitado'].includes(statusLabel)) {
+            statusLabel = 'Pendiente';
           }
 
           return {
@@ -95,9 +96,13 @@ export class MisVoluntariados implements OnInit {
         this.allVolunteeringData = [
           ...result.pending.map(v => ({ ...mapItem(v), category: 'left' })),
           ...result.accepted.map(v => ({ ...mapItem(v), category: 'second' })),
-          ...result.ongoing.map(v => ({ ...mapItem(v), category: 'middle' })),
-          ...result.completed.map(v => ({ ...mapItem(v), category: 'right' }))
+          ...result.ongoing.map(v => ({ ...mapItem(v), category: 'second' })), // Merged into Accepted
+          ...result.completed.map(v => ({ ...mapItem(v), category: 'second' })) // Merged into Accepted
         ];
+
+        // Recalculate counts based on merged categories
+        this.countPending = this.allVolunteeringData.filter(v => v.category === 'left').length;
+        this.countAccepted = this.allVolunteeringData.filter(v => v.category === 'second').length;
 
         this.extractFilterOptions();
         this.applyFilters();
@@ -170,9 +175,8 @@ export class MisVoluntariados implements OnInit {
     this.activeTab = tab;
 
     if (tab === 'left') this.tabLabel = 'Pendientes';
-    if (tab === 'second') this.tabLabel = 'Aceptados';
-    if (tab === 'middle') this.tabLabel = 'En Curso';
-    if (tab === 'right') this.tabLabel = 'Completados';
+    if (tab === 'second') this.tabLabel = 'Aceptadas';
+    // Removed middle/right labels logic as they are now merged
 
     this.applyFilters();
   }

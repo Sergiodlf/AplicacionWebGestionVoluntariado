@@ -211,7 +211,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   }
 
   onFormSubmit(data: Organization): void {
-    console.log('Nueva organización añadida:', data);
+    console.log('Organización creada y recibida:', data);
     this.closeModal();
     this.organizationService.notifyOrganizationUpdate();
   }

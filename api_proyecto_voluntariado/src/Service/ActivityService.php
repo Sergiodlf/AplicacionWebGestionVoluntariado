@@ -46,13 +46,20 @@ class ActivityService
     {
         $actividad = new Actividad();
         $actividad->setNombre($data['nombre']);
-        $actividad->setEstado($data['estado'] ?? 'En Curso');
+        $now = new \DateTime();
+        $fechaInicio = isset($data['fechaInicio']) ? new \DateTime($data['fechaInicio']) : new \DateTime();
+        
+        // Determine initial state based on start date
+        // If start date is in the future (> today), it is PENDING
+        // Otherwise it is OPEN (ABIERTA)
+        $estadoCalculado = ($fechaInicio > $now) ? 'PENDIENTE' : 'ABIERTA';
+        
+        $actividad->setEstado($data['estado'] ?? $estadoCalculado);
         $actividad->setEstadoAprobacion($data['estadoAprobacion'] ?? 'PENDIENTE');
         $actividad->setOrganizacion($organizacion);
         
-        if (isset($data['fechaInicio'])) {
-            $actividad->setFechaInicio(new \DateTime($data['fechaInicio']));
-        }
+        $actividad->setFechaInicio($fechaInicio);
+        
         if (isset($data['fechaFin'])) {
             $actividad->setFechaFin(new \DateTime($data['fechaFin']));
         }
