@@ -642,6 +642,23 @@ paths:
                 items:
                   $ref: '#/components/schemas/CicloDetalle'
 
+  # ==========================================
+  # ESTADÍSTICAS (DASHBOARD)
+  # ==========================================
+  /stats/general:
+    get:
+      summary: Obtener estadísticas generales del dashboard
+      tags:
+        - Estadísticas
+      description: Devuelve los contadores de voluntarios, organizaciones y matches para el panel de control.
+      responses:
+        '200':
+          description: Estadísticas recuperadas correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1062,3 +1079,40 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/InscripcionOrganizacionDetalle'
+
+    # --- MODELO ESTADÍSTICAS ---
+    DashboardStats:
+      type: object
+      properties:
+        voluntarios:
+          type: object
+          properties:
+            total:
+              type: integer
+            pendientes:
+              type: integer
+        organizaciones:
+          type: object
+          properties:
+            total:
+              type: integer
+            pendientes:
+              type: integer
+        matches:
+          type: object
+          properties:
+            total:
+              type: integer
+        pendientes_global:
+          type: integer
+        desglose_inscripciones:
+          type: object
+          properties:
+            completados:
+              type: integer
+            pendientes:
+              type: integer
+            aceptados:
+              type: integer
+
+    # --- MODELO CICLO ---
