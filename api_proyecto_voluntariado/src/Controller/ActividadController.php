@@ -66,6 +66,17 @@ class ActividadController extends AbstractController
             if ($dto->fechaInicio) {
                 $fInicio = new \DateTime($dto->fechaInicio);
                 $fechaInicioSql = $fInicio->format('Ymd'); // Ej: 20251201
+
+                // Validar que no sea anterior a hoy
+                $hoy = new \DateTime();
+                $hoy->setTime(0, 0, 0);
+
+                $fInicioCheck = clone $fInicio;
+                $fInicioCheck->setTime(0, 0, 0);
+
+                if ($fInicioCheck < $hoy) {
+                    return $this->json(['error' => 'La fecha de inicio no puede ser anterior a la actual'], 400);
+                }
             } else {
                 $fInicio = new \DateTime();
                 $fechaInicioSql = $fInicio->format('Ymd');

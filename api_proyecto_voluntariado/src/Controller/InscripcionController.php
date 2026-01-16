@@ -56,7 +56,7 @@ class InscripcionController extends AbstractController
                     'email_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getEmail() : '',
                     'horario' => $actividad->getHorario(),
                     'habilidades_actividad' => $actividad->getHabilidades(), // Requisitos
-                    
+                    'fecha_fin_actividad' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d') : null,
                     'estado' => $inscripcion->getEstado()
                 ];
             }
@@ -262,11 +262,6 @@ class InscripcionController extends AbstractController
                     continue;
                 }
     
-                $telefono = null;
-                if (method_exists($voluntario, 'getTelefono')) {
-                    $telefono = $voluntario->getTelefono();
-                }
-
                 $data[] = [
                     'id_inscripcion' => $inscripcion->getId(),
                     'estado' => $inscripcion->getEstado(),
@@ -275,7 +270,6 @@ class InscripcionController extends AbstractController
                         'dni' => $voluntario->getDni(),
                         // 'nombre' => $voluntario->getNombre() . ' ' . $voluntario->getApellido1(),
                         // 'email' => $voluntario->getUserIdentifier(), 
-                        'telefono' => $telefono
                     ],
                     'actividad' => [
                         'codActividad' => $actividad->getCodActividad(),

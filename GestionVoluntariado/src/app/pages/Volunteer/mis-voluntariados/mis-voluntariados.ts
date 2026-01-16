@@ -89,7 +89,9 @@ export class MisVoluntariados implements OnInit {
             skills: v.habilidades || [],
             date: v.fechaInicio,
             status: statusLabel,
-            ods: v.ods || []
+            ods: v.ods || [],
+            // Ensure sector is mapped if available in nested objects (common in Symfony serialization)
+            sector: v.sector || v.actividad?.sector || v.voluntariado?.sector || v.nombre_sector || ''
           };
         };
 
@@ -120,10 +122,27 @@ export class MisVoluntariados implements OnInit {
     const secs = new Set<string>();
     this.allVolunteeringData.forEach(v => {
       if (v.direccion) locs.add(v.direccion);
+      // Try to find sector in various properties if not at root
       if (v.sector) secs.add(v.sector);
     });
+
+    // Merge with default zones to ensure filter availability
+    const defaultZones = [
+      'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea', 'Txantrea',
+      'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri', 'Sarriguren',
+      'Barañáin', 'Burlada', 'Villava', 'Uharte', 'Berriozar', 'Ansoáin',
+      'Noáin', 'Zizur Mayor', 'Mutilva'
+    ];
+    defaultZones.forEach(z => locs.add(z));
+
     this.availableLocations = Array.from(locs).sort();
-    this.availableSectors = Array.from(secs).sort();
+
+    // Hardcode sectors if none found (fallback from creation modal)
+    if (secs.size === 0) {
+      this.availableSectors = ['Educación', 'Social', 'Sanitario', 'Medio Ambiente'];
+    } else {
+      this.availableSectors = Array.from(secs).sort();
+    }
   }
 
   applyFilters() {
