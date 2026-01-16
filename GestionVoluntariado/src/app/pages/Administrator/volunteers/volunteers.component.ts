@@ -8,6 +8,7 @@ import { BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { VolunteerService } from '../../../services/volunteer.service';
 import { CategoryService } from '../../../services/category.service';
+import { NotificationService } from '../../../services/notification.service';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
@@ -31,6 +32,7 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
 export class VolunteersComponent implements OnInit, OnDestroy {
   private volunteerService = inject(VolunteerService);
   private categoryService = inject(CategoryService);
+  private notificationService = inject(NotificationService);
   private refresh$ = new BehaviorSubject<boolean>(false);
 
   // Filter Criteria Subject
@@ -288,11 +290,13 @@ export class VolunteersComponent implements OnInit, OnDestroy {
       next: () => {
         this.refresh$.next(true);
         this.closeModal('add');
-        alert('Voluntario creado con éxito');
+        this.notificationService.showSuccess('Voluntario creado con éxito');
       },
       error: (error) => {
         console.error('Error creating volunteer', error);
-        alert('Error al crear voluntario');
+        // Extract message from typical Angular HttpErrorResponse (error.error.message, error.error.error, or error.message)
+        const errorMessage = error.error?.message || error.error?.error || error.message || 'Error al crear voluntario';
+        this.notificationService.showError('Error: ' + errorMessage);
       },
     });
   }

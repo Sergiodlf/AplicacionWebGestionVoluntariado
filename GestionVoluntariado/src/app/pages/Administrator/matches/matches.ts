@@ -7,6 +7,7 @@ import { StatusToggleComponent } from '../../../components/Global-Components/sta
 import { MatchCardComponent } from '../../../components/Administrator/Matches/match-card/match-card.component';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-matches',
@@ -25,6 +26,7 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
 })
 export class MatchesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
+  private notificationService = inject(NotificationService);
 
   activeTab: 'left' | 'middle' = 'left';
   matches: any[] = [];
@@ -126,40 +128,45 @@ export class MatchesComponent implements OnInit {
     console.log('Accepting match', match);
     this.voluntariadoService.updateInscripcionStatus(match.id, 'CONFIRMADO').subscribe({
       next: () => {
-        alert('Match aceptado correctamente');
+        this.notificationService.showSuccess('Match aceptado correctamente');
         this.loadMatches(true);
       },
       error: (err) => {
         console.error('Error accepting match', err);
-        alert('Error al aceptar el match');
+        this.notificationService.showError('Error al aceptar el match');
       }
     });
   }
 
   onReject(match: any) {
     console.log('Rejecting match', match);
-    this.voluntariadoService.updateInscripcionStatus(match.id, 'RECHAZADO').subscribe({
-      next: () => {
-        alert('Match rechazado correctamente');
-        this.loadMatches(true);
-      },
-      error: (err) => {
-        console.error('Error rejecting match', err);
-        alert('Error al rechazar el match');
-      }
-    });
+    this.notificationService.showConfirmation('¿Estás seguro?', 'Vas a rechazar este match. esta acción no se puede deshacer.')
+      .then((confirmed) => {
+        if (confirmed) {
+          this.voluntariadoService.updateInscripcionStatus(match.id, 'RECHAZADO').subscribe({
+            next: () => {
+              this.notificationService.showSuccess('Match rechazado correctamente');
+              this.loadMatches(true);
+            },
+            error: (err) => {
+              console.error('Error rejecting match', err);
+              this.notificationService.showError('Error al rechazar el match');
+            }
+          });
+        }
+      });
   }
 
   onComplete(match: any) {
     console.log('Completing match', match);
     this.voluntariadoService.updateInscripcionStatus(match.id, 'COMPLETADA').subscribe({
       next: () => {
-        alert('Match completado correctamente');
+        this.notificationService.showSuccess('Match completado correctamente');
         this.loadMatches(true);
       },
       error: (err) => {
         console.error('Error completing match', err);
-        alert('Error al completar el match');
+        this.notificationService.showError('Error al completar el match');
       }
     });
   }

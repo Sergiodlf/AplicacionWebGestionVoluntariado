@@ -9,6 +9,7 @@ import { VoluntariadoService, Voluntariado } from '../../../services/voluntariad
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { CategoryService, Category } from '../../../services/category.service';
+import { NotificationService } from '../../../services/notification.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -30,6 +31,7 @@ import { forkJoin } from 'rxjs';
 export class ActivitiesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
   private categoryService = inject(CategoryService);
+  private notificationService = inject(NotificationService);
   activeTab: 'left' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
@@ -263,16 +265,16 @@ export class ActivitiesComponent implements OnInit {
     if (item.estado?.toUpperCase() === 'PENDIENTE') {
       this.voluntariadoService.actualizarEstadoActividad(item.id, 'ACEPTADA').subscribe({
         next: () => {
-          alert('Actividad aceptada con éxito');
+          this.notificationService.showSuccess('Actividad aceptada con éxito');
           this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities()); // Reload with force refresh
         },
         error: (err) => {
           console.error('Error updating activity status:', err);
-          alert('Error al aceptar la actividad');
+          this.notificationService.showError('Error al aceptar la actividad');
         }
       });
     } else {
-      alert('Esta actividad ya ha sido procesada.');
+      this.notificationService.showInfo('Esta actividad ya ha sido procesada.');
     }
   }
 
@@ -300,6 +302,7 @@ export class ActivitiesComponent implements OnInit {
     this.voluntariadoService.crearActividad(newVoluntariado).subscribe(() => {
       this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities());
       this.modalCrearActividadOpen = false;
+      this.notificationService.showSuccess('Actividad creada con éxito');
     });
   }
 
@@ -314,7 +317,7 @@ export class ActivitiesComponent implements OnInit {
 
   onMatchCreated() {
     this.showAssignModal = false;
-    alert('Voluntario asignado correctamente');
+    this.notificationService.showSuccess('Voluntario asignado correctamente');
   }
   parseJson(value: any): string[] {
     if (!value) return [];

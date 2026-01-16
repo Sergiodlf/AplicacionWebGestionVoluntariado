@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { CategoryService, ODS, Category } from '../../../services/category.service';
 import { OrganizationService } from '../../../services/organization.service';
+import { NotificationService } from '../../../services/notification.service';
 import { Organization } from '../../../models/organizationModel';
 
 @Component({
@@ -39,7 +40,8 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
   constructor(
     private voluntariadoService: VoluntariadoService,
     private categoryService: CategoryService,
-    private organizationService: OrganizationService
+    private organizationService: OrganizationService,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit() {
@@ -114,7 +116,7 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
 
   crear() {
     if (!this.form.title || !this.form.selectedCif || !this.form.startDate || !this.form.endDate || !this.form.sector || !this.form.zone) {
-      alert('Por favor rellena todos los campos obligatorios (Título, Organización, Fechas, Sector, Zona).');
+      this.notificationService.showError('Por favor rellena todos los campos obligatorios (Título, Organización, Fechas, Sector, Zona).');
       return;
     }
 
@@ -137,13 +139,14 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
     this.voluntariadoService.crearActividad(payload).subscribe({
       next: (res) => {
         console.log('Actividad creada:', res);
-        alert('Actividad creada con éxito');
+        this.notificationService.showSuccess('Actividad creada con éxito');
         this.created.emit(res);
         this.onClose();
       },
       error: (err) => {
         console.error('Error creando actividad:', err);
-        alert('Hubo un error al crear la actividad. Consulta la consola.');
+        const errorMessage = err.error?.message || err.error?.error || err.message || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error al crear la actividad: ' + errorMessage);
       }
     });
   }

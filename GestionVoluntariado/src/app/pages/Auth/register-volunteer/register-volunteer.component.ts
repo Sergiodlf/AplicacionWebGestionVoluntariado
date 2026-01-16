@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { NotificationService } from '../../../services/notification.service';
 
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
 
@@ -15,6 +16,7 @@ import { VolunteerFormComponent } from '../../../components/Global-Components/vo
 export class RegisterVolunteerComponent {
   private volunteerService = inject(VolunteerService);
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
 
   handleRegister(volunteerData: any) {
     // Map data to match backend expectation if needed (similar to Admin view)
@@ -39,12 +41,16 @@ export class RegisterVolunteerComponent {
 
     this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
       next: () => {
-        alert('Registro completado con éxito. Por favor inicia sesión.');
-        this.router.navigate(['/login']);
+        this.notificationService.showSuccessPopup(
+          'Registro completado',
+          'Tu cuenta ha sido creada con éxito. Por favor inicia sesión.'
+        ).then(() => {
+          this.router.navigate(['/login']);
+        });
       },
       error: (error) => {
         console.error('Error during registration:', error);
-        alert('Error en el registro: ' + (error.error?.error || 'Inténtalo de nuevo.'));
+        this.notificationService.showError('Error en el registro: ' + (error.error?.error || 'Inténtalo de nuevo.'));
       }
     });
   }

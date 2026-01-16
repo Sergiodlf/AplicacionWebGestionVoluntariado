@@ -184,3 +184,7 @@
 .body-modal-open {
     overflow: hidden !important;
 }
+/* SweetAlert2 Z-Index Override */
+.swal2-container {
+    z-index: 10000 !important;
+}
