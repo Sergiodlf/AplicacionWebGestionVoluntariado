@@ -1,0 +1,97 @@
+<div class="profile-page-container custom-scrollbar-hide">
+    <!-- Header Section -->
+    <div class="profile-header-section">
+        <div class="d-flex align-items-center gap-3">
+            <button (click)="goBack()" class="btn-back-link">
+                <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <h1 class="mb-0">{{ editMode ? 'Editar Perfil' : 'Mi Perfil' }}</h1>
+        </div>
+        <div class="header-actions">
+            <button *ngIf="!editMode" (click)="toggleEdit()" class="btn-edit-toggle">
+                <i class="bi bi-pencil-square"></i> Editar Perfil
+            </button>
+            <button *ngIf="editMode" (click)="submitProfile()"
+                class="btn btn-custom-blue rounded-pill px-4 text-white shadow-sm">
+                Guardar Cambios
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-overlay">
+        <div class="dot-spinner"></div>
+        <p>Cargando información...</p>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="!loading" class="profile-content-card shadow-sm border-0 rounded-4 overflow-hidden">
+
+        <!-- VIEW MODE -->
+        <div *ngIf="!editMode" class="view-mode p-4 p-md-5">
+            <div class="user-summary">
+                <div class="avatar-large" (click)="toggleEdit()">
+                    <i class="bi bi-person-circle"></i>
+                    <span class="edit-overlay"><i class="bi bi-camera"></i></span>
+                </div>
+                <div class="user-info-main">
+                    <h2>{{ volunteer?.nombre }} {{ volunteer?.apellido1 }}</h2>
+                    <p class="user-email">{{ volunteer?.email }}</p>
+                    <span class="badge-status">Voluntario</span>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label><i class="bi bi-geo-alt"></i> Zona</label>
+                    <p>{{ volunteer?.zona || 'No especificada' }}</p>
+                </div>
+                <div class="info-item">
+                    <label><i class="bi bi-briefcase"></i> Experiencia</label>
+                    <p>{{ volunteer?.experience || 'Sin especificar' }}</p>
+                </div>
+                <div class="info-item">
+                    <label><i class="bi bi-car-front"></i> Vehículo</label>
+                    <p>{{ volunteer?.hasCar ? 'Dispone de coche propio' : 'No dispone de coche' }}</p>
+                </div>
+                <div class="info-item full-width">
+                    <label><i class="bi bi-star"></i> Habilidades</label>
+                    <div class="pill-container">
+                        <span *ngFor="let h of volunteer?.habilidades" class="info-pill">{{ h.nombre || h }}</span>
+                        <span *ngIf="!volunteer?.habilidades?.length" class="empty-text">Sin habilidades
+                            registradas</span>
+                    </div>
+                </div>
+                <div class="info-item full-width">
+                    <label><i class="bi bi-heart"></i> Intereses</label>
+                    <div class="pill-container">
+                        <span *ngFor="let i of volunteer?.intereses" class="info-pill">{{ i.nombre || i }}</span>
+                        <span *ngIf="!volunteer?.intereses?.length" class="empty-text">Sin intereses registrados</span>
+                    </div>
+                </div>
+                <div class="info-item full-width">
+                    <label><i class="bi bi-clock"></i> Disponibilidad</label>
+                    <div class="pill-container">
+                        <span *ngFor="let d of volunteer?.disponibilidad" class="info-pill">{{ d }}</span>
+                        <span *ngIf="!volunteer?.disponibilidad?.length" class="empty-text">No especificada</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT MODE (Integrated Shared Form) -->
+        <div *ngIf="editMode" class="integrated-editor">
+            <!-- Parent feedback at the top -->
+            <div *ngIf="message" [class]="'feedback-toast top-toast ' + (isError ? 'error' : 'success')">
+                {{ message }}
+            </div>
+
+            <!-- Editor Body (Scrollable) -->
+            <div class="editor-scroll-body p-4 bg-light bg-opacity-10">
+                <app-volunteer-form submitLabel="Guardar Cambios" [isModal]="false" [isEdit]="true"
+                    [hideSubmitButton]="true" [initialData]="volunteer" (onSubmit)="handleFormSubmit($event)">
+                </app-volunteer-form>
+            </div>
+        </div>
+    </div>
+</div>

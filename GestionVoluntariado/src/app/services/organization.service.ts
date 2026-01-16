@@ -78,4 +78,12 @@ export class OrganizationService {
   notifyOrganizationUpdate(): void {
     this.organizationUpdatedSource.next();
   }
+
+  updateProfile(cif: string, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${cif}`, data);
+  }
+
+  getOrganizationByEmail(email: string): Observable<Organization> {
+    return this.http.post<Organization>(`${this.apiUrl}/by-email`, { email });
+  }
 }

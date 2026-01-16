@@ -11,6 +11,7 @@ export interface Organization {
   localidad: string;
   descripcion: string;
   actividades?: any[];
+  contacto?: string;
   // Vista Dashboard: Campo necesario para filtrar
   estado: 'Pendiente' | 'Aprobado' | 'Rechazado' | 'pendiente' | 'aprobado' | 'rechazado';
 }

@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        @if (organization.estado?.toLowerCase() === 'pendiente') {
+        @if (organization.estado.toLowerCase() === 'pendiente') {
         <div class="d-flex gap-2">
             <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill d-flex align-items-center"
                 (click)="onAcceptClick()">
@@ -28,14 +28,14 @@
         </div>
         }
 
-        @if (organization.estado?.toLowerCase() !== 'pendiente') {
-        @if (organization.estado?.toLowerCase() === 'aprobado') {
+        @if (organization.estado.toLowerCase() !== 'pendiente') {
+        @if (organization.estado.toLowerCase() === 'aprobado') {
         <div
             class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill d-flex align-items-center">
             <i class="bi bi-check-circle-fill me-2"></i> Aceptado
         </div>
         } @else {
-        <span [ngClass]="{'bg-danger': organization.estado?.toLowerCase() === 'rechazado'}"
+        <span [ngClass]="{'bg-danger': organization.estado.toLowerCase() === 'rechazado'}"
             class="badge text-white px-3 py-2 rounded-pill">
             {{ organization.estado }}
         </span>
