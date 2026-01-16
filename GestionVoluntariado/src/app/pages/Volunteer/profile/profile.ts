@@ -105,6 +105,14 @@ export class ProfileComponent implements OnInit {
           }, 3500);
         }
       });
+    } else {
+      this.message = 'Error al cargar el perfil. No se encontró sesión.';
+      this.isError = true;
+      this.loading = false;
+      setTimeout(() => {
+        this.message = '';
+        this.isError = false;
+      }, 3500);
     }
   }
 }

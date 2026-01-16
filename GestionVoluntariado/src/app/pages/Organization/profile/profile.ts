@@ -99,8 +99,21 @@ export class ProfileOrganizationComponent implements OnInit {
           this.message = 'Error al cargar el perfil.';
           this.isError = true;
           this.loading = false;
+          // Auto-dismiss error
+          setTimeout(() => {
+            this.message = '';
+            this.isError = false;
+          }, 3500);
         }
       });
+    } else {
+      this.message = 'Error al cargar el perfil. No se encontró sesión.';
+      this.isError = true;
+      this.loading = false;
+      setTimeout(() => {
+        this.message = '';
+        this.isError = false;
+      }, 3500);
     }
   }
 }

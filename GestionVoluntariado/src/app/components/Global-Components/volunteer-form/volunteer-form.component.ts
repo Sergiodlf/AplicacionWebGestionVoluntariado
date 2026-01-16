@@ -234,4 +234,5 @@ export class VolunteerFormComponent implements OnInit {
       this.errorMessage = errorMsg;
     }
   }
+  get f() { return this.volunteerForm.controls; }
 }

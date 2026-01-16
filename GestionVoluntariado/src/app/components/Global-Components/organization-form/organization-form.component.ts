@@ -75,7 +75,7 @@ export class OrganizationFormComponent implements OnInit {
                 Validators.maxLength(500)
             ]),
 
-            contacto: new FormControl('')
+
         });
 
         if (this.isEdit && this.initialData) {
