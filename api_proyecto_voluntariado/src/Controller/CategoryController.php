@@ -79,8 +79,8 @@ class CategoryController extends AbstractController
     public function createHabilidad(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['nombre'])) {
-            return new JsonResponse(['error' => 'Nombre es requerido'], 400);
+        if (!isset($data['nombre']) || trim($data['nombre']) === '') {
+            return new JsonResponse(['error' => 'Nombre es requerido y no puede estar vacío'], 400);
         }
 
         $h = new Habilidad();
@@ -107,8 +107,8 @@ class CategoryController extends AbstractController
     public function createInteres(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['nombre'])) {
-            return new JsonResponse(['error' => 'Nombre es requerido'], 400);
+        if (!isset($data['nombre']) || trim($data['nombre']) === '') {
+            return new JsonResponse(['error' => 'Nombre es requerido y no puede estar vacío'], 400);
         }
 
         $i = new Interes();
