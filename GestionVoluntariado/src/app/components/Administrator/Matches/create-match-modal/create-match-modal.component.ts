@@ -88,10 +88,18 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
                 console.error('Error creating match', err);
+                const msg = err.error?.error || err.error?.message || 'Error desconocido';
+
                 if (err.status === 409) {
-                    this.notificationService.showWarning('Este voluntario ya tiene una solicitud para esta actividad.');
+                    // Check specific message content if needed, or just show the backend message
+                    if (msg.includes('ya está inscrito')) {
+                        this.notificationService.showWarning(msg);
+                    } else {
+                        // "Activity complete" or "Max participants"
+                        this.notificationService.showError(msg);
+                    }
                 } else {
-                    this.notificationService.showError('Error al crear el match: ' + (err.error?.message || 'Inténtalo de nuevo.'));
+                    this.notificationService.showError('Error al crear el match: ' + msg);
                 }
                 this.isLoading = false;
             }

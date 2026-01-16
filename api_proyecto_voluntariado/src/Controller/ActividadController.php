@@ -144,18 +144,19 @@ class ActividadController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $criteria = [];
+        $qb = $em->getRepository(Actividad::class)->createQueryBuilder('a');
+        
         if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
-            $criteria['estadoAprobacion'] = $estadoAprobacion;
+            $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
+               ->setParameter('estadoAprobacion', $estadoAprobacion);
         }
 
-        $actividades = $em->getRepository(Actividad::class)->findBy($criteria);
+        $actividades = $qb->getQuery()->getResult();
         
         $data = [];
         foreach ($actividades as $actividad) {
             $data[] = [
                 'codActividad' => $actividad->getCodActividad(),
-                'nombre' => $actividad->getNombre(),
                 'nombre' => $actividad->getNombre(),
                 'estado' => $actividad->getEstado(),
                 'estadoAprobacion' => $actividad->getEstadoAprobacion(),
@@ -195,6 +196,17 @@ class ActividadController extends AbstractController
 
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
+        }
+
+        // 0. Comprobar si la actividad está completada o finalizada
+        // Asumiendo que 'FINALIZADO', 'COMPLETADA', 'CERRADA' son estados finales.
+        // También podríamos verificar la fechaFin < hoy
+        $estadoActividad = strtoupper($actividad->getEstado());
+        $estadosFinales = ['FINALIZADO', 'COMPLETADA', 'CERRADA', 'CANCELADO'];
+        $now = new \DateTime();
+        
+        if (in_array($estadoActividad, $estadosFinales) || ($actividad->getFechaFin() && $actividad->getFechaFin() < $now)) {
+             return $this->json(['error' => 'La actividad ya está completada o finalizada'], 409);
         }
 
         // 1. Comprobar si ya existe la inscripción (Vía Service)

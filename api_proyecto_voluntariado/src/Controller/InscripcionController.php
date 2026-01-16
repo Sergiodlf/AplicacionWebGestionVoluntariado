@@ -13,10 +13,23 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+use App\Service\InscripcionService;
+
 #[Route('/api/inscripciones', name: 'api_inscripciones_')]
 class InscripcionController extends AbstractController
 {
+    private $inscripcionService;
+
+    public function __construct(InscripcionService $inscripcionService)
+    {
+        $this->inscripcionService = $inscripcionService;
+    }
+
+
+    // ...
+
     #[Route('', name: 'get_all', methods: ['GET'])]
+    // Force cache update
     public function getAll(Request $request, EntityManagerInterface $em): JsonResponse
     {
         try {
@@ -102,6 +115,12 @@ class InscripcionController extends AbstractController
 
         if ($existing) {
             return $this->json(['error' => 'El voluntario ya está inscrito en esta actividad'], 409);
+        }
+
+        // VALIDACIÓN DE CUPO MÁXIMO
+        $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
+        if ($ocupadas >= $actividad->getMaxParticipantes()) {
+            return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
         }
 
         $inscripcion = new Inscripcion();

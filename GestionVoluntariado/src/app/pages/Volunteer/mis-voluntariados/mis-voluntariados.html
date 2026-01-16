@@ -45,16 +45,6 @@
                         <div class="d-flex align-items-center gap-3 ms-auto">
                             <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm border-0"
                                 style="max-width: 350px; width: 100%;">
-                                <span
-                                    class="input-group-text bg-transparent border-0 text-custom-blue position-relative"
-                                    style="cursor: pointer;" (click)="openFilterModal()">
-                                    <i class="bi bi-sliders"></i>
-                                    <span class="position-absolute constant-badge badge rounded-pill bg-danger"
-                                        style="top: 5px; right: 5px; font-size: 0.5rem; padding: 0.25em 0.4em;"
-                                        *ngIf="activeFilterCount > 0">
-                                        {{ activeFilterCount }}
-                                    </span>
-                                </span>
                                 <input type="text"
                                     class="form-control bg-transparent border-0 shadow-none ps-2 text-dark"
                                     placeholder="Buscar Voluntariado..." [(ngModel)]="searchTerm"
@@ -65,8 +55,15 @@
                             </div>
 
                             <button
-                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center text-nowrap">
+                                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center text-nowrap position-relative"
+                                (click)="openFilterModal()">
                                 <i class="bi bi-sliders me-2"></i> Filtrar Por
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light"
+                                    *ngIf="activeFilterCount > 0" style="font-size: 0.6rem;">
+                                    {{ activeFilterCount }}
+                                    <span class="visually-hidden">filtros activos</span>
+                                </span>
                             </button>
                         </div>
                     </div>

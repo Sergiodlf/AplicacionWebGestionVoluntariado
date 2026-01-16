@@ -93,10 +93,10 @@ export class MatchesComponent implements OnInit {
     // First filter by status
     switch (this.activeTab) {
       case 'left':
-        list = list.filter(m => m.status === 'PENDIENTE');
+        list = list.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE');
         break;
       case 'middle':
-        list = list.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO');
+        list = list.filter(m => ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'].includes((m.status || '').toUpperCase()));
         break;
     }
 
@@ -123,11 +123,12 @@ export class MatchesComponent implements OnInit {
   }
 
   get countPending() {
-    return this.matches.filter(m => m.status === 'PENDIENTE' && this.isMatchActive(m)).length;
+    return this.matches.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE' && this.isMatchActive(m)).length;
   }
 
   get countConfirmed() {
-    return this.matches.filter(m => (m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO') && this.isMatchActive(m)).length;
+    const valid = ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'];
+    return this.matches.filter(m => valid.includes((m.status || '').toUpperCase()) && this.isMatchActive(m)).length;
   }
 
   onTabChange(tab: 'left' | 'middle' | 'right') {

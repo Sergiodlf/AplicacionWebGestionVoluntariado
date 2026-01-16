@@ -28,7 +28,7 @@
                   <input type="text" class="form-control premium-input shadow-none" [(ngModel)]="form.title"
                     name="title" placeholder="Apoyo Escolar, Recogida de Alimentos...">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <label class="premium-label"><i class="bi bi-building"></i>Organización</label>
                   <select class="form-select premium-input shadow-none" [(ngModel)]="form.selectedCif"
                     name="organizationCif" [disabled]="!!cifOrganization">
@@ -36,7 +36,7 @@
                     <option *ngFor="let org of availableOrganizations" [value]="org.cif">{{ org.nombre }}</option>
                   </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <label class="premium-label"><i class="bi bi-grid"></i>Sector</label>
                   <select class="form-select premium-input shadow-none" [(ngModel)]="form.sector" name="sector">
                     <option value="">Selecciona Sector...</option>
@@ -45,6 +45,11 @@
                     <option>Sanitario</option>
                     <option>Medio Ambiente</option>
                   </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="premium-label"><i class="bi bi-people"></i>Max. Partic.</label>
+                  <input type="number" class="form-control premium-input shadow-none" [(ngModel)]="form.maxParticipants"
+                    name="maxParticipants" min="1" placeholder="10">
                 </div>
               </div>
             </div>
