@@ -13,6 +13,7 @@ export interface Organization {
   contacto: string;   // Nuevo campo requerido por backend
   descripcion: string;
   actividades?: any[];
+
   // Vista Dashboard: Campo necesario para filtrar
   estado: 'Pendiente' | 'Aprobado' | 'Rechazado' | 'pendiente' | 'aprobado' | 'rechazado';
 }

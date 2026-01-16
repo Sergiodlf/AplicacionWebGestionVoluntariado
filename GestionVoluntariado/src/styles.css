@@ -184,6 +184,37 @@
 .body-modal-open {
     overflow: hidden !important;
 }
+
+/* Hide scrollbar utility */
+.no-scrollbar {
+    overflow: hidden !important;
+}
+
+.custom-scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.custom-scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.btn-back-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-back-link:hover {
+    color: var(--primary-blue);
+}
+
 /* SweetAlert2 Z-Index Override */
 .swal2-container {
     z-index: 10000 !important;

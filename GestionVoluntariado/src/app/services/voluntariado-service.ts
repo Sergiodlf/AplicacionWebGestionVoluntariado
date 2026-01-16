@@ -36,6 +36,9 @@ export class VoluntariadoService {
   private actividadesSubject = new BehaviorSubject<Voluntariado[] | null>(null);
   actividades$ = this.actividadesSubject.asObservable();
 
+  private myInscripcionesSubject = new BehaviorSubject<any[] | null>(null);
+
+
   constructor(private http: HttpClient) { }
 
   getAllVoluntariados(forceReload: boolean = false): Observable<Voluntariado[]> {
@@ -77,7 +80,9 @@ export class VoluntariadoService {
     const url = `${this.apiUrl}/${idActividad}/inscribir`;
     return this.http.post(url, {
       dni: dniVoluntario
-    });
+    }).pipe(
+      tap(() => this.myInscripcionesSubject.next(null)) // Invalidate cache
+    );
   }
 
   updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE' | 'COMPLETADA'): Observable<any> {
@@ -97,6 +102,17 @@ export class VoluntariadoService {
       params.estado = estado;
     }
     return this.http.get<any[]>(fullUrl, { params });
+  }
+
+  getMyInscripciones(dni: string, forceReload: boolean = false): Observable<any[]> {
+    if (this.myInscripcionesSubject.value && !forceReload) {
+      return of(this.myInscripcionesSubject.value);
+    }
+    // Fetch all for user (no status filter to get everything)
+    const url = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    return this.http.get<any[]>(url).pipe(
+      tap(data => this.myInscripcionesSubject.next(data))
+    );
   }
 
   getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {

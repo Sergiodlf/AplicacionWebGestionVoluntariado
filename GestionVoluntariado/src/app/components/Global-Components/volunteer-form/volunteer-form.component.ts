@@ -14,6 +14,9 @@ import { CategoryService, Category } from '../../../services/category.service';
 export class VolunteerFormComponent implements OnInit {
   @Input() submitLabel: string = 'Registrarme';
   @Input() isModal: boolean = true;
+  @Input() isEdit: boolean = false;
+  @Input() initialData: any = null;
+  @Input() hideSubmitButton: boolean = false;
   @Output() onSubmit = new EventEmitter<any>();
   errorMessage: string = '';
 
@@ -40,21 +43,7 @@ export class VolunteerFormComponent implements OnInit {
     'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
   ];
 
-  volunteerForm: FormGroup = this.fb.group({
-    nombreCompleto: ['', Validators.required],
-    dni: ['', [Validators.required, Validators.maxLength(9)]],
-    correo: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-    zona: ['', Validators.required],
-    ciclo: ['', Validators.required],
-    fechaNacimiento: ['', Validators.required],
-    experiencia: [''],
-    coche: [''],
-    idiomas: new FormControl<string[]>([]),
-    habilidades: new FormControl<number[]>([]),
-    intereses: new FormControl<number[]>([]),
-    disponibilidad: new FormControl<string[]>([])
-  });
+  volunteerForm!: FormGroup;
 
   addedSkills: Category[] = [];
   addedInterests: Category[] = [];
@@ -62,6 +51,7 @@ export class VolunteerFormComponent implements OnInit {
   addedIdiomas: string[] = [];
 
   ngOnInit() {
+    this.initForm();
     this.addedIdiomas = [];
     this.addedAvailability = [];
 
@@ -70,8 +60,78 @@ export class VolunteerFormComponent implements OnInit {
       error: (err) => console.error('Error fetching cycles:', err)
     });
 
-    this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
-    this.categoryService.getIntereses().subscribe(data => this.availableInterests = data);
+    this.categoryService.getHabilidades().subscribe(data => {
+      this.availableSkills = data;
+      this.loadInitialData(); // Try matching skills after they are loaded
+    });
+    this.categoryService.getIntereses().subscribe(data => {
+      this.availableInterests = data;
+      this.loadInitialData(); // Try matching interests after they are loaded
+    });
+  }
+
+  private initForm() {
+    this.volunteerForm = this.fb.group({
+      nombreCompleto: ['', this.isEdit ? [] : Validators.required],
+      dni: ['', this.isEdit ? [] : [Validators.required, Validators.maxLength(9), Validators.pattern(/^\d{8}[a-zA-Z]$/)]],
+      correo: ['', this.isEdit ? [] : [Validators.required, Validators.email]],
+      password: ['', this.isEdit ? [] : [Validators.required, Validators.minLength(6)]],
+      zona: ['', Validators.required],
+      ciclo: ['', Validators.required],
+      fechaNacimiento: ['', this.isEdit ? [] : Validators.required],
+      experiencia: [''],
+      coche: [''],
+      idiomas: new FormControl<string[]>([]),
+      habilidades: new FormControl<number[]>([]),
+      intereses: new FormControl<number[]>([]),
+      disponibilidad: new FormControl<string[]>([])
+    });
+  }
+
+  private loadInitialData() {
+    if (!this.isEdit || !this.initialData) return;
+
+    // Direct field mapping
+    this.volunteerForm.patchValue({
+      nombreCompleto: this.initialData.nombreCompleto || this.initialData.nombre + ' ' + (this.initialData.apellido1 || ''),
+      dni: this.initialData.dni,
+      correo: this.initialData.correo || this.initialData.email,
+      zona: this.initialData.zona,
+      ciclo: this.initialData.ciclo,
+      fechaNacimiento: this.initialData.fechaNacimiento,
+      experiencia: this.initialData.experiencia || this.initialData.experience,
+      coche: this.initialData.coche || (this.initialData.hasCar ? 'Si' : 'No')
+    });
+
+    // Habilidades mapping
+    if (this.initialData.habilidades && this.availableSkills.length > 0) {
+      this.addedSkills = this.availableSkills.filter(s =>
+        this.initialData.habilidades.some((h: any) => (h.id === s.id || h === s.id || h.nombre === s.nombre))
+      );
+      this.volunteerForm.patchValue({ habilidades: this.addedSkills.map(s => s.id) });
+    }
+
+    // Intereses mapping
+    if (this.initialData.intereses && this.availableInterests.length > 0) {
+      this.addedInterests = this.availableInterests.filter(i =>
+        this.initialData.intereses.some((int: any) => (int.id === i.id || int === i.id || int.nombre === i.nombre))
+      );
+      this.volunteerForm.patchValue({ intereses: this.addedInterests.map(i => i.id) });
+    }
+
+    // Idiomas mapping
+    if (this.initialData.idiomas && this.addedIdiomas.length === 0) {
+      this.addedIdiomas = [...this.initialData.idiomas];
+      this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
+    }
+
+    // Disponibilidad mapping
+    if (this.initialData.disponibilidad && this.addedAvailability.length === 0) {
+      this.addedAvailability = Array.isArray(this.initialData.disponibilidad)
+        ? [...this.initialData.disponibilidad]
+        : [this.initialData.disponibilidad];
+      this.volunteerForm.patchValue({ disponibilidad: this.addedAvailability });
+    }
   }
 
   get canAddAvailability(): boolean {
@@ -145,7 +205,23 @@ export class VolunteerFormComponent implements OnInit {
         intereses: this.addedInterests.map(i => i.id)
       };
 
-      this.onSubmit.emit(finalPayload);
+      if (this.isEdit && this.initialData) {
+        // If it's an edit, we call updateProfile
+        // The DNI is usually the identifier
+        const identifier = this.initialData.dni || this.initialData.email;
+        this.volunteerService.updateProfile(identifier, finalPayload).subscribe({
+          next: (response) => {
+            this.onSubmit.emit(response);
+          },
+          error: (err) => {
+            this.errorMessage = 'Error al actualizar el perfil. Por favor, intente de nuevo.';
+            console.error('Error updating profile:', err);
+          }
+        });
+      } else {
+        // Otherwise, it's a registration (handled by the parent)
+        this.onSubmit.emit(finalPayload);
+      }
     } else {
       let errorMsg = 'Por favor, revise los campos obligatorios:\n';
       Object.keys(this.volunteerForm.controls).forEach(key => {
@@ -156,4 +232,5 @@ export class VolunteerFormComponent implements OnInit {
       this.errorMessage = errorMsg;
     }
   }
+  get f() { return this.volunteerForm.controls; }
 }

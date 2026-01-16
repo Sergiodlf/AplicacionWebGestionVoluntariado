@@ -1,5 +1,12 @@
 <form [formGroup]="organizationForm" (ngSubmit)="submit()" autocomplete="off" class="premium-form pb-5"
     [class.modal-form-scroll]="isModal">
+    <!-- Top Message Area (UX Improvement) -->
+    <div *ngIf="errorMessage" class="mb-4">
+        <div class="alert alert-danger px-4 py-3 rounded-4 shadow-sm border-0 d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
+            <span style="white-space: pre-line;">{{ errorMessage }}</span>
+        </div>
+    </div>
     <!-- Section: General Information -->
     <div class="form-section mb-5">
         <div class="d-flex align-items-center mb-3">
@@ -170,9 +177,12 @@
         </div>
     </div>
 
-    <div class="text-center mt-5 pt-2">
+    <!-- Sticky Action Bar (For Edit Mode integrated editor) -->
+    <!-- Sticky Action Bar (For Edit Mode integrated editor) -->
+    <div *ngIf="!hideSubmitButton"
+        [ngClass]="isModal ? 'sticky-action-bar bg-white border-top p-3 d-flex flex-column align-items-center gap-2' : 'text-center mt-5'">
         <button type="submit"
-            class="btn btn-custom-blue px-4 py-2 rounded-pill text-white shadow-lg hover-lift submit-btn">
+            class="btn btn-custom-blue px-5 py-2 rounded-pill text-white shadow hover-lift submit-btn">
             <i class="bi bi-check-lg me-2"></i> {{ submitLabel }}
         </button>
     </div>

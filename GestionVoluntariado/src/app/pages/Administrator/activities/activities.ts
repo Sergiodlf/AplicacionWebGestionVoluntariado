@@ -69,13 +69,10 @@ export class ActivitiesComponent implements OnInit {
   }
 
   loadActivities() {
-    console.log('ActivitiesComponent: calling getAllVoluntariadosFiltered()...');
+    console.log('ActivitiesComponent: calling getAllVoluntariados(false) [CACHED]...');
 
-    const pending$ = this.voluntariadoService.getAllVoluntariadosFiltered('PENDIENTE');
-    const accepted$ = this.voluntariadoService.getAllVoluntariadosFiltered('ACEPTADA');
-
-    forkJoin([pending$, accepted$]).subscribe({
-      next: ([pendingRes, acceptedRes]) => {
+    this.voluntariadoService.getAllVoluntariados(false).subscribe({
+      next: (allData) => {
         // Helper to safely check status handling property variations
         const checkApproval = (item: any, expected: string) => {
           const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
@@ -114,12 +111,12 @@ export class ActivitiesComponent implements OnInit {
           };
         };
 
-        // Robust client-side filtering
-        this.pendingOpportunities = pendingRes
+        // Robust client-side filtering from the SINGLE cached list
+        this.pendingOpportunities = allData
           .filter(i => checkApproval(i, 'PENDIENTE'))
           .map(mapActivity);
 
-        this.acceptedOpportunities = acceptedRes
+        this.acceptedOpportunities = allData
           .filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'))
           .map(mapActivity);
 

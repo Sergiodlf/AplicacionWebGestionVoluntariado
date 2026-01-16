@@ -5,12 +5,27 @@
     </a>
 
     <div class="ms-auto d-flex align-items-center">
-      <div class="d-flex align-items-center text-custom-blue">
+      <a *ngIf="profileLink" [routerLink]="profileLink"
+        class="d-flex align-items-center text-decoration-none text-custom-blue me-4 profile-trigger">
         <span class="me-2 fw-bold">Bienvenido, {{ userName }}</span>
         <div class="rounded-circle bg-custom-blue d-flex align-items-center justify-content-center border-0 shadow-sm"
           style="width: 40px; height: 40px;">
           <i class="bi bi-person-fill fs-5 text-white"></i>
         </div>
+      </a>
+
+      <div *ngIf="!profileLink" class="d-flex align-items-center text-custom-blue me-4">
+        <span class="me-2 fw-bold">Bienvenido, {{ userName }}</span>
+        <div class="rounded-circle bg-custom-blue d-flex align-items-center justify-content-center border-0 shadow-sm"
+          style="width: 40px; height: 40px;">
+          <i class="bi bi-person-fill fs-5 text-white"></i>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button (click)="logout()" class="btn btn-logout-minimal" title="Cerrar Sesión">
+          <i class="bi bi-box-arrow-right fs-4"></i>
+        </button>
       </div>
     </div>
   </div>

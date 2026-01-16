@@ -1,4 +1,4 @@
-<div class="d-flex flex-column h-100 bg-light">
+<div class="d-flex flex-column min-vh-100 bg-light">
   <app-navbar></app-navbar>
   <div class="d-flex flex-grow-1 overflow-hidden">
     <app-sidebar-volunteer></app-sidebar-volunteer>
@@ -11,6 +11,7 @@
         </div>
 
         <!-- Subheader & Search -->
+        <!-- Subheader & Search -->
         <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div class="d-flex align-items-center text-dark">
@@ -18,17 +19,25 @@
               <h4 class="fw-bold mb-0">Listado de Voluntariados</h4>
             </div>
 
-            <div class="d-flex align-items-center gap-3 flex-grow-1 justify-content-end">
-              <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm" style="max-width: 400px;">
-                <span class="input-group-text bg-transparent border-0"><i class="bi bi-calendar3 text-muted"></i></span>
-                <input type="text" class="form-control bg-transparent border-0 shadow-none"
-                  placeholder="Buscar Voluntariado">
-                <span class="input-group-text bg-transparent border-0"><i class="bi bi-search text-muted"></i></span>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+              <!-- Integrated Search & Filter Icon -->
+              <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm border-0"
+                style="max-width: 350px; width: 100%;">
+                <span class="input-group-text bg-transparent border-0 text-custom-blue position-relative"
+                  style="cursor: pointer;" (click)="openFilterModal()">
+                  <i class="bi bi-sliders"></i>
+                  <span class="position-absolute constant-badge badge rounded-pill bg-danger"
+                    style="top: 5px; right: 5px; font-size: 0.5rem; padding: 0.25em 0.4em;"
+                    *ngIf="activeFilterCount > 0">
+                    {{ activeFilterCount }}
+                  </span>
+                </span>
+                <input type="text" class="form-control bg-transparent border-0 shadow-none ps-2 text-dark"
+                  placeholder="Buscar Voluntariado..." [(ngModel)]="searchTerm" (input)="applyFilters()">
+                <span class="input-group-text bg-transparent border-0 text-custom-blue">
+                  <i class="bi bi-search"></i>
+                </span>
               </div>
-
-              <button class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center">
-                <i class="bi bi-sliders me-2"></i> Filtrar Por
-              </button>
             </div>
           </div>
         </div>
@@ -43,6 +52,51 @@
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" *ngIf="showFilterModal()">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h3 class="modal-title fw-bold text-custom-blue">Filtrar Voluntariados</h3>
+          <button type="button" class="btn-close" (click)="closeFilterModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+
+          <div class="row g-4">
+            <!-- Localidad Filter -->
+            <div class="col-12">
+              <label class="form-label fw-bold text-dark mb-2">Localidad</label>
+              <select class="form-select border-light-gray" [(ngModel)]="tempFilters.localidad">
+                <option value="">Todas las localidades</option>
+                <option *ngFor="let loc of availableLocations" [value]="loc">{{ loc }}</option>
+              </select>
+            </div>
+
+            <!-- Sector Filter -->
+            <div class="col-12">
+              <label class="form-label fw-bold text-dark mb-2">Sector</label>
+              <select class="form-select border-light-gray" [(ngModel)]="tempFilters.sector">
+                <option value="">Todos los sectores</option>
+                <option *ngFor="let sec of availableSectors" [value]="sec">{{ sec }}</option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+        <div class="modal-footer border-0 justify-content-between px-4 pb-4">
+          <button type="button" class="btn btn-outline-danger px-4 rounded-pill" (click)="resetFilters()">
+            <i class="bi bi-trash me-2"></i> Limpiar Filtros
+          </button>
+          <button type="button" class="btn btn-custom-blue text-white px-4 rounded-pill"
+            (click)="applyFiltersFromModal()">
+            Aplicar Filtros
+          </button>
+        </div>
       </div>
     </div>
   </div>

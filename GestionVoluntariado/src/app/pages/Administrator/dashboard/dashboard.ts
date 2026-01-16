@@ -19,6 +19,7 @@ export class DashboardComponent implements OnInit {
   showLoading = false;
 
   ngOnInit() {
+    this.dashboardService.loadDashboardData().subscribe();
     this.dashboardService.metrics$.subscribe((m) => (this.metrics = m));
     const fromLogin = history.state?.fromLogin;
 
