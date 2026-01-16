@@ -43,21 +43,7 @@ export class VolunteerFormComponent implements OnInit {
     'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva'
   ];
 
-  volunteerForm: FormGroup = this.fb.group({
-    nombreCompleto: ['', Validators.required],
-    dni: ['', [Validators.required, Validators.maxLength(9)]],
-    correo: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-    zona: ['', Validators.required],
-    ciclo: ['', Validators.required],
-    fechaNacimiento: ['', Validators.required],
-    experiencia: [''],
-    coche: [''],
-    idiomas: new FormControl<string[]>([]),
-    habilidades: new FormControl<number[]>([]),
-    intereses: new FormControl<number[]>([]),
-    disponibilidad: new FormControl<string[]>([])
-  });
+  volunteerForm!: FormGroup;
 
   addedSkills: Category[] = [];
   addedInterests: Category[] = [];
@@ -65,6 +51,7 @@ export class VolunteerFormComponent implements OnInit {
   addedIdiomas: string[] = [];
 
   ngOnInit() {
+    this.initForm();
     this.addedIdiomas = [];
     this.addedAvailability = [];
 
@@ -81,13 +68,24 @@ export class VolunteerFormComponent implements OnInit {
       this.availableInterests = data;
       this.loadInitialData(); // Try matching interests after they are loaded
     });
+  }
 
-    if (this.isEdit && this.initialData) {
-      if (this.volunteerForm.get('password')) {
-        this.volunteerForm.get('password')?.setValidators([]);
-        this.volunteerForm.get('password')?.updateValueAndValidity();
-      }
-    }
+  private initForm() {
+    this.volunteerForm = this.fb.group({
+      nombreCompleto: ['', this.isEdit ? [] : Validators.required],
+      dni: ['', this.isEdit ? [] : [Validators.required, Validators.maxLength(9), Validators.pattern(/^\d{8}[a-zA-Z]$/)]],
+      correo: ['', this.isEdit ? [] : [Validators.required, Validators.email]],
+      password: ['', this.isEdit ? [] : [Validators.required, Validators.minLength(6)]],
+      zona: ['', Validators.required],
+      ciclo: ['', Validators.required],
+      fechaNacimiento: ['', this.isEdit ? [] : Validators.required],
+      experiencia: [''],
+      coche: [''],
+      idiomas: new FormControl<string[]>([]),
+      habilidades: new FormControl<number[]>([]),
+      intereses: new FormControl<number[]>([]),
+      disponibilidad: new FormControl<string[]>([])
+    });
   }
 
   private loadInitialData() {
