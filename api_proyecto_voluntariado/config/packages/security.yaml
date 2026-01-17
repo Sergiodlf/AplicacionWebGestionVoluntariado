@@ -27,6 +27,7 @@ security:
         # Allow public access to registration and login (if you still use custom login)
         - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/categories, roles: PUBLIC_ACCESS }
         
         # Require authentication for everything else in /api
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
