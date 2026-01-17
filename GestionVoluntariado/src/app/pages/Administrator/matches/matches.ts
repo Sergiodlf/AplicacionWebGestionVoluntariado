@@ -72,7 +72,8 @@ export class MatchesComponent implements OnInit {
             email: item.email_organizacion || 'org@example.com',
             description: item.descripcion_actividad || '',
             schedule: item.horario || 'No especificado',
-            needs: this.parseList(item.habilidades_actividad)
+            needs: this.parseList(item.habilidades_actividad),
+            endDate: item.fecha_fin_actividad ? new Date(item.fecha_fin_actividad) : null
           },
           status: item.status || item.estado
         }));
@@ -86,14 +87,16 @@ export class MatchesComponent implements OnInit {
 
   applyFilters() {
     let list = this.matches;
+    // 0. Filter out expired activities (endDate < now)
+    list = list.filter(m => this.isMatchActive(m));
 
     // First filter by status
     switch (this.activeTab) {
       case 'left':
-        list = this.matches.filter(m => m.status === 'PENDIENTE');
+        list = list.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE');
         break;
       case 'middle':
-        list = this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO');
+        list = list.filter(m => ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'].includes((m.status || '').toUpperCase()));
         break;
     }
 
@@ -110,12 +113,22 @@ export class MatchesComponent implements OnInit {
     this.filteredMatches = list;
   }
 
+  isMatchActive(m: any): boolean {
+    if (!m.organization.endDate) return true;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const end = new Date(m.organization.endDate);
+    end.setHours(0, 0, 0, 0);
+    return end >= now;
+  }
+
   get countPending() {
-    return this.matches.filter(m => m.status === 'PENDIENTE').length;
+    return this.matches.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE' && this.isMatchActive(m)).length;
   }
 
   get countConfirmed() {
-    return this.matches.filter(m => m.status === 'CONFIRMADA' || m.status === 'ACEPTADA' || m.status === 'ACEPTADO' || m.status === 'CONFIRMADO').length;
+    const valid = ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'];
+    return this.matches.filter(m => valid.includes((m.status || '').toUpperCase()) && this.isMatchActive(m)).length;
   }
 
   onTabChange(tab: 'left' | 'middle' | 'right') {

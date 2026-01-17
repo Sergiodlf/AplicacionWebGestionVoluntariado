@@ -1,0 +1,5 @@
+kreait_firebase:
+    projects:
+        default:
+            # Point to the service account JSON file
+            credentials: '%kernel.project_dir%/config/secrets/firebase_service_account.json'

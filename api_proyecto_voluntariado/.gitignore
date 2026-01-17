@@ -9,3 +9,6 @@
 /vendor/
 /migrations/
 ###< symfony/framework-bundle ###
+
+# Firebase Secrets
+/config/secrets/*.json

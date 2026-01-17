@@ -16,14 +16,19 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 use App\Service\VolunteerService;
 
+use Kreait\Firebase\Contract\Auth;
+use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
+
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
 {
     private $volunteerService;
+    private $firebaseAuth;
 
-    public function __construct(VolunteerService $volunteerService)
+    public function __construct(VolunteerService $volunteerService, Auth $firebaseAuth)
     {
         $this->volunteerService = $volunteerService;
+        $this->firebaseAuth = $firebaseAuth;
     }
     // =========================================================================
     // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
@@ -252,5 +257,67 @@ class AuthController extends AbstractController
         }
 
         return $this->json(['message' => 'Contraseña actualizada correctamente']);
+    }
+    // =========================================================================
+    // 5. OBTENER PERFIL (UNIFICADO)
+    // =========================================================================
+    #[Route('/profile', name: 'profile', methods: ['POST'])]
+    // =========================================================================
+    // 5. OBTENER PERFIL (UNIFICADO)
+    // =========================================================================
+    #[Route('/profile', name: 'profile', methods: ['GET', 'POST'])]
+    public function getProfile(
+        SerializerInterface $serializer
+    ): JsonResponse
+    {
+        // El usuario ya viene autenticado por el Token Handler (UnifiedUserProvider)
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
+        }
+
+        // --- 1. Caso Voluntario ---
+        if ($user instanceof Voluntario) {
+            return $this->json([
+                'tipo' => 'voluntario',
+                'datos' => [
+                    'dni' => $user->getDni(),
+                    'nombre' => $user->getNombre(),
+                    'apellido1' => $user->getApellido1(),
+                    'apellido2' => $user->getApellido2(),
+                    'correo' => $user->getCorreo(),
+                    'zona' => $user->getZona(),
+                    'fechaNacimiento' => $user->getFechaNacimiento() ? $user->getFechaNacimiento()->format('Y-m-d') : null,
+                    'experiencia' => $user->getExperiencia(),
+                    'coche' => $user->isCoche(),
+                    'habilidades' => $user->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+                    'intereses' => $user->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
+                    'idiomas' => $user->getIdiomas(),
+                    'estado_voluntario' => $user->getEstadoVoluntario(),
+                    'disponibilidad' => $user->getDisponibilidad(),
+                    'ciclo' => $user->getCiclo() ? (string)$user->getCiclo() : null,
+                ]
+            ]);
+        }
+
+        // --- 2. Caso Organización ---
+        if ($user instanceof Organizacion) {
+            // Serialización automática
+            $jsonOrg = $serializer->serialize($user, 'json', ['groups' => ['org:read']]);
+            $arrayOrg = json_decode($jsonOrg, true);
+            
+            // Eliminamos las actividades para aligerar la respuesta (solo datos editables)
+            if (isset($arrayOrg['actividades'])) {
+                unset($arrayOrg['actividades']);
+            }
+
+            return $this->json([
+                'tipo' => 'organizacion',
+                'datos' => $arrayOrg
+            ]);
+        }
+
+        return $this->json(['error' => 'Tipo de usuario desconocido'], 500);
     }
 }

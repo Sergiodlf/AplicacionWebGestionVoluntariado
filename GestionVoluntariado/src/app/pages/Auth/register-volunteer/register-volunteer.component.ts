@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { VolunteerService } from '../../../services/volunteer.service';
+import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
@@ -15,6 +16,7 @@ import { VolunteerFormComponent } from '../../../components/Global-Components/vo
 })
 export class RegisterVolunteerComponent {
   private volunteerService = inject(VolunteerService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
 
@@ -39,19 +41,46 @@ export class RegisterVolunteerComponent {
 
     console.log('Registering volunteer:', mappedVolunteer);
 
-    this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
-      next: () => {
-        this.notificationService.showSuccessPopup(
-          'Registro completado',
-          'Tu cuenta ha sido creada con éxito. Por favor inicia sesión.'
-        ).then(() => {
-          this.router.navigate(['/login']);
-        });
-      },
-      error: (error) => {
-        console.error('Error during registration:', error);
-        this.notificationService.showError('Error en el registro: ' + (error.error?.error || 'Inténtalo de nuevo.'));
-      }
-    });
+    // 1. Register in Firebase (also sends verification email)
+    this.authService.register(mappedVolunteer.email, mappedVolunteer.password)
+      .then(() => {
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser) {
+            // 2. Save Role to Firestore (for Android compatibility)
+            // Note: Android LoginFragment checks 'usuarios' collection and 'rol' field.
+            this.authService.saveUserRole(currentUser.uid, mappedVolunteer.email, 'voluntario')
+                .then(() => {
+                    // 3. Register in Backend
+                    this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
+                        next: () => {
+                            this.notificationService.showSuccessPopup(
+                                'Registro completado',
+                                'Tu cuenta ha sido creada con éxito. Se ha enviado un correo de verificación.'
+                            ).then(() => {
+                                this.router.navigate(['/login']);
+                            });
+                        },
+                        error: (error) => {
+                            console.error('Error during backend registration:', error);
+                            this.notificationService.showError('Error en el registro del backend: ' + (error.error?.error || 'Inténtalo de nuevo.'));
+                        }
+                    });
+                })
+                .catch((error) => {
+                     console.error('Error saving role to Firestore:', error);
+                     this.notificationService.showError('Error guardando datos de usuario: ' + error.message);
+                });
+        }
+      })
+      .catch((error) => {
+        console.error('Error during Firebase registration:', error);
+        if (error.code === 'auth/email-already-in-use') {
+           this.notificationService.showError('El correo electrónico ya está en uso.');
+        } else if (error.code === 'auth/weak-password') {
+           this.notificationService.showError('La contraseña es muy débil (mínimo 6 caracteres).');
+        } else {
+           this.notificationService.showError('Error en el registro de Firebase: ' + error.message);
+        }
+      });
   }
 }

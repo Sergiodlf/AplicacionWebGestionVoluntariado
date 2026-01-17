@@ -43,6 +43,10 @@ export class OrganizationService {
     return this.http.post<Organization>(this.apiUrl, data);
   }
 
+  createOrganization(organization: any): Observable<any> {
+    return this.http.post('/api/auth/register/organizacion', organization);
+  }
+
   removeOrganization(cif: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${cif}`);
   }

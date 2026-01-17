@@ -35,6 +35,7 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
     selectedOdsId: '' as string | number,
     skills: [] as Category[],
     ods: [] as ODS[],
+    maxParticipants: 10
   };
 
   constructor(
@@ -127,7 +128,7 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
       fechaInicio: this.form.startDate ? this.form.startDate.substring(0, 10) : '',
       fechaFin: this.form.endDate ? this.form.endDate.substring(0, 10) : '',
       direccion: this.form.zone,
-      maxParticipantes: 10,
+      maxParticipantes: this.form.maxParticipants || 10,
       estado: 'Pendiente',
       sector: this.form.sector,
       habilidades: this.form.skills.map(s => s.id),

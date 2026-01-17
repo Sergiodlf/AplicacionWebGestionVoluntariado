@@ -75,6 +75,7 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $inscripciones;
 
 
+
     public function __construct()
     {
         $this->inscripciones = new ArrayCollection();
@@ -195,10 +196,6 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
-    public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }
-
-
     // MÉTODOS DE LA RELACIÓN
     /**
      * @return Collection<int, Inscripcion>
@@ -207,6 +204,9 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->inscripciones;
     }
+
+    public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
+    public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }
 
     public function addInscripcion(Inscripcion $inscripcion): static
     {

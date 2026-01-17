@@ -33,6 +33,40 @@ paths:
         '401':
           description: Credenciales incorrectas
 
+  /auth/profile:
+    post:
+      tags:
+        - Autenticación
+      summary: Obtener perfil (Token o Email)
+      security:
+        - bearerAuth: []
+      description: Recupera el perfil del usuario autenticado vía Token (recomendado) o por Email en body.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Perfil del usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tipo:
+                    type: string
+                  datos:
+                    type: object
+        '401':
+          description: No autorizado
+        '404':
+          description: Usuario no encontrado
+
   /auth/register/voluntario:
     post:
       tags:
@@ -659,12 +693,76 @@ paths:
               schema:
                 $ref: '#/components/schemas/DashboardStats'
 
+  # ==========================================
+  # CATEGORÍAS (DATA MAESTRA)
+  # ==========================================
+  /categories/ods:
+    get:
+      tags:
+        - Categorías
+      summary: Listar ODS
+      responses:
+        '200':
+          description: Lista de ODS
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ODS'
+
+  /categories/habilidades:
+    get:
+      tags:
+        - Categorías
+      summary: Listar Habilidades
+      responses:
+        '200':
+          description: Lista de Habilidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habilidad'
+
+  /categories/intereses:
+    get:
+      tags:
+        - Categorías
+      summary: Listar Intereses
+      responses:
+        '200':
+          description: Lista de Intereses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interes'
+
+  /categories/necesidades:
+    get:
+      tags:
+        - Categorías
+      summary: Listar Necesidades
+      responses:
+        '200':
+          description: Lista de Necesidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Necesidad'
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: "Firebase ID Token"
 
   schemas:
     # --- MODELOS DE AUTENTICACIÓN ---
@@ -698,6 +796,46 @@ components:
         nombre:
           type: string
           example: "Juan Pérez"
+        email:
+           type: string
+
+    # --- MODELOS AUXILIARES ---
+    ODS:
+      type: object
+      properties:
+        id: 
+          type: integer
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        color:
+          type: string
+          example: "#E5243B"
+
+    Habilidad:
+      type: object
+      properties:
+        id: 
+          type: integer
+        nombre:
+          type: string
+
+    Interes:
+      type: object
+      properties:
+        id: 
+          type: integer
+        nombre:
+          type: string
+
+    Necesidad:
+      type: object
+      properties:
+        id: 
+          type: integer
+        nombre:
+          type: string
 
     # --- MODELO REGISTRO VOLUNTARIO ---
     VoluntarioRegistro:
@@ -779,15 +917,49 @@ components:
         coche:
           type: boolean
         habilidades:
-          type: string
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
         intereses:
-          type: string
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              nombre:
+                type: string
         idiomas:
-          type: string
-        estadoVoluntario:
+          type: array
+          items:
+            type: string
+        estado_voluntario:
           type: string
           description: "Estado del voluntario en la plataforma (PENDIENTE, ACEPTADO, etc.)"
           example: "PENDIENTE"
+        disponibilidad:
+          type: array
+          items:
+            type: string
+        ciclo:
+          type: string
+        inscripciones:
+          type: array
+          items:
+            type: object
+            properties:
+              id_inscripcion:
+                type: integer
+              actividad:
+                type: string
+                description: "Nombre de la actividad"
+              estado:
+                type: string
 
     # --- MODELO REGISTRO ORGANIZACIÓN ---
     OrganizacionRegistro:
@@ -815,6 +987,18 @@ components:
         descripcion:
           type: string
           example: "ONG dedicada a..."
+        direccion:
+          type: string
+          example: "Calle Mayor 12"
+        localidad:
+          type: string
+          example: "Pamplona"
+        cp:
+          type: string
+          example: "31001"
+        contacto:
+          type: string
+          example: "600112233"
 
     OrganizacionDetalle:
       type: object
@@ -936,7 +1120,6 @@ components:
           type: integer
           example: 1
 
-
     InscripcionPendiente:
       type: object
       properties:
@@ -1021,12 +1204,24 @@ components:
           type: array
           items:
             type: object
+        disponibilidad_voluntario:
+          type: array
+          items:
+            type: string
+        intereses_voluntario:
+          type: array
+          items:
+            type: object
         codActividad:
           type: integer
         nombre_actividad:
           type: string
         email_organizacion:
           type: string
+        habilidades_actividad:
+          type: array
+          items:
+             type: object
         estado:
           type: string
           example: "PENDIENTE"
@@ -1055,7 +1250,6 @@ components:
             nombre:
               type: string
 
-
     ActividadConInscripciones:
       type: object
       properties:
@@ -1075,10 +1269,14 @@ components:
           format: date-time
         maxParticipantes:
           type: integer
-        inscripciones:
+        ods:
           type: array
           items:
-            $ref: '#/components/schemas/InscripcionOrganizacionDetalle'
+            type: object
+        habilidades:
+          type: array
+          items:
+            type: object
 
     # --- MODELO ESTADÍSTICAS ---
     DashboardStats:
@@ -1114,5 +1312,3 @@ components:
               type: integer
             aceptados:
               type: integer
-
-    # --- MODELO CICLO ---

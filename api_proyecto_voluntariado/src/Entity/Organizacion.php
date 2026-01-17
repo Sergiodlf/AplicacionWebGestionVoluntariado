@@ -82,6 +82,7 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
     // Solo 'org:read' para que las actividades relacionadas se incluyan al obtener la organización.
     #[Groups(['org:read'])] 
     private Collection $actividades;
+    
 
     public function __construct()
     {
