@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { Organization, OrganizationCreateData } from '../models/organizationModel';
 
 @Injectable({
@@ -89,5 +89,12 @@ export class OrganizationService {
 
   getOrganizationByEmail(email: string): Observable<Organization> {
     return this.http.post<Organization>(`${this.apiUrl}/by-email`, { email });
+  }
+
+  getProfile(): Observable<Organization> {
+    return this.http.get<any>('/api/auth/profile').pipe(
+      tap(response => console.log('Organization Profile:', response)),
+      map(response => response.datos as Organization)
+    );
   }
 }

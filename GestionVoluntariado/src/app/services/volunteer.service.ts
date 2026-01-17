@@ -106,6 +106,30 @@ export class VolunteerService {
     );
   }
 
+  getProfile(): Observable<Volunteer> {
+    return this.http.get<any>('/api/auth/profile').pipe(
+      map(response => {
+        const v = response.datos;
+         return {
+          nombre: v.nombre,
+          apellido1: v.apellido1,
+          email: v.correo,
+          habilidades: v.habilidades || [],
+          disponibilidad: this.parseJson(v.disponibilidad),
+          intereses: v.intereses || [],
+          status: v.estado_voluntario || 'PENDIENTE',
+          dni: v.dni,
+          birthDate: v.fechaNacimiento,
+          experience: v.experiencia,
+          hasCar: v.coche,
+          languages: this.parseJson(v.idiomas),
+          zona: v.zona,
+          ciclo: v.ciclo
+        } as Volunteer;
+      })
+    );
+  }
+
   getCiclos(): Observable<any[]> {
     return this.http.get<any[]>(this.apiCiclosUrl);
   }

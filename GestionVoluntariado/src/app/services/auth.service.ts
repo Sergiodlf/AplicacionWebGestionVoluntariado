@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User, authState, sendEmailVerification } from '@angular/fire/auth';
 import { Firestore, doc, setDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { ProfileResponse } from '../models/profile.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +16,7 @@ export class AuthService {
   private firestore: Firestore = inject(Firestore);
   readonly user$: Observable<User | null> = authState(this.auth);
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   login(email: string, pass: string): Promise<void> {
     return signInWithEmailAndPassword(this.auth, email, pass)
@@ -60,5 +62,9 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     return this.auth.currentUser;
+  }
+
+  getProfile(): Observable<ProfileResponse> {
+    return this.http.get<ProfileResponse>('/api/auth/profile');
   }
 }
