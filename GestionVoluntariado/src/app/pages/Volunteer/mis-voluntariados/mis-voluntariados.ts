@@ -10,6 +10,7 @@ import { StatusToggleVoluntariado } from "../../../components/Volunteer/status-t
 
 @Component({
   selector: 'app-mis-voluntariados',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

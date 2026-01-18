@@ -53,11 +53,12 @@
                 </div>
                 <div class="info-item">
                     <label><i class="bi bi-briefcase"></i> Experiencia</label>
-                    <p>{{ volunteer?.experience || 'Sin especificar' }}</p>
+                    <p>{{ volunteer?.experiencia || volunteer?.experience || 'Sin especificar' }}</p>
                 </div>
                 <div class="info-item">
                     <label><i class="bi bi-car-front"></i> Vehículo</label>
-                    <p>{{ volunteer?.hasCar ? 'Dispone de coche propio' : 'No dispone de coche' }}</p>
+                    <p>{{ (volunteer?.coche || volunteer?.hasCar) ? 'Dispone de coche propio' : 'No dispone de coche' }}
+                    </p>
                 </div>
                 <div class="info-item full-width">
                     <label><i class="bi bi-star"></i> Habilidades</label>
@@ -92,7 +93,8 @@
             <!-- Editor Body (Scrollable) -->
             <div class="editor-scroll-body p-4 bg-light bg-opacity-10">
                 <app-volunteer-form submitLabel="Guardar Cambios" [isModal]="false" [isEdit]="true"
-                    [hideSubmitButton]="true" [initialData]="volunteer" (onSubmit)="handleFormSubmit($event)">
+                    [hideSubmitButton]="true" [disableAutoUpdate]="true" [initialData]="volunteer"
+                    (onSubmit)="handleFormSubmit($event)">
                 </app-volunteer-form>
             </div>
         </div>

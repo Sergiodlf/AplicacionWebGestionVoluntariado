@@ -16,7 +16,9 @@ export interface Volunteer {
   dni?: string;
   birthDate?: string;
   experience?: string;
+  experiencia?: string; // Backend mapping
   hasCar?: boolean;
+  coche?: boolean; // Backend mapping
   languages?: any[];
   zona?: string;
   ciclo?: string;
@@ -110,7 +112,7 @@ export class VolunteerService {
     return this.http.get<any>('/api/auth/profile').pipe(
       map(response => {
         const v = response.datos;
-         return {
+        return {
           nombre: v.nombre,
           apellido1: v.apellido1,
           email: v.correo,

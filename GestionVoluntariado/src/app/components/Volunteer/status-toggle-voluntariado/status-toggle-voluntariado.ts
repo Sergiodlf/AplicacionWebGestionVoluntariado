@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-status-toggle-voluntariado',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './status-toggle-voluntariado.html',
   styleUrl: './status-toggle-voluntariado.css',

@@ -17,7 +17,7 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
 
-  constructor(private router: Router, private http: HttpClient, private authService: AuthService) {}
+  constructor(private router: Router, private http: HttpClient, private authService: AuthService) { }
 
   login() {
     if (!this.email || !this.password) {
@@ -28,7 +28,7 @@ export class LoginComponent {
     this.authService.login(this.email, this.password)
       .then(() => {
         console.log('Firebase login successful');
-        this.proceedToBackendLogin();
+        this.loadUserProfile();
       })
       .catch((error) => {
         console.error('Firebase login error:', error);
@@ -42,56 +42,45 @@ export class LoginComponent {
       });
   }
 
-  proceedToBackendLogin() {
-    const body = { email: this.email, password: this.password };
-
-    this.http.post<any>('/api/auth/login', body).subscribe({
-      next: (response) => {
-        console.log('Login backend exitoso:', response);
-
-        // Save session data (Basic implementation)
-        localStorage.setItem('user_token', 'mock_token'); // Backend doesn't send token yet, mimicking it
-        localStorage.setItem('user_role', response.tipo);
-        localStorage.setItem('user_id', response.id);
-        localStorage.setItem('user_name', response.nombre);
-
+  loadUserProfile() {
+    this.authService.loadProfile().subscribe({
+      next: (profile) => {
+        console.log('Perfil cargado:', profile);
         const user = this.authService.getCurrentUser();
 
-        // Redirect based on role
-        if (response.tipo === 'voluntario') {
+        // Redirect based on role from profile
+        if (profile.tipo === 'voluntario') {
           if (user && !user.emailVerified) {
-             alert('Debes verificar tu correo antes de entrar como voluntario.');
-             this.authService.logout();
-             return;
+            alert('Debes verificar tu correo antes de entrar como voluntario.');
+            this.authService.logout();
+            return;
           }
           this.router.navigate(['/volunteer/voluntariados']);
-        } else if (response.tipo === 'organizacion') {
+        } else if (profile.tipo === 'organizacion') {
           if (user && !user.emailVerified) {
-             alert('Debes verificar tu correo antes de entrar como organización.');
-             this.authService.logout();
-             return;
+            alert('Debes verificar tu correo antes de entrar como organización.');
+            this.authService.logout();
+            return;
           }
           this.router.navigate(['/organization/mis-voluntariados-organizacion']);
         } else {
-          // Fallback for admin or others (ALLOW ADMIN WITHOUT VERIFICATION)
+          // Fallback, maybe admin?
           this.router.navigate(['/admin/dashboard'], {
             state: { fromLogin: true },
           });
         }
       },
       error: (err) => {
-        console.error('Login backend error:', err);
-        // Even if backend fails, if Firebase succeeded, we might want to handle it. 
-        // But for now, let's show the backend error or proceed if we want to rely solely on Firebase eventually.
-        // Assuming we need backend data:
-        if (err.status === 401) {
-          this.errorMessage = 'Credenciales incorrectas en el servidor.';
+        console.error('Error loading profile:', err);
+        if (err.error && err.error.error === 'Voluntario no encontrado') {
+          this.errorMessage = 'Usuario no registrado en la base de datos (Backend).';
         } else if (err.status === 404) {
-          this.errorMessage = 'Usuario no encontrado en el servidor.';
+          this.errorMessage = 'Perfil de usuario no encontrado.';
         } else {
-          this.errorMessage = 'Error en el servidor. Inténtalo más tarde.';
+          this.errorMessage = 'Error al cargar el perfil del usuario.';
         }
-      },
+        this.authService.logout(); // Logout if profile fails to load
+      }
     });
   }
 }

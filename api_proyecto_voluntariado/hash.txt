@@ -1,7 +1,1 @@
- --------------- ----------------------------------------------------------------- 
-  Key             Value                                                            
- --------------- ----------------------------------------------------------------- 
-  Hasher used     Symfony\Component\PasswordHasher\Hasher\MigratingPasswordHasher  
-  Password hash   $2y$13$.aNiha/erCM33dtT00QGGuIaQ6u1PGLfQA.ZnJp5O.9Ae6x.E6pRK     
- --------------- ----------------------------------------------------------------- 
-
+$2y$10$xFENcIrbBwYXqzKgjFyqsuuv.OMmQ1Cn7pMM.MvVpLEhmhf3cx9jC

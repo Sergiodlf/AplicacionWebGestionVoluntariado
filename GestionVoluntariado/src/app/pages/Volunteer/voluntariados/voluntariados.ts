@@ -8,6 +8,7 @@ import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-car
 
 @Component({
   selector: 'app-voluntariados',
+  standalone: true,
   imports: [CommonModule, FormsModule, Navbar, SidebarVolunteer, VoluntariadoCard],
   templateUrl: './voluntariados.html',
   styleUrl: './voluntariados.css',

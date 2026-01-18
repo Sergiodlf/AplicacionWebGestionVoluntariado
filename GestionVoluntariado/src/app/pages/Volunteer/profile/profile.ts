@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { VolunteerService, Volunteer } from '../../../services/volunteer.service';
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-profile',
@@ -25,7 +26,8 @@ export class ProfileComponent implements OnInit {
     private fb: FormBuilder,
     private volunteerService: VolunteerService,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private authService: AuthService
   ) {
     this.profileForm = this.fb.group({
       nombre: ['', Validators.required],
@@ -64,15 +66,37 @@ export class ProfileComponent implements OnInit {
   }
 
   handleFormSubmit(updatedData: any): void {
-    this.volunteer = updatedData;
-    this.editMode = false;
-    this.message = 'Perfil actualizado con éxito';
-    this.isError = false;
-    setTimeout(() => this.message = '', 3000);
+    this.loading = true;
+    this.authService.updateProfile(updatedData).subscribe({
+      next: () => {
+        this.message = 'Perfil actualizado con éxito';
+        this.isError = false;
+        this.editMode = false;
 
-    if (updatedData.nombre) {
-      localStorage.setItem('user_name', updatedData.nombre);
-    }
+        // Refresh local data from the updated subject/backend
+        this.loadProfile();
+
+        // Small delay to let loading spinner show briefly if loadProfile is fast, 
+        // or just to ensure UI transitions smoothly. 
+        // Actually loadProfile sets loading=false when done.
+
+        setTimeout(() => this.message = '', 3000);
+        // Local storage update if name changed
+        if (updatedData.nombre) {
+          localStorage.setItem('user_name', updatedData.nombre);
+        }
+      },
+      error: (err) => {
+        console.error('Error updating profile', err);
+        this.message = 'Error al actualizar el perfil.';
+        this.isError = true;
+        this.loading = false;
+        setTimeout(() => {
+          this.message = '';
+          this.isError = false;
+        }, 3500);
+      }
+    });
   }
 
   goBack(): void {
@@ -80,39 +104,46 @@ export class ProfileComponent implements OnInit {
   }
 
   loadProfile(): void {
-    const email = localStorage.getItem('user_id');
-    if (email) {
-      this.volunteerService.getVolunteerByEmail(email).subscribe({
-        next: (data) => {
-          this.volunteer = data;
-          this.profileForm.patchValue({
-            nombre: data.nombre,
-            apellido1: data.apellido1,
-            email: data.email,
-            zona: data.zona,
-            experience: data.experience,
-            hasCar: data.hasCar
-          });
+    // Try to get from state first
+    const currentProfile = this.authService.getCurrentProfile();
+
+    if (currentProfile && currentProfile.tipo === 'voluntario') {
+      this.mapProfileToForm(currentProfile.datos);
+      this.loading = false;
+    } else {
+      // Fallback: load from API via AuthService
+      this.authService.loadProfile().subscribe({
+        next: (profile) => {
+          if (profile.tipo === 'voluntario') {
+            this.mapProfileToForm(profile.datos);
+          } else {
+            this.message = 'El perfil no corresponde a un voluntario.';
+            this.isError = true;
+          }
           this.loading = false;
         },
         error: (err) => {
+          console.error(err);
           this.message = 'Error al cargar el perfil.';
           this.isError = true;
           this.loading = false;
-          setTimeout(() => {
-            this.message = '';
-            this.isError = false;
-          }, 3500);
         }
       });
-    } else {
-      this.message = 'Error al cargar el perfil. No se encontró sesión.';
-      this.isError = true;
-      this.loading = false;
-      setTimeout(() => {
-        this.message = '';
-        this.isError = false;
-      }, 3500);
     }
+  }
+
+  private mapProfileToForm(data: any) {
+    this.volunteer = data; // Assuming data structure matches roughly or we need to map fields
+    // ProfileResponse.datos has fields like nombre, apellido1, correo...
+    // Volunteer interface has email. ProfileResponse has correo.
+
+    this.profileForm.patchValue({
+      nombre: data.nombre,
+      apellido1: data.apellido1,
+      email: data.correo || data.email,
+      zona: data.zona,
+      experience: data.experiencia || data.experience,
+      hasCar: data.coche || data.hasCar
+    });
   }
 }

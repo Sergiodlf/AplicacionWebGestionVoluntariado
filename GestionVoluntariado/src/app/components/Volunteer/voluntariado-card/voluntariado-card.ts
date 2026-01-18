@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-voluntariado-card',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './voluntariado-card.html',
   styleUrl: './voluntariado-card.css',

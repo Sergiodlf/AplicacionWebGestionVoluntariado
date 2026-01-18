@@ -17,6 +17,7 @@ export class VolunteerFormComponent implements OnInit {
   @Input() isEdit: boolean = false;
   @Input() initialData: any = null;
   @Input() hideSubmitButton: boolean = false;
+  @Input() disableAutoUpdate: boolean = false; // New Input
   @Output() onSubmit = new EventEmitter<any>();
   errorMessage: string = '';
 
@@ -97,7 +98,7 @@ export class VolunteerFormComponent implements OnInit {
       dni: this.initialData.dni,
       correo: this.initialData.correo || this.initialData.email,
       zona: this.initialData.zona,
-      ciclo: this.initialData.ciclo,
+      ciclo: (this.initialData.ciclo && this.initialData.ciclo.nombre) ? this.initialData.ciclo.nombre : this.initialData.ciclo,
       fechaNacimiento: this.initialData.fechaNacimiento,
       experiencia: this.initialData.experiencia || this.initialData.experience,
       coche: this.initialData.coche || (this.initialData.hasCar ? 'Si' : 'No')
@@ -205,8 +206,8 @@ export class VolunteerFormComponent implements OnInit {
         intereses: this.addedInterests.map(i => i.id)
       };
 
-      if (this.isEdit && this.initialData) {
-        // If it's an edit, we call updateProfile
+      if (this.isEdit && this.initialData && !this.disableAutoUpdate) {
+        // If it's an edit AND auto-update is ENABLED
         // The DNI is usually the identifier
         const identifier = this.initialData.dni || this.initialData.email;
         this.volunteerService.updateProfile(identifier, finalPayload).subscribe({
@@ -219,7 +220,7 @@ export class VolunteerFormComponent implements OnInit {
           }
         });
       } else {
-        // Otherwise, it's a registration (handled by the parent)
+        // Registration OR Manual Update (parent handles it)
         this.onSubmit.emit(finalPayload);
       }
     } else {
