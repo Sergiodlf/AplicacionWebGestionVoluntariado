@@ -57,3 +57,15 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Solución de Problemas (Troubleshooting)
+
+### Error `npm install`
+Si encuentras un error `ERESOLVE` al ejecutar `npm install`, esto se debe a conflictos de versiones en las dependencias. Para solucionarlo, utiliza:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+### Optimización del Build
+Se han ajustado los presupuestos (budgets) en `angular.json` para permitir un tamaño de bundle inicial mayor (hasta 4MB) y evitar errores durante el `npm run build`.
