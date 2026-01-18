@@ -264,6 +264,43 @@ class ActividadController extends AbstractController
         return $this->json(['message' => 'Solicitud de inscripción enviada con estado PENDIENTE'], 201);
     }
 
+    // DESINSCRIBIR VOLUNTARIO (Smart Unsubscribe via Activity ID)
+    #[Route('/{id}/desinscribir', name: 'desinscribir', methods: ['DELETE'])]
+    public function desinscribir(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user || !($user instanceof Voluntario)) {
+             return $this->json(['error' => 'Acceso denegado. Debes ser un voluntario.'], 403);
+        }
+
+        $actividad = $em->getRepository(Actividad::class)->find($id);
+        if (!$actividad) {
+            return $this->json(['error' => 'Actividad no encontrada'], 404);
+        }
+
+        // Buscar la inscripción de ESTE voluntario en ESTA actividad
+        $inscripcion = $em->getRepository(\App\Entity\Inscripcion::class)->findOneBy([
+            'voluntario' => $user,
+            'actividad' => $actividad
+        ]);
+
+        if (!$inscripcion) {
+            return $this->json(['error' => 'No estás inscrito en esta actividad'], 404);
+        }
+
+        // Reglas de negocio (Opcional: No permitir si ya acabó)
+        // if ($inscripcion->getEstado() === 'FINALIZADO') ...
+
+        try {
+            $em->remove($inscripcion);
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al desinscribir: ' . $e->getMessage()], 500);
+        }
+
+        return $this->json(['message' => 'Te has desapuntado correctamente.'], 200);
+    }
+
     // OBTENER ACTIVIDADES POR ORGANIZACIÓN (Con Inscripciones)
     #[Route('/organizacion/{cif}', name: 'get_by_organizacion', methods: ['GET'])]
     public function getByOrganizacion(string $cif, Request $request, EntityManagerInterface $em): JsonResponse

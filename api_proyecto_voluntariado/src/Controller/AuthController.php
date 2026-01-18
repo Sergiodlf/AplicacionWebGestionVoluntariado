@@ -216,37 +216,28 @@ class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher
     ): JsonResponse
     {
+        // 1. Obtener usuario del Token (Smart access)
+        $user = $this->getUser();
+        
+        if (!$user) {
+             return $this->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
-        $email = $data['email'] ?? null;
         $oldPassword = $data['oldPassword'] ?? null;
         $newPassword = $data['newPassword'] ?? null;
 
-        if (!$email || !$oldPassword || !$newPassword) {
-            return $this->json(['error' => 'Faltan datos obligatorios (email, oldPassword, newPassword)'], 400);
+        if (!$oldPassword || !$newPassword) {
+            return $this->json(['error' => 'Faltan datos obligatorios (oldPassword, newPassword)'], 400);
         }
 
-        // A. Buscar en tabla Voluntarios
-        $user = $entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
-        $tipoUsuario = 'voluntario';
-
-        // B. Si no está, buscar en tabla Organizaciones
-        if (!$user) {
-            $user = $entityManager->getRepository(Organizacion::class)->findOneBy(['email' => $email]);
-            $tipoUsuario = 'organizacion';
-        }
-
-        // Si no encontramos al usuario
-        if (!$user) {
-            return $this->json(['error' => 'Usuario no encontrado'], 404);
-        }
-
-        // C. Verificar contraseña actual
+        // 2. Verificar contraseña actual
         if (!$passwordHasher->isPasswordValid($user, $oldPassword)) {
             return $this->json(['error' => 'La contraseña actual es incorrecta'], 401);
         }
 
-        // D. Hashear y guardar nueva contraseña
+        // 3. Hashear y guardar nueva contraseña
         $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
         $user->setPassword($hashedPassword);
 
@@ -332,5 +323,88 @@ class AuthController extends AbstractController
         }
 
         return $this->json(['error' => 'Tipo de usuario desconocido'], 500);
+    }
+
+    // =========================================================================
+    // 6. ACTUALIZAR PERFIL (UNIFICADO)
+    // =========================================================================
+    #[Route('/profile', name: 'update_profile', methods: ['PUT'])]
+    public function updateProfile(
+        Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        // --- 1. Caso Voluntario ---
+        if ($user instanceof Voluntario) {
+            if (isset($data['nombre'])) $user->setNombre($data['nombre']);
+            if (isset($data['apellido1'])) $user->setApellido1($data['apellido1']);
+            if (isset($data['apellido2'])) $user->setApellido2($data['apellido2']);
+            if (isset($data['zona'])) $user->setZona($data['zona']);
+            if (isset($data['experiencia'])) $user->setExperiencia($data['experiencia']);
+            if (isset($data['coche'])) $user->setCoche($data['coche']);
+            if (isset($data['disponibilidad'])) $user->setDisponibilidad($data['disponibilidad']); // Array
+            if (isset($data['idiomas'])) $user->setIdiomas($data['idiomas']); // Array
+
+            // Relaciones ManyToMany (Habilidades)
+            // Esperamos un array de IDs o Nombres. Asumimos IDs por ahora para simplicidad, o Nombres si el front manda nombres.
+            // Dado que el front (Angular) suele mandar IDs si seleccionamos de una lista.
+            if (isset($data['habilidades']) && is_array($data['habilidades'])) {
+                $user->getHabilidades()->clear();
+                $repoHab = $em->getRepository(\App\Entity\Habilidad::class);
+                foreach ($data['habilidades'] as $item) {
+                     // Soportar envío de objeto {id:1, nombre:...} o solo ID
+                    $id = is_array($item) ? ($item['id'] ?? null) : $item;
+                    if ($id) {
+                         $habilidad = $repoHab->find($id);
+                         if ($habilidad) $user->addHabilidad($habilidad);
+                    }
+                }
+            }
+
+            // Relaciones ManyToMany (Intereses)
+            if (isset($data['intereses']) && is_array($data['intereses'])) {
+                $user->getIntereses()->clear();
+                $repoInt = $em->getRepository(\App\Entity\Interes::class);
+                foreach ($data['intereses'] as $item) {
+                    $id = is_array($item) ? ($item['id'] ?? null) : $item;
+                    if ($id) {
+                         $interes = $repoInt->find($id);
+                         if ($interes) $user->addInterese($interes);
+                    }
+                }
+            }
+            
+            // Ciclo (Opcional)
+            if (isset($data['ciclo'])) {
+                 // Lógica si se quiere actualizar ciclo
+            }
+
+        } 
+        // --- 2. Caso Organización ---
+        elseif ($user instanceof Organizacion) {
+            if (isset($data['nombre'])) $user->setNombre($data['nombre']);
+            // if (isset($data['email'])) $user->setEmail($data['email']); // Mejor no permitir cambio de email/ID login fácilmente
+            if (isset($data['sector'])) $user->setSector($data['sector']);
+            if (isset($data['direccion'])) $user->setDireccion($data['direccion']);
+            if (isset($data['localidad'])) $user->setLocalidad($data['localidad']);
+            if (isset($data['cp'])) $user->setCp($data['cp']);
+            if (isset($data['descripcion'])) $user->setDescripcion($data['descripcion']);
+            if (isset($data['contacto'])) $user->setContacto($data['contacto']);
+        }
+
+        try {
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al actualizar perfil', 'detalle' => $e->getMessage()], 500);
+        }
+
+        return $this->json(['message' => 'Perfil actualizado correctamente']);
     }
 }

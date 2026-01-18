@@ -66,6 +66,60 @@ paths:
           description: No autorizado
         '404':
           description: Usuario no encontrado
+    put:
+      tags:
+        - Autenticación
+      summary: Actualizar perfil (Smart Update)
+      security:
+        - bearerAuth: []
+      description: Actualiza los datos del perfil del usuario autenticado sin necesidad de ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                nombre: "Nuevo Nombre"
+                zona: "Norte"
+                habilidades: [1, 2]
+      responses:
+        '200':
+          description: Perfil actualizado correctamente
+        '401':
+          description: No autorizado
+        '500':
+          description: Error del servidor
+
+  /auth/change-password:
+    post:
+      tags:
+        - Autenticación
+      summary: Cambiar contraseña
+      security:
+        - bearerAuth: []
+      description: Cambia la contraseña del usuario autenticado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oldPassword
+                - newPassword
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Contraseña actualizada correctamente
+        '401':
+          description: Contraseña actual incorrecta
+        '400':
+          description: Datos faltantes
 
   /auth/register/voluntario:
     post:
@@ -396,6 +450,28 @@ paths:
           description: Actividad o Voluntario no encontrado.
         '409':
           description: Ya inscrito.
+
+
+  /actividades/{id}/desinscribir:
+    delete:
+      tags:
+        - Actividades
+      summary: Desinscribirse de una actividad (Smart Unsubscribe)
+      description: Permite al voluntario autenticado desapuntarse de una actividad indicando solo el ID de la actividad. El servidor localiza la inscripción correspondiente.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Actividad
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Te has desapuntado correctamente
+        '403':
+          description: No autorizado (Token inválido)
+        '404':
+          description: Actividad no encontrada o no estás inscrito en ella
 
   /actividades/{id}/estado:
     patch:
