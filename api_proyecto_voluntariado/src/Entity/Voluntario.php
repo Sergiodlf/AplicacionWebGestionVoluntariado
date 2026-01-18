@@ -18,13 +18,13 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'DNI', type: Types::STRING, length: 9, options: ['fixed' => true])]
     private ?string $dni = null;
 
-    #[ORM\Column(name: 'NOMBRE', length: 40)]
+    #[ORM\Column(name: 'NOMBRE', length: 100)]
     private ?string $nombre = null;
 
-    #[ORM\Column(name: 'APELLIDO1', length: 40)]
+    #[ORM\Column(name: 'APELLIDO1', length: 100)]
     private ?string $apellido1 = null;
 
-    #[ORM\Column(name: 'APELLIDO2', length: 40)]
+    #[ORM\Column(name: 'APELLIDO2', length: 100)]
     private ?string $apellido2 = null;
 
     #[ORM\Column(name: 'CORREO', length: 40, unique: true)]

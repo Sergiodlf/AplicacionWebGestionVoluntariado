@@ -68,9 +68,15 @@ class ActivityService
         $actividad->setDireccion($data['direccion']);
 
         // Link ODS
-        if (!empty($data['odsIds'])) {
-            foreach ($data['odsIds'] as $id) {
-                $ods = $this->odsRepository->find($id);
+        if (!empty($data['odsIds'])) { // Nota: en el DTO se llama 'ods', mapeado a este campo
+            foreach ($data['odsIds'] as $item) {
+                $ods = null;
+                if (is_numeric($item)) {
+                    $ods = $this->odsRepository->find($item);
+                } elseif (is_string($item)) {
+                    $ods = $this->odsRepository->findOneBy(['nombre' => $item]);
+                }
+                
                 if ($ods) {
                     $actividad->addOd($ods);
                 }
@@ -79,8 +85,14 @@ class ActivityService
 
         // Link Habilidades
         if (!empty($data['habilidadIds'])) {
-            foreach ($data['habilidadIds'] as $id) {
-                $h = $this->habilidadRepository->find($id);
+            foreach ($data['habilidadIds'] as $item) {
+                $h = null;
+                if (is_numeric($item)) {
+                    $h = $this->habilidadRepository->find($item);
+                } elseif (is_string($item)) {
+                    $h = $this->habilidadRepository->findOneBy(['nombre' => $item]);
+                }
+
                 if ($h) {
                     $actividad->addHabilidad($h);
                 }
@@ -88,14 +100,20 @@ class ActivityService
         }
 
         // Link Necesidades
-        if (!empty($data['necesidadIds'])) {
-            foreach ($data['necesidadIds'] as $id) {
-                $n = $this->necesidadRepository->find($id);
+        /*if (!empty($data['necesidadIds'])) {
+            foreach ($data['necesidadIds'] as $item) {
+                 $n = null;
+                if (is_numeric($item)) {
+                    $n = $this->necesidadRepository->find($item);
+                } elseif (is_string($item)) {
+                    $n = $this->necesidadRepository->findOneBy(['nombre' => $item]);
+                }
+
                 if ($n) {
                     $actividad->addNecesidad($n);
                 }
             }
-        }
+        }*/
 
         $this->entityManager->persist($actividad);
         $this->entityManager->flush();

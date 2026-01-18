@@ -45,10 +45,21 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'JSON inválido'], 400);
         }
 
-        // 1. Validar Organización
-        $organizacion = $em->getRepository(Organizacion::class)->find($dto->cifOrganizacion);
+        // 1. Validar Organización (Token o CIF explícito)
+        $organizacion = null;
+        $user = $this->getUser();
+
+        // A. Prioridad: Token de Organización
+        if ($user instanceof Organizacion) {
+            $organizacion = $user;
+        }
+        // B. Fallback: CIF en el JSON (para admins o debug)
+        elseif (!empty($dto->cifOrganizacion)) {
+             $organizacion = $em->getRepository(Organizacion::class)->find($dto->cifOrganizacion);
+        }
+
         if (!$organizacion) {
-            return $this->json(['error' => 'Organización no encontrada. Revisa el CIF.'], 404);
+            return $this->json(['error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.'], 401);
         }
 
         // --- CONTROL DE DUPLICIDAD (PV-40) ---
@@ -301,6 +312,46 @@ class ActividadController extends AbstractController
         return $this->json(['message' => 'Te has desapuntado correctamente.'], 200);
     }
 
+    // OBTENER MIS ACTIVIDADES (Organización vía Token)
+    #[Route('/mis-actividades', name: 'my_activities', methods: ['GET'])]
+    public function getMisActividades(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        
+        if (!$user || !($user instanceof Organizacion)) {
+            return $this->json(['error' => 'Acceso denegado. Debes iniciar sesión como Organización.'], 403);
+        }
+
+        // Reutilizar lógica de búsqueda
+        $criteria = ['organizacion' => $user];
+
+        if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
+            $criteria['estadoAprobacion'] = $estadoAprobacion;
+        }
+        if ($estado = $request->query->get('estado')) {
+            $criteria['estado'] = $estado;
+        }
+
+        $actividades = $em->getRepository(Actividad::class)->findBy($criteria, ['fechaInicio' => 'DESC']);
+
+        $data = [];
+        foreach ($actividades as $actividad) {
+            $data[] = [
+                'codActividad' => $actividad->getCodActividad(),
+                'nombre' => $actividad->getNombre(),
+                'estado' => $actividad->getEstado(),
+                'estadoAprobacion' => $actividad->getEstadoAprobacion(),
+                'direccion' => $actividad->getDireccion(),
+                'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
+                'maxParticipantes' => $actividad->getMaxParticipantes(),
+                'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),
+                'habilidades'      => $actividad->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
     // OBTENER ACTIVIDADES POR ORGANIZACIÓN (Con Inscripciones)
     #[Route('/organizacion/{cif}', name: 'get_by_organizacion', methods: ['GET'])]
     public function getByOrganizacion(string $cif, Request $request, EntityManagerInterface $em): JsonResponse
@@ -318,6 +369,10 @@ class ActividadController extends AbstractController
             // 2. Estado de aprobación del organizador (ACEPTADA, PENDIENTE, RECHAZADA)
             if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
                 $criteria['estadoAprobacion'] = $estadoAprobacion;
+            }
+            // Agregado soporte para filtrar por estado de ejecución (ABIERTA, CERRADA, etc.)
+            if ($estado = $request->query->get('estado')) {
+                $criteria['estado'] = $estado;
             }
 
             $actividades = $em->getRepository(Actividad::class)->findBy($criteria);

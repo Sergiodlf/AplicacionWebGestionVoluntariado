@@ -339,6 +339,18 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Usuario no autenticado'], 401);
         }
 
+        // RELOAD USER to ensure it is managed by the current EntityManager
+        // (Fixes issue where updates are not persisted)
+        if ($user instanceof Voluntario) {
+            $user = $em->getRepository(Voluntario::class)->find($user->getDni());
+        } elseif ($user instanceof Organizacion) {
+            $user = $em->getRepository(Organizacion::class)->find($user->getCif());
+        }
+
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado en base de datos'], 404);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         // --- 1. Caso Voluntario ---
@@ -353,18 +365,28 @@ class AuthController extends AbstractController
             if (isset($data['idiomas'])) $user->setIdiomas($data['idiomas']); // Array
 
             // Relaciones ManyToMany (Habilidades)
-            // Esperamos un array de IDs o Nombres. Asumimos IDs por ahora para simplicidad, o Nombres si el front manda nombres.
-            // Dado que el front (Angular) suele mandar IDs si seleccionamos de una lista.
             if (isset($data['habilidades']) && is_array($data['habilidades'])) {
                 $user->getHabilidades()->clear();
                 $repoHab = $em->getRepository(\App\Entity\Habilidad::class);
                 foreach ($data['habilidades'] as $item) {
-                     // Soportar envío de objeto {id:1, nombre:...} o solo ID
-                    $id = is_array($item) ? ($item['id'] ?? null) : $item;
-                    if ($id) {
-                         $habilidad = $repoHab->find($id);
-                         if ($habilidad) $user->addHabilidad($habilidad);
-                    }
+                     $habilidad = null;
+                     
+                     // 1. Si es un array con ID
+                     if (is_array($item) && isset($item['id'])) {
+                         $habilidad = $repoHab->find($item['id']);
+                     }
+                     // 2. Si es numérico (ID directo)
+                     elseif (is_numeric($item)) {
+                         $habilidad = $repoHab->find($item);
+                     }
+                     // 3. Si es string (Nombre)
+                     elseif (is_string($item)) {
+                         $habilidad = $repoHab->findOneBy(['nombre' => $item]);
+                     }
+
+                     if ($habilidad) {
+                         $user->addHabilidad($habilidad);
+                     }
                 }
             }
 
@@ -373,17 +395,55 @@ class AuthController extends AbstractController
                 $user->getIntereses()->clear();
                 $repoInt = $em->getRepository(\App\Entity\Interes::class);
                 foreach ($data['intereses'] as $item) {
-                    $id = is_array($item) ? ($item['id'] ?? null) : $item;
-                    if ($id) {
-                         $interes = $repoInt->find($id);
-                         if ($interes) $user->addInterese($interes);
-                    }
+                    $interes = null;
+
+                     // 1. Si es un array con ID
+                     if (is_array($item) && isset($item['id'])) {
+                         $interes = $repoInt->find($item['id']);
+                     }
+                     // 2. Si es numérico (ID directo)
+                     elseif (is_numeric($item)) {
+                         $interes = $repoInt->find($item);
+                     }
+                     // 3. Si es string (Nombre)
+                     elseif (is_string($item)) {
+                         $interes = $repoInt->findOneBy(['nombre' => $item]);
+                     }
+
+                     if ($interes) {
+                         $user->addInterese($interes);
+                     }
                 }
             }
             
             // Ciclo (Opcional)
+            // Ciclo
             if (isset($data['ciclo'])) {
-                 // Lógica si se quiere actualizar ciclo
+                 $cicloData = $data['ciclo'];
+                 $repoCiclo = $em->getRepository(\App\Entity\Ciclo::class);
+                 $cicloObj = null;
+
+                 if (is_array($cicloData) && isset($cicloData['nombre']) && isset($cicloData['curso'])) {
+                     $cicloObj = $repoCiclo->findOneBy([
+                         'nombre' => $cicloData['nombre'], 
+                         'curso' => $cicloData['curso']
+                     ]);
+                 } elseif (is_string($cicloData)) {
+                     // Try to match by nombre only (might be ambiguous) or parse string
+                     $parts = [];
+                     if (preg_match('/^(.*)\s\((\d+)º\)$/', $cicloData, $parts)) {
+                         $nombre = trim($parts[1]);
+                         $curso = (int)$parts[2];
+                         $cicloObj = $repoCiclo->findOneBy(['nombre' => $nombre, 'curso' => $curso]);
+                     } else {
+                        // Fallback: search by name only (take first)
+                        $cicloObj = $repoCiclo->findOneBy(['nombre' => $cicloData]);
+                     }
+                 }
+
+                 if ($cicloObj) {
+                     $user->setCiclo($cicloObj);
+                 }
             }
 
         } 

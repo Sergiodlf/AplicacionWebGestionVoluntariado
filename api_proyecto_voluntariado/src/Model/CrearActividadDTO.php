@@ -5,7 +5,7 @@ namespace App\Model;
 class CrearActividadDTO
 {
     public function __construct(
-        public string $cifOrganizacion, // Necesitamos saber QUIÉN crea la actividad
+        public ?string $cifOrganizacion = null, // Opcional si se usa Token
         public string $nombre,
         public ?string $descripcion = null,
         public ?string $sector = null,
