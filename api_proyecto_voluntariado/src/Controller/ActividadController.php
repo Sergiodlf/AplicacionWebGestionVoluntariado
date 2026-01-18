@@ -151,6 +151,23 @@ class ActividadController extends AbstractController
                ->setParameter('estadoAprobacion', $estadoAprobacion);
         }
 
+        // NUEVO FILTRO INTELIGENTE: SI HAY TOKEN DE VOLUNTARIO, FILTRAR AUTOMÁTICAMENTE
+        $user = $this->getUser();
+        $excludeDni = $request->query->get('exclude_volunteer_dni');
+
+        if ($user instanceof \App\Entity\Voluntario) {
+            $excludeDni = $user->getDni();
+        }
+
+        if ($excludeDni) {
+            $qb->andWhere('a.codActividad NOT IN (
+                SELECT IDENTITY(i.actividad) 
+                FROM App\Entity\Inscripcion i 
+                WHERE i.voluntario = :voluntarioDni
+            )')
+            ->setParameter('voluntarioDni', $excludeDni);
+        }
+
         $actividades = $qb->getQuery()->getResult();
         
         $data = [];
