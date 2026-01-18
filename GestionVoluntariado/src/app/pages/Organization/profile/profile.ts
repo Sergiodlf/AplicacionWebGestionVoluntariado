@@ -2,7 +2,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { OrganizationService } from '../../../services/organization.service';
+import { AuthService } from '../../../services/auth.service';
 import { Organization } from '../../../models/organizationModel';
+import { ProfileResponse } from '../../../models/profile.model';
 import { OrganizationFormComponent } from '../../../components/Global-Components/organization-form/organization-form.component';
 
 @Component({
@@ -24,6 +26,7 @@ export class ProfileOrganizationComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private organizationService: OrganizationService,
+    private authService: AuthService,
     private location: Location
   ) {
     this.profileForm = this.fb.group({
@@ -79,41 +82,45 @@ export class ProfileOrganizationComponent implements OnInit {
   }
 
   loadProfile(): void {
-    const email = localStorage.getItem('user_id');
-    if (email) {
-      this.organizationService.getOrganizationByEmail(email).subscribe({
-        next: (data) => {
-          this.organization = data;
-          this.profileForm.patchValue({
-            nombre: data.nombre,
-            email: data.email,
-            sector: data.sector,
-            direccion: data.direccion,
-            localidad: data.localidad,
-            descripcion: data.descripcion,
-            contacto: data.contacto || ''
-          });
+    // Try to get from state first, then load from API
+    const currentProfile = this.authService.getCurrentProfile();
+
+    if (currentProfile && currentProfile.tipo === 'organizacion') {
+      this.mapProfileToForm(currentProfile);
+      this.loading = false;
+    } else {
+      // Fetch fresh
+      this.authService.loadProfile().subscribe({
+        next: (profile: ProfileResponse) => {
+          if (profile.tipo === 'organizacion') {
+            this.mapProfileToForm(profile);
+          } else {
+            this.message = 'El perfil no corresponde a una organización.';
+            this.isError = true;
+          }
           this.loading = false;
         },
-        error: (err) => {
+        error: (err: any) => {
+          console.error('Error loading profile:', err);
           this.message = 'Error al cargar el perfil.';
           this.isError = true;
           this.loading = false;
-          // Auto-dismiss error
-          setTimeout(() => {
-            this.message = '';
-            this.isError = false;
-          }, 3500);
         }
       });
-    } else {
-      this.message = 'Error al cargar el perfil. No se encontró sesión.';
-      this.isError = true;
-      this.loading = false;
-      setTimeout(() => {
-        this.message = '';
-        this.isError = false;
-      }, 3500);
     }
+  }
+
+  private mapProfileToForm(profile: any): void {
+    const data = profile.datos;
+    this.organization = data;
+    this.profileForm.patchValue({
+      nombre: data.nombre,
+      email: data.email,
+      sector: data.sector,
+      direccion: data.direccion,
+      localidad: data.localidad,
+      descripcion: data.descripcion,
+      contacto: data.contacto || ''
+    });
   }
 }

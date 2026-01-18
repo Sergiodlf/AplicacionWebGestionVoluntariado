@@ -148,6 +148,6 @@
 
     <!-- Modal Crear Voluntariado -->
     <app-crear-voluntariado-modal *ngIf="modalOpen" (close)="modalOpen = false"
-        (created)="onVoluntariadoCreated($event)" [cifOrganization]="TEST_CIF">
+        (created)="onVoluntariadoCreated($event)" [cifOrganization]="currentCif">
     </app-crear-voluntariado-modal>
 </div>

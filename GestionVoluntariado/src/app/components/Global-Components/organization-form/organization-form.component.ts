@@ -102,15 +102,9 @@ export class OrganizationFormComponent implements OnInit {
                     }
                 });
             } else {
-                this.organizationService.addOrganization(formData as OrganizationCreateData).subscribe({
-                    next: (response) => {
-                        this.onSubmit.emit(response);
-                    },
-                    error: (err) => {
-                        this.errorMessage = 'Error al registrar la organización. Por favor, intente de nuevo.';
-                        console.error('Error al registrar la organización:', err);
-                    }
-                });
+                // For new registration, pass the raw form data (including password) to the parent helper
+                // The parent (RegisterOrganizationComponent) handles Firebase + Backend registration
+                this.onSubmit.emit(formData as Organization);
             }
         } else {
             this.organizationForm.markAllAsTouched();

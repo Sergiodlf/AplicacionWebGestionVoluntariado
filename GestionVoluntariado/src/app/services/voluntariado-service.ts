@@ -41,6 +41,12 @@ export class VoluntariadoService {
 
   constructor(private http: HttpClient) { }
 
+  clearState() {
+    this.inscripcionesSubject.next(null);
+    this.actividadesSubject.next(null);
+    this.myInscripcionesSubject.next(null);
+  }
+
   getAllVoluntariados(forceReload: boolean = false): Observable<Voluntariado[]> {
     if (this.actividadesSubject.value && !forceReload) {
       return of(this.actividadesSubject.value);

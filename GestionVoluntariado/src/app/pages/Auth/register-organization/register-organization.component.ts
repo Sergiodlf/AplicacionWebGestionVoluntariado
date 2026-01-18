@@ -13,6 +13,8 @@ import { OrganizationFormComponent } from '../../../components/Global-Components
     templateUrl: './register-organization.component.html',
     styleUrl: './register-organization.component.css'
 })
+
+
 export class RegisterOrganizationComponent {
     constructor(
         private router: Router,

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
+import { AuthService } from '../../../services/auth.service';
 
 import { CommonModule } from '@angular/common';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
@@ -44,12 +45,13 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   countPending = 0;
   countAccepted = 0;
 
-  // CIF de prueba: si no es organización, usamos Cruz Roja por defecto para evitar 404 en pruebas
-  public readonly TEST_CIF = (localStorage.getItem('user_role') === 'organizacion'
-    ? (localStorage.getItem('user_id') || 'A12345678')
-    : 'A12345678').trim();
+  // CIF for template
+  currentCif: string = '';
 
-  constructor(private voluntariadoService: VoluntariadoService) { }
+  constructor(
+    private voluntariadoService: VoluntariadoService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     this.loadAllData();
@@ -57,10 +59,31 @@ export class MisVoluntariadosOrganizacion implements OnInit {
 
   loadAllData() {
     this.isLoading = true;
-    console.log('Fetching activities for CIF:', this.TEST_CIF);
 
-    const pending$ = this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, undefined, 'PENDIENTE');
-    const accepted$ = this.voluntariadoService.getActivitiesByOrganization(this.TEST_CIF, undefined, 'ACEPTADA');
+    // Get CIF dynamically from authenticated user
+    const user = this.authService.getCurrentUser();
+    const profile = this.authService.getCurrentProfile();
+
+    // Fallback logic if profile isn't fully loaded yet but we have user
+    // Ideally we rely on profile.datos.cif
+    if (profile && profile.tipo === 'organizacion') {
+      this.currentCif = profile.datos.cif;
+    } else {
+      // Graceful fallback or error
+      console.warn('Profile not loaded or not organization. Trying localStorage as backup.');
+      this.currentCif = localStorage.getItem('user_id') || '';
+    }
+
+    if (!this.currentCif) {
+      console.error('No CIF found for logged in user.');
+      this.isLoading = false;
+      return;
+    }
+
+    console.log('Fetching activities for CIF:', this.currentCif);
+
+    const pending$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'PENDIENTE');
+    const accepted$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'ACEPTADA');
 
     forkJoin([pending$, accepted$]).subscribe({
       next: ([pendingRes, acceptedRes]) => {

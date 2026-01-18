@@ -5,10 +5,8 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { ProfileResponse } from '../models/profile.model';
+import { VoluntariadoService } from './voluntariado-service';
 
-@Injectable({
-  providedIn: 'root'
-})
 @Injectable({
   providedIn: 'root'
 })
@@ -19,6 +17,8 @@ export class AuthService {
 
   private userProfileSubject = new BehaviorSubject<ProfileResponse | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();
+
+  private voluntariadoService = inject(VoluntariadoService);
 
   constructor(private http: HttpClient) { }
 
@@ -61,6 +61,11 @@ export class AuthService {
 
   logout(): Promise<void> {
     this.userProfileSubject.next(null);
+    this.voluntariadoService.clearState();
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_role'); // Clean up any other potential keys
+    localStorage.removeItem('user_token'); // If stored manually
     return signOut(this.auth);
   }
 
@@ -77,6 +82,30 @@ export class AuthService {
       tap(profile => {
         console.log('Profile loaded:', profile);
         this.userProfileSubject.next(profile);
+
+        // Persist essential session data
+        localStorage.setItem('user_role', profile.tipo);
+        if (profile.datos.nombre) {
+          localStorage.setItem('user_name', profile.datos.nombre);
+        }
+
+        // Save email specifically for legacy components
+        if (profile.datos.email) {
+          localStorage.setItem('user_email', profile.datos.email);
+        }
+
+        // Handle ID ambiguity for legacy support
+        if (profile.tipo === 'organizacion' && profile.datos.cif) {
+          // Some components might still look for 'user_id' expecting a CIF/Email
+          // We prioritize specific keys but keep basic ID available if needed
+          // For now, let's strictly rely on new keys where possible, but set user_id 
+          // to email if that's what legacy organization components expect (e.g. Profile)
+          // However, MisVoluntariados expects CIF in user_id fallback.
+          // Let's set specific keys:
+          localStorage.setItem('user_cif', profile.datos.cif);
+        } else if (profile.tipo === 'voluntario' && profile.datos.dni) {
+          localStorage.setItem('user_dni', profile.datos.dni);
+        }
       })
     );
   }
