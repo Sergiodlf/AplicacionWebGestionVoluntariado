@@ -202,17 +202,26 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Actividad no encontrada'], 404);
         }
 
-        $data = json_decode($request->getContent(), true);
-        $dniVoluntario = $data['dni'] ?? $data['dni_voluntario'] ?? null;
+        // SMART ENROLLMENT: USE TOKEN IF AVAILABLE
+        $user = $this->getUser();
+        $voluntario = null;
 
-        if (!$dniVoluntario) {
-            return $this->json(['error' => 'Falta el campo "dni"'], 400);
+        if ($user instanceof \App\Entity\Voluntario) {
+            $voluntario = $user;
         }
 
-        $voluntario = $em->getRepository(Voluntario::class)->find($dniVoluntario);
+        // FALLBACK: Manual DNI in body (for Admins or potential future uses)
+        if (!$voluntario) {
+            $data = json_decode($request->getContent(), true);
+            $dniVoluntario = $data['dni'] ?? $data['dni_voluntario'] ?? null;
+
+            if ($dniVoluntario) {
+                $voluntario = $em->getRepository(Voluntario::class)->find($dniVoluntario);
+            }
+        }
 
         if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+            return $this->json(['error' => 'Voluntario no encontrado (Token inválido o falta DNI)'], 404);
         }
 
         // 0. Comprobar si la actividad está completada o finalizada

@@ -475,6 +475,28 @@ paths:
         '409':
           description: El voluntario ya está inscrito
 
+
+  /inscripciones/{id}:
+    delete:
+      tags:
+        - Inscripciones
+      summary: Cancelar inscripción
+      description: Elimina una inscripción existente. Solo el voluntario propietario puede realizar esta acción.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la inscripción
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inscripción cancelada correctamente
+        '403':
+          description: No tienes permiso
+        '404':
+          description: Inscripción no encontrada
+
   /inscripciones/{id}/estado:
     patch:
       tags:
@@ -507,32 +529,32 @@ paths:
         '404':
           description: Inscripción no encontrada
 
-  /inscripciones/voluntario/{dni}/pendientes:
+
+  /inscripciones/me:
     get:
       tags:
         - Inscripciones
-      summary: Listar inscripciones pendientes de un voluntario
-      description: Devuelve todas las inscripciones con estado PENDIENTE para un DNI dado.
+      summary: Mis Inscripciones (Usa Token)
+      description: Recupera las inscripciones del voluntario autenticado. Permite filtrar por estado.
       parameters:
-        - name: dni
-          in: path
-          required: true
-          description: DNI del voluntario
+        - name: estado
+          in: query
+          required: false
           schema:
             type: string
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO]
+          description: Estado de la inscripción (opcional)
       responses:
         '200':
-          description: Lista de inscripciones pendientes
+          description: Lista de inscripciones del usuario
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InscripcionPendiente'
-        '404':
-          description: Voluntario no encontrado
-
-
+                  $ref: '#/components/schemas/Inscripcion'
+        '401':
+          description: No autenticado
 
   /inscripciones/voluntario/{dni}/actividades-aceptadas:
     get:
