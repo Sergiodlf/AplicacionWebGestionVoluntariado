@@ -104,12 +104,12 @@ export class VoluntariadoService {
     return this.http.get<any[]>(fullUrl, { params });
   }
 
-  getMyInscripciones(dni: string, forceReload: boolean = false): Observable<any[]> {
+  getMyInscripciones(dni?: string, forceReload: boolean = false): Observable<any[]> {
     if (this.myInscripcionesSubject.value && !forceReload) {
       return of(this.myInscripcionesSubject.value);
     }
-    // Fetch all for user (no status filter to get everything)
-    const url = `${this.inscripcionesUrl}/voluntario/${dni}/inscripciones`;
+    // Updated to use the new "smart" endpoint
+    const url = `${this.inscripcionesUrl}/me`;
     return this.http.get<any[]>(url).pipe(
       tap(data => this.myInscripcionesSubject.next(data))
     );

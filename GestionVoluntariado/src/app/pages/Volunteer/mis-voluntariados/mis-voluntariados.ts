@@ -60,7 +60,7 @@ export class MisVoluntariados implements OnInit {
   loadAllData() {
     this.isLoading = true;
 
-    this.voluntariadoService.getMyInscripciones(this.currentDNI).subscribe({
+    this.voluntariadoService.getMyInscripciones().subscribe({
       next: (allData) => {
         // Filter locally
         const pending = allData.filter(v => ['PENDIENTE', 'ABIERTA', 'Solicitado'].includes(v.estado_inscripcion || v.estado));

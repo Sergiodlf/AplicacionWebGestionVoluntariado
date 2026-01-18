@@ -67,7 +67,7 @@ export class Voluntariados implements OnInit {
 
     // 2. Get my inscriptions (pending matches)
     // FIX: Fetch ALL inscriptions to ensure duplicate check works for Confirmed/Accepted too.
-    this.voluntariadoService.getMyInscripciones(this.currentDNI).subscribe({
+    this.voluntariadoService.getMyInscripciones().subscribe({
       next: (data: any[]) => {
         this.myInscripciones = data;
         this.filterData();
