@@ -170,7 +170,7 @@ class AuthController extends AbstractController
         }
 
         // --- ACCESO PROVISIONAL ADMINISTRADOR (HARDCODED) ---
-        if ($email === 'admin@admin.com' && $password === 'admin123') {
+        if ($email === 'admin@admin.com' && $password === '1234567') {
             return $this->json([
                 'message' => 'Login correcto (Admin)',
                 'id' => 'ADMIN01',

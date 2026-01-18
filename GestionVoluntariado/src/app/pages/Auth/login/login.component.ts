@@ -28,16 +28,6 @@ export class LoginComponent {
     this.authService.login(this.email, this.password)
       .then(() => {
         console.log('Firebase login successful');
-        const user = this.authService.getCurrentUser();
-        if (user && !user.emailVerified) {
-             // Android behaves: mAuth.signOut() and show "Verificación pendiente".
-             // We will warn but maybe allow proceeding if the backend allows it, 
-             // OR to match Android exactly, we should block.
-             // Let's Match Android Logic:
-             alert('Debes verificar tu correo antes de entrar.');
-             this.authService.logout();
-             return;
-        }
         this.proceedToBackendLogin();
       })
       .catch((error) => {
@@ -65,13 +55,25 @@ export class LoginComponent {
         localStorage.setItem('user_id', response.id);
         localStorage.setItem('user_name', response.nombre);
 
+        const user = this.authService.getCurrentUser();
+
         // Redirect based on role
         if (response.tipo === 'voluntario') {
+          if (user && !user.emailVerified) {
+             alert('Debes verificar tu correo antes de entrar como voluntario.');
+             this.authService.logout();
+             return;
+          }
           this.router.navigate(['/volunteer/voluntariados']);
         } else if (response.tipo === 'organizacion') {
+          if (user && !user.emailVerified) {
+             alert('Debes verificar tu correo antes de entrar como organización.');
+             this.authService.logout();
+             return;
+          }
           this.router.navigate(['/organization/mis-voluntariados-organizacion']);
         } else {
-          // Fallback for admin or others
+          // Fallback for admin or others (ALLOW ADMIN WITHOUT VERIFICATION)
           this.router.navigate(['/admin/dashboard'], {
             state: { fromLogin: true },
           });
