@@ -16,6 +16,7 @@ export class LoginComponent {
   email = '';
   password = '';
   errorMessage = '';
+  isLoading = false;
 
   constructor(private router: Router, private http: HttpClient, private authService: AuthService) { }
 
@@ -25,6 +26,9 @@ export class LoginComponent {
       return;
     }
 
+    this.isLoading = true;
+    this.errorMessage = ''; // Clear previous errors
+
     this.authService.login(this.email, this.password)
       .then(() => {
         console.log('Firebase login successful');
@@ -32,6 +36,7 @@ export class LoginComponent {
       })
       .catch((error) => {
         console.error('Firebase login error:', error);
+        this.isLoading = false;
         if (error.code === 'auth/invalid-email') {
           this.errorMessage = 'El formato del correo es inválido.';
         } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -53,6 +58,7 @@ export class LoginComponent {
           if (user && !user.emailVerified) {
             alert('Debes verificar tu correo antes de entrar como voluntario.');
             this.authService.logout();
+            this.isLoading = false;
             return;
           }
           this.router.navigate(['/volunteer/voluntariados']);
@@ -60,6 +66,7 @@ export class LoginComponent {
           if (user && !user.emailVerified) {
             alert('Debes verificar tu correo antes de entrar como organización.');
             this.authService.logout();
+            this.isLoading = false;
             return;
           }
           this.router.navigate(['/organization/mis-voluntariados-organizacion']);
@@ -69,9 +76,11 @@ export class LoginComponent {
             state: { fromLogin: true },
           });
         }
+        // Note: We don't set isLoading = false here because we are navigating away.
       },
       error: (err) => {
         console.error('Error loading profile:', err);
+        this.isLoading = false;
         if (err.error && err.error.error === 'Voluntario no encontrado') {
           this.errorMessage = 'Usuario no registrado en la base de datos (Backend).';
         } else if (err.status === 404) {
