@@ -179,6 +179,13 @@ class ActividadController extends AbstractController
             ->setParameter('voluntarioDni', $excludeDni);
         }
 
+        // FILTRO POR FECHA (Ocultar pasadas por defecto)
+        $mostrarHistorial = $request->query->getBoolean('history', false);
+        if (!$mostrarHistorial) {
+            $qb->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
+               ->setParameter('now', new \DateTime());
+        }
+
         $actividades = $qb->getQuery()->getResult();
         
         $data = [];

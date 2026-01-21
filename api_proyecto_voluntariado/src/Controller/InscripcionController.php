@@ -69,6 +69,8 @@ class InscripcionController extends AbstractController
                     'email_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getEmail() : '',
                     'horario' => $actividad->getHorario(),
                     'habilidades_actividad' => $actividad->getHabilidades(), // Requisitos
+                    'necesidades_actividad' => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
+                    'maxParticipantes' => $actividad->getMaxParticipantes(),
                     'fecha_fin_actividad' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d') : null,
                     'estado' => $inscripcion->getEstado()
                 ];
@@ -263,6 +265,8 @@ class InscripcionController extends AbstractController
                     'estado_actividad' => $actividad->getEstado(),
                     'ods' => $actividad->getOds(),
                     'habilidades' => $actividad->getHabilidades(),
+                    'necesidades' => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
+                    'maxParticipantes' => $actividad->getMaxParticipantes(),
                 ];
             }
         }

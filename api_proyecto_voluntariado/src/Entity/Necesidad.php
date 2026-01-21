@@ -13,11 +13,11 @@ class Necesidad
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['actividad:read', 'necesidad:read'])]
+    #[Groups(['actividad:read', 'necesidad:read', 'org:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(['actividad:read', 'necesidad:read'])]
+    #[Groups(['actividad:read', 'necesidad:read', 'org:read'])]
     private ?string $nombre = null;
 
     public function getId(): ?int

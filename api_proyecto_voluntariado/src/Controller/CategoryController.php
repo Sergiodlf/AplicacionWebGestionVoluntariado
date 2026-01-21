@@ -97,6 +97,14 @@ class CategoryController extends AbstractController
         $h = $repository->find($id);
         if (!$h) return new JsonResponse(['error' => 'No encontrada'], 404);
 
+        // Manually remove relationship from Voluntarios to avoid FK constraint violation
+        // Since Voluntario is the owning side, we must do it from there or execute raw SQL.
+        // Doing it via DQL/ORM is cleaner but heavier if many volunteers.
+        // Given the expected scale, a raw SQL query to the join table is most efficient and safest for a quick fix.
+        
+        $conn = $this->entityManager->getConnection();
+        $conn->executeStatement('DELETE FROM VOLUNTARIOS_HABILIDADES WHERE HABILIDAD_ID = :id', ['id' => $id]);
+
         $this->entityManager->remove($h);
         $this->entityManager->flush();
 
@@ -124,6 +132,10 @@ class CategoryController extends AbstractController
     {
         $i = $repository->find($id);
         if (!$i) return new JsonResponse(['error' => 'No encontrada'], 404);
+
+        // Same for Intereses
+        $conn = $this->entityManager->getConnection();
+        $conn->executeStatement('DELETE FROM VOLUNTARIOS_INTERESES WHERE INTERES_ID = :id', ['id' => $id]);
 
         $this->entityManager->remove($i);
         $this->entityManager->flush();

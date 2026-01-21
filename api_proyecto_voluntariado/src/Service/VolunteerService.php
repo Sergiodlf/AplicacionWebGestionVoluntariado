@@ -79,11 +79,22 @@ class VolunteerService
 
         // Handle Ciclo
         if ($dto->ciclo) {
-            $cicloEntity = $this->cicloRepository->findOneBy(['nombre' => $dto->ciclo]);
+            $cicloData = $dto->ciclo;
+            $cicloEntity = null;
+
+            if (is_array($cicloData) && isset($cicloData['nombre']) && isset($cicloData['curso'])) {
+                $cicloEntity = $this->cicloRepository->findOneBy([
+                    'nombre' => $cicloData['nombre'], 
+                    'curso' => $cicloData['curso']
+                ]);
+            } elseif (is_string($cicloData)) {
+                 $cicloEntity = $this->cicloRepository->findOneBy(['nombre' => $cicloData]);
+            }
+
             if ($cicloEntity) {
                 $voluntario->setCiclo($cicloEntity);
             } else {
-                error_log("Ciclo not found: " . $dto->ciclo);
+                error_log("Ciclo not found: " . print_r($cicloData, true));
             }
         }
         

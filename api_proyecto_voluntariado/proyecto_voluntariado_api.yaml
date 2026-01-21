@@ -11,27 +11,7 @@ paths:
   # ==========================================
   # AUTENTICACIÓN Y REGISTRO
   # ==========================================
-  /auth/login:
-    post:
-      tags:
-        - Autenticación
-      summary: Iniciar sesión
-      description: Login común para Voluntarios y Organizaciones.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login exitoso. Devuelve token y rol.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
-          description: Credenciales incorrectas
+
 
   /auth/profile:
     post:
@@ -91,35 +71,7 @@ paths:
         '500':
           description: Error del servidor
 
-  /auth/change-password:
-    post:
-      tags:
-        - Autenticación
-      summary: Cambiar contraseña
-      security:
-        - bearerAuth: []
-      description: Cambia la contraseña del usuario autenticado.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - oldPassword
-                - newPassword
-              properties:
-                oldPassword:
-                  type: string
-                newPassword:
-                  type: string
-      responses:
-        '200':
-          description: Contraseña actualizada correctamente
-        '401':
-          description: Contraseña actual incorrecta
-        '400':
-          description: Datos faltantes
+
 
   /auth/register/voluntario:
     post:
@@ -794,6 +746,22 @@ paths:
   # ==========================================
   # CATEGORÍAS (DATA MAESTRA)
   # ==========================================
+  /ciclos:
+    get:
+      tags:
+        - Categorías
+      summary: Listar Ciclos Formativos
+      description: Devuelve la lista de ciclos formativos disponibles.
+      responses:
+        '200':
+          description: Lista de ciclos recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CicloDetalle'
+
   /categories/ods:
     get:
       tags:
@@ -823,6 +791,43 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Habilidad'
+    post:
+      tags:
+        - Categorías
+      summary: Crear nueva Habilidad
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                  example: "Primeros Auxilios"
+      responses:
+        '201':
+          description: Habilidad creada exitosamente
+        '400':
+          description: Nombre inválido o vacío
+
+  /categories/habilidades/{id}:
+    delete:
+      tags:
+        - Categorías
+      summary: Eliminar Habilidad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Habilidad eliminada exitosamente
+        '404':
+          description: Habilidad no encontrada
 
   /categories/intereses:
     get:
@@ -838,6 +843,43 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Interes'
+    post:
+      tags:
+        - Categorías
+      summary: Crear nuevo Interés
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                nombre:
+                  type: string
+                  example: "Protección Animal"
+      responses:
+        '201':
+          description: Interés creado exitosamente
+        '400':
+          description: Nombre inválido o vacío
+
+  /categories/intereses/{id}:
+    delete:
+      tags:
+        - Categorías
+      summary: Eliminar Interés
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Interés eliminado exitosamente
+        '404':
+          description: Interés no encontrado
 
   /categories/necesidades:
     get:
@@ -863,40 +905,6 @@ components:
       description: "Firebase ID Token"
 
   schemas:
-    # --- MODELOS DE AUTENTICACIÓN ---
-    LoginRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-          example: "usuario@email.com"
-        password:
-          type: string
-          format: password
-          example: "1234"
-
-    LoginResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          example: "Login correcto"
-        id:
-          type: string
-          description: "DNI o CIF del usuario logueado"
-          example: "12345678Z"
-        tipo:
-          type: string
-          enum: ["voluntario", "organizacion", "admin"]
-          example: "voluntario"
-        nombre:
-          type: string
-          example: "Juan Pérez"
-        email:
-           type: string
-
     # --- MODELOS AUXILIARES ---
     ODS:
       type: object
@@ -1388,6 +1396,13 @@ components:
             pendientes:
               type: integer
         organizaciones:
+          type: object
+          properties:
+            total:
+              type: integer
+            pendientes:
+              type: integer
+        actividades:
           type: object
           properties:
             total:

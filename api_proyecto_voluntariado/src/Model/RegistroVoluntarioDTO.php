@@ -22,5 +22,6 @@ class RegistroVoluntarioDTO
     public array $intereses = [];
     public array $disponibilidad = [];
     
-    public ?string $ciclo = null;
+    /** @var string|array|null */
+    public $ciclo = null;
 }

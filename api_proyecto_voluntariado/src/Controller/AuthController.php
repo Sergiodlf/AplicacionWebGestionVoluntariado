@@ -151,104 +151,12 @@ class AuthController extends AbstractController
     }
 
     // =========================================================================
-    // 3. LOGIN UNIFICADO (MEJORADO PARA DEBUG)
+    // 3. LOGIN UNIFICADO (ELIMINADO - Usar Firebase)
     // =========================================================================
-    #[Route('/login', name: 'login', methods: ['POST'])]
-    public function login(
-        Request $request,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-
-        $email = $data['email'] ?? null;
-        $password = $data['password'] ?? null;
-
-        if (!$email || !$password) {
-            return $this->json(['error' => 'Faltan credenciales (email y password)'], 400);
-        }
-
-        // --- ACCESO PROVISIONAL ADMINISTRADOR (HARDCODED) ---
-        if ($email === 'admin@admin.com' && $password === '1234567') {
-            return $this->json([
-                'message' => 'Login correcto (Admin)',
-                'id' => 'ADMIN01',
-                'tipo' => 'admin',
-                'nombre' => 'Administrador Sistema'
-            ]);
-        }
-
-        // A. Buscar en tabla Voluntarios
-        $user = $entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
-        $tipoUsuario = 'voluntario';
-
-        // B. Si no está, buscar en tabla Organizaciones
-        if (!$user) {
-            $user = $entityManager->getRepository(Organizacion::class)->findOneBy(['email' => $email]);
-            $tipoUsuario = 'organizacion';
-        }
-
-        // Si no encontramos al usuario en ninguna tabla
-        if (!$user) {
-            return $this->json(['error' => 'Usuario no encontrado'], 404);
-        }
-
-        // C. Verificar contraseña
-        if (!$passwordHasher->isPasswordValid($user, $password)) {
-            return $this->json(['error' => 'Contraseña incorrecta'], 401);
-        }
-
-        return $this->json([
-            'message' => 'Login correcto',
-            'id' => ($tipoUsuario === 'voluntario') ? $user->getDni() : $user->getCif(),
-            'tipo' => $tipoUsuario,
-            'nombre' => $user->getNombre(),
-        ]);
-    }
+    //
     // =========================================================================
-    // 4. CAMBIO DE CONTRASEÑA
+    // 4. CAMBIO DE CONTRASEÑA (ELIMINADO - Usar Firebase)
     // =========================================================================
-    #[Route('/change-password', name: 'change_password', methods: ['POST'])]
-    public function changePassword(
-        Request $request,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
-    ): JsonResponse
-    {
-        // 1. Obtener usuario del Token (Smart access)
-        $user = $this->getUser();
-        
-        if (!$user) {
-             return $this->json(['error' => 'Usuario no autenticado'], 401);
-        }
-
-        $data = json_decode($request->getContent(), true);
-
-        $oldPassword = $data['oldPassword'] ?? null;
-        $newPassword = $data['newPassword'] ?? null;
-
-        if (!$oldPassword || !$newPassword) {
-            return $this->json(['error' => 'Faltan datos obligatorios (oldPassword, newPassword)'], 400);
-        }
-
-        // 2. Verificar contraseña actual
-        if (!$passwordHasher->isPasswordValid($user, $oldPassword)) {
-            return $this->json(['error' => 'La contraseña actual es incorrecta'], 401);
-        }
-
-        // 3. Hashear y guardar nueva contraseña
-        $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
-        $user->setPassword($hashedPassword);
-
-        try {
-            $entityManager->flush();
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar la contraseña', 'detalle' => $e->getMessage()], 500);
-        }
-
-        return $this->json(['message' => 'Contraseña actualizada correctamente']);
-    }
     // =========================================================================
     // 5. OBTENER PERFIL (UNIFICADO)
     // =========================================================================
@@ -268,20 +176,22 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
         }
 
+        // --- 0. Caso Admin (Virtual) ---
+        if ($user instanceof \App\Security\User\AdminUser) {
+             return $this->json([
+                'tipo' => 'admin',
+                'datos' => [
+                    'dni' => 'ADMIN01',
+                    'nombre' => 'Administrador Sistema',
+                    'correo' => $user->getUserIdentifier(),
+                    'zona' => 'Global'
+                ]
+            ]);
+        }
+
         // --- 1. Caso Voluntario ---
         if ($user instanceof Voluntario) {
-            // BACKDOOR: Si es el admin@admin.com, devolvemos tipo 'admin'
-            if ($user->getCorreo() === 'admin@admin.com') {
-                 return $this->json([
-                    'tipo' => 'admin',
-                    'datos' => [
-                        'dni' => $user->getDni(),
-                        'nombre' => 'Administrador',
-                        'correo' => $user->getCorreo(),
-                        'zona' => 'Global'
-                    ]
-                ]);
-            }
+            // (El backdoor antiguo se puede eliminar o dejar por seguridad, pero AdminUser tiene prioridad)
 
             return $this->json([
                 'tipo' => 'voluntario',
@@ -361,8 +271,8 @@ class AuthController extends AbstractController
             if (isset($data['zona'])) $user->setZona($data['zona']);
             if (isset($data['experiencia'])) $user->setExperiencia($data['experiencia']);
             if (isset($data['coche'])) $user->setCoche($data['coche']);
-            if (isset($data['disponibilidad'])) $user->setDisponibilidad($data['disponibilidad']); // Array
-            if (isset($data['idiomas'])) $user->setIdiomas($data['idiomas']); // Array
+            if (isset($data['disponibilidad']) && is_array($data['disponibilidad'])) $user->setDisponibilidad(array_values($data['disponibilidad'])); // Array
+            if (isset($data['idiomas']) && is_array($data['idiomas'])) $user->setIdiomas(array_values($data['idiomas'])); // Array
 
             // Relaciones ManyToMany (Habilidades)
             if (isset($data['habilidades']) && is_array($data['habilidades'])) {

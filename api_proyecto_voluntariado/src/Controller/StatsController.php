@@ -30,21 +30,26 @@ class StatsController extends AbstractController
         $totalOrganizaciones = $organizacionRepo->count([]);
         $organizacionesPendientes = $organizacionRepo->count(['estado' => 'pendiente']);
 
-        // 4. INSCRIPCIONES (MATCHES)
+        // 4. ACTIVIDADES (PROJECTS)
+        $actividadRepo = $em->getRepository(Actividad::class);
+        $totalActividades = $actividadRepo->count([]);
+        // Asumiendo que 'estadoAprobacion' = 'PENDIENTE' significa pendiente de moderación
+        $actividadesPendientes = $actividadRepo->count(['estadoAprobacion' => 'PENDIENTE']);
+
+        // 5. INSCRIPCIONES (MATCHES)
         // Definimos "Matches" como inscripciones exitosas o en proceso
         $totalMatches = $inscripcionRepo->count([
             'estado' => ['CONFIRMADO', 'ACEPTADO', 'EN_CURSO', 'FINALIZADO', 'COMPLETADA']
         ]);
 
-        // 5. DESGLOSE INSCRIPCIONES
+        // 6. DESGLOSE INSCRIPCIONES
         $inscripcionesCompletadas = $inscripcionRepo->count(['estado' => ['FINALIZADO', 'COMPLETADA']]);
         $inscripcionesPendientes = $inscripcionRepo->count(['estado' => 'PENDIENTE']);
         $inscripcionesAceptadas = $inscripcionRepo->count(['estado' => ['CONFIRMADO', 'ACEPTADO', 'EN_CURSO']]);
 
-        // 6. TOTAL PENDIENTES (General del sistema a revisar por admin)
-        // Sumamos voluntarios pendientes + organizaciones pendientes + inscripciones pendientes (opcional, según dashboard)
-        // Según la imagen, "Pendientes" parece ser un contador global de tareas para el admin.
-        $totalPendientesGlobal = $voluntariosPendientes + $organizacionesPendientes; // + $inscripcionesPendientes;
+        // 7. TOTAL PENDIENTES (General del sistema a revisar por admin)
+        // Sumamos voluntarios pendientes + organizaciones pendientes + actividades pendientes
+        $totalPendientesGlobal = $voluntariosPendientes + $organizacionesPendientes + $actividadesPendientes;
 
         $data = [
             'voluntarios' => [
@@ -54,6 +59,10 @@ class StatsController extends AbstractController
             'organizaciones' => [
                 'total' => $totalOrganizaciones,
                 'pendientes' => $organizacionesPendientes
+            ],
+            'actividades' => [
+                'total' => $totalActividades,
+                'pendientes' => $actividadesPendientes
             ],
             'matches' => [
                 'total' => $totalMatches
