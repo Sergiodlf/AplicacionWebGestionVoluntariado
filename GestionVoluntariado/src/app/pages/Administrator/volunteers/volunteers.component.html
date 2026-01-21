@@ -1,5 +1,5 @@
 <div class="d-flex flex-column min-vh-100 bg-light">
-  <app-navbar></app-navbar>
+
   <div class="d-flex flex-grow-1 overflow-hidden">
     <app-sidebar></app-sidebar>
     <div class="flex-grow-1 d-flex flex-column overflow-hidden">
@@ -178,32 +178,30 @@
 <!-- Add Volunteer Modal -->
 @if (showModal) {
 
-  <!-- Backdrop -->
-  <div class="custom-backdrop" (click)="closeModal('add')"></div>
+<!-- Backdrop -->
+<div class="custom-backdrop" (click)="closeModal('add')"></div>
 
-  <!-- Modal -->
-  <div class="modal fade show d-block" role="dialog" aria-modal="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content rounded-4 border-0 shadow-lg">
+<!-- Modal -->
+<div class="modal fade show d-block" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
 
-        <div class="modal-header border-0">
-          <button class="btn-close" (click)="closeModal('add')"></button>
+      <div class="modal-header border-0">
+        <button class="btn-close" (click)="closeModal('add')"></button>
+      </div>
+
+      <div class="modal-body px-5 pb-5">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold text-custom-blue">Añadir Voluntario</h2>
         </div>
 
-        <div class="modal-body px-5 pb-5">
-          <div class="text-center mb-4">
-            <h2 class="fw-bold text-custom-blue">Añadir Voluntario</h2>
-          </div>
+        <app-volunteer-form submitLabel="Añadir" (onSubmit)="handleCreateVolunteer($event)">
+        </app-volunteer-form>
 
-          <app-volunteer-form
-            submitLabel="Añadir"
-            (onSubmit)="handleCreateVolunteer($event)">
-          </app-volunteer-form>
-
-        </div>
       </div>
     </div>
   </div>
+</div>
 }
 
 

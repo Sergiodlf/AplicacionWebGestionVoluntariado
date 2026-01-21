@@ -74,10 +74,11 @@ Para mantener la estabilidad del código, implementamos una estrategia de **Git 
 
 1.  **Instalar dependencias:**
     ```bash
-    npm install
+    npm install --legacy-peer-deps
     ```
 2.  **Iniciar Servidor:**
     ```bash
     ng serve
     ```
+
 

@@ -5,6 +5,7 @@ import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarVolunteer } from '../../../components/Volunteer/sidebar-volunteer/sidebar-volunteer';
 import { VoluntariadoService, Voluntariado } from '../../../services/voluntariado-service';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-voluntariados',
@@ -15,6 +16,7 @@ import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-car
 })
 export class Voluntariados implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
+  private notificationService = inject(NotificationService);
 
   // Fetch from session or fallback
   currentDNI = localStorage.getItem('user_id') || '00000000A';
@@ -159,13 +161,13 @@ export class Voluntariados implements OnInit {
     });
 
     if (alreadySignedUp) {
-      alert('Ya estás inscrito en el voluntariado: ' + item.title);
+      this.notificationService.showWarning('Ya estás inscrito en el voluntariado: ' + item.title);
       return;
     }
 
     this.voluntariadoService.inscribirVoluntario(this.currentDNI, item.codAct).subscribe({
       next: (res) => {
-        alert('Te has apuntado correctamente!');
+        this.notificationService.showSuccess('Te has apuntado correctamente!');
         // Refresh data to update "status" and clear cache
         this.voluntariadoService.getMyInscripciones(this.currentDNI, true).subscribe(() => {
           this.loadData();
@@ -175,7 +177,7 @@ export class Voluntariados implements OnInit {
         console.error('Error al inscribirse', err);
         // Try to show more specific error from backend if available
         const serverMsg = err.error?.message || err.error?.error || '';
-        alert(`Error al apuntarse. ${serverMsg} Verifica que no estés ya inscrito.`);
+        this.notificationService.showError(`Error al apuntarse. ${serverMsg} Verifica que no estés ya inscrito.`);
       }
     });
   }
