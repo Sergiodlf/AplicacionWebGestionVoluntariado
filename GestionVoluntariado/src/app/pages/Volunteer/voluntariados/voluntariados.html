@@ -44,7 +44,16 @@
 
         <!-- Cards Grid -->
         <div class="row g-4">
-          <div class="col-md-6" *ngFor="let item of displayedVoluntariados">
+          <div class="col-12" *ngIf="isLoading">
+            <div class="d-flex flex-column align-items-center justify-content-center py-5">
+              <div class="mb-3">
+                <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
+              </div>
+              <h5 class="text-custom-blue fw-light">Cargando voluntariados...</h5>
+            </div>
+          </div>
+
+          <div class="col-md-6" *ngFor="let item of displayedVoluntariados" [hidden]="isLoading">
             <app-voluntariado-card [title]="item.title || item.nombre"
               [organization]="item.organization || item.organizacion" [skills]="item.skills || []"
               [date]="item.date || ''" [ciclo]="item.ciclo || ''" [ods]="item.ods || []" (onAction)="onAction(item)">

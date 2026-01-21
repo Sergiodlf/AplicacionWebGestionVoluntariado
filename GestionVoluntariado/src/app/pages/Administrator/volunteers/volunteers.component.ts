@@ -35,6 +35,8 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private refresh$ = new BehaviorSubject<boolean>(false);
 
+  isLoading = true;
+
   // Filter Criteria Subject
   private filterCriteria$ = new BehaviorSubject<any>({
     zona: '',
@@ -95,14 +97,20 @@ export class VolunteersComponent implements OnInit, OnDestroy {
 
   // Main data stream
   private rawVolunteers$ = this.refresh$.pipe(
-    switchMap((force) =>
-      this.volunteerService.getVolunteers(force).pipe(
+    switchMap((force) => {
+      this.isLoading = true; // Start loading
+      return this.volunteerService.getVolunteers(force).pipe(
+        map(data => {
+          this.isLoading = false; // Stop loading on success
+          return data;
+        }),
         catchError((err) => {
           console.error('Error fetching volunteers:', err);
+          this.isLoading = false; // Stop loading on error
           return of([]);
         })
-      )
-    )
+      );
+    })
   );
 
   // Filtered stream
@@ -161,6 +169,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   showFilterModal = false;
   showCreateMatchModal = false;
   selectedVolunteerForMatch: any = null;
+
 
   ngOnInit() {
     this.categoryService.getHabilidades().subscribe((data) => (this.availableSkills = data));

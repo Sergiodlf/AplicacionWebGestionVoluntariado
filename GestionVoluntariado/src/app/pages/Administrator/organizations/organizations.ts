@@ -64,6 +64,8 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
   showFilterModal = signal(false);
 
+  isLoading = true;
+
   ngOnInit(): void {
     this.loadOrganizations();
     this.setupUpdateSubscription(); // Inicia la escucha de notificaciones
@@ -112,9 +114,11 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
         const approved = data.filter((org) => org.estado?.toLowerCase() === 'aprobado');
         this.pendingCount.set(pending.length);
         this.approvedCount.set(approved.length);
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al obtener organizaciones de la API:', error);
+        this.isLoading = false;
       },
     });
   }

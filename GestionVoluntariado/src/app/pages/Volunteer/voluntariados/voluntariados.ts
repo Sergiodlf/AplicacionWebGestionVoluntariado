@@ -43,6 +43,8 @@ export class Voluntariados implements OnInit {
   availableLocations: string[] = [];
   availableSectors: string[] = [];
 
+  isLoading = true;
+
   ngOnInit() {
     this.loadData();
   }
@@ -64,8 +66,12 @@ export class Voluntariados implements OnInit {
         });
         this.extractFilterOptions();
         this.filterData();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Error fetching voluntariados', err)
+      error: (err) => {
+        console.error('Error fetching voluntariados', err);
+        this.isLoading = false;
+      }
     });
 
     // 2. Get my inscriptions (pending matches)

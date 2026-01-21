@@ -63,6 +63,10 @@ export class ActivitiesComponent implements OnInit {
   availableODS: string[] = Array.from({ length: 17 }, (_, i) => `ODS ${i + 1}`);
   availableSkills: Category[] = [];
 
+
+
+  isLoading = true;
+
   ngOnInit() {
     this.loadActivities();
     this.categoryService.getHabilidades().subscribe(data => this.availableSkills = data);
@@ -134,9 +138,11 @@ export class ActivitiesComponent implements OnInit {
         this.availableOrganizations = Array.from(orgs).sort();
 
         this.applyFilters();
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('ActivitiesComponent: Error fetching activities:', err);
+        this.isLoading = false;
       }
     });
   }
