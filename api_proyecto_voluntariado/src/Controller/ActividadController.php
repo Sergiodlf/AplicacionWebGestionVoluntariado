@@ -125,7 +125,11 @@ class ActividadController extends AbstractController
         // Determinar estado inicial basado en fecha
         // $fInicio ya fue instanciado arriba (líneas 67 o 70)
         $now = new \DateTime();
-        $estadoCalculado = ($fInicio > $now) ? 'PENDIENTE' : 'ABIERTA';
+        $estadoCalculado = 'En curso';
+        if ($fInicio > $now) {
+            $estadoCalculado = 'Sin comenzar';
+        }
+
 
         // 4. Create Activity via Service
         try {
@@ -188,6 +192,17 @@ class ActividadController extends AbstractController
 
         $actividades = $qb->getQuery()->getResult();
         
+        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        $modificado = false;
+        foreach ($actividades as $actividad) {
+            if ($this->checkAndUpdateStatus($actividad)) {
+                $modificado = true;
+            }
+        }
+        if ($modificado) {
+            $em->flush();
+        }
+
         $data = [];
         foreach ($actividades as $actividad) {
             $data[] = [
@@ -341,6 +356,17 @@ class ActividadController extends AbstractController
 
         $actividades = $em->getRepository(Actividad::class)->findBy($criteria, ['fechaInicio' => 'DESC']);
 
+        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        $modificado = false;
+        foreach ($actividades as $actividad) {
+            if ($this->checkAndUpdateStatus($actividad)) {
+                $modificado = true;
+            }
+        }
+        if ($modificado) {
+            $em->flush();
+        }
+
         $data = [];
         foreach ($actividades as $actividad) {
             $data[] = [
@@ -383,6 +409,17 @@ class ActividadController extends AbstractController
             }
 
             $actividades = $em->getRepository(Actividad::class)->findBy($criteria);
+
+            // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+            $modificado = false;
+            foreach ($actividades as $actividad) {
+                if ($this->checkAndUpdateStatus($actividad)) {
+                    $modificado = true;
+                }
+            }
+            if ($modificado) {
+                $em->flush();
+            }
 
             $data = [];
             foreach ($actividades as $actividad) {
@@ -428,11 +465,22 @@ class ActividadController extends AbstractController
         
         // --- DEFINICIÓN DE LISTAS BLANCAS ---
         $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
-        $estadosEjecucion = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'];
-
-        // --- LÓGICA INTELEGENTE DE ASIGNACIÓN ---
         
-        // Caso 1: Forzado explícitamente por el cliente (ej: quiere poner Aprobación en PENDIENTE)
+        // Mapa de normalización para ejecución: UPPER -> StoredValue
+        $mapaEjecucion = [
+            'SIN COMENZAR' => 'Sin comenzar',
+            'EN CURSO'     => 'En curso',
+            'COMPLETADA'   => 'Completada',
+            'COMPLETADO'   => 'Completada',
+            'FINALIZADO'   => 'Completada', 
+            'CANCELADO'    => 'CANCELADO',
+            'ABIERTA'      => 'En curso',
+            'PENDIENTE'    => 'Sin comenzar' 
+        ];
+
+        // --- LÓGICA INTELIGENTE DE ASIGNACIÓN ---
+        
+        // Caso 1: Forzado explícitamente por el cliente
         if ($tipo === 'aprobacion') {
             if (!in_array($nuevoEstadoUpper, $estadosAprobacion)) {
                 return $this->json(['error' => "Estado de aprobación inválido: $nuevoEstadoUpper"], 400);
@@ -441,11 +489,11 @@ class ActividadController extends AbstractController
             $campoActualizado = 'estadoAprobacion';
 
         } elseif ($tipo === 'ejecucion') {
-            if (!in_array($nuevoEstadoUpper, $estadosEjecucion)) {
+            if (!array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
                  return $this->json(['error' => "Estado de ejecución inválido: $nuevoEstadoUpper"], 400);
             }
-            $actividad->setEstado($nuevoEstadoUpper);
-             $campoActualizado = 'estado';
+            $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
+            $campoActualizado = 'estado';
 
         } else {
             // Caso 2: Auto-detección (Sin 'tipo')
@@ -454,15 +502,10 @@ class ActividadController extends AbstractController
                 $actividad->setEstadoAprobacion($nuevoEstadoUpper);
                 $campoActualizado = 'estadoAprobacion';
                 
-            } elseif (in_array($nuevoEstadoUpper, ['EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'])) {
-                $actividad->setEstado($nuevoEstadoUpper);
+            } elseif (array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
+                $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
                 $campoActualizado = 'estado';
 
-            } elseif ($nuevoEstadoUpper === 'PENDIENTE') {
-                // AMBIGÜEDAD: 'PENDIENTE' existe en ambos.
-                // Decisión de diseño: Sin 'tipo', asumimos ESTADO (Ejecución) para no romper clientes antiguos.
-                $actividad->setEstado('PENDIENTE');
-                $campoActualizado = 'estado';
             } else {
                  return $this->json([
                     'error' => 'Estado desconocido o inválido', 
@@ -482,5 +525,34 @@ class ActividadController extends AbstractController
             'campo_actualizado' => $campoActualizado,
             'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion()
         ]);
+    }
+
+    // MÉTODO PRIVADO PARA CHEQUEAR Y ACTUALIZAR ESTADO SEGÚN FECHAS
+    private function checkAndUpdateStatus(Actividad $actividad): bool
+    {
+        $now = new \DateTime();
+        $start = $actividad->getFechaInicio();
+        $end = $actividad->getFechaFin();
+        $estadoActual = $actividad->getEstado();
+        $nuevoEstado = null;
+
+        // Reglas de negocio
+        if ($start && $now < $start) {
+            $nuevoEstado = 'Sin comenzar';
+        } elseif ($end && $now > $end) {
+            $nuevoEstado = 'Completada';
+        } else {
+            // Si ya empezó y no ha terminado (o no tiene fin), está en curso
+            $nuevoEstado = 'En curso';
+        }
+
+
+        // Solo actualizamos si cambia
+        if ($nuevoEstado && $estadoActual !== $nuevoEstado) {
+            $actividad->setEstado($nuevoEstado);
+            return true;
+        }
+
+        return false;
     }
 }
