@@ -1,11 +1,11 @@
-# Sistema de Gestión de Voluntariado (Backend API)
+# Sistema de Gestión de Voluntariado
 
 ![Branching](https://img.shields.io/badge/gitflow-branching-orange)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
 ![PHP](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php)
 
 ## Objetivo del Proyecto
-El objetivo central es proporcionar una API REST robusta y segura que actúe como motor para una plataforma de voluntariado multicanal (Web y Móvil). El sistema orquesta la relación entre organizaciones que publican causas sociales y voluntarios dispuestos a participar, garantizando la integridad de los datos en procesos críticos como el **Match** y el **Control de Inscripciones**.
+El objetivo central es proporcionar una aplicación web para la gestión del voluntariado de cuatrovientos. El sistema orquesta la relación entre organizaciones que publican causas sociales y voluntarios dispuestos a participar, garantizando la integridad de los datos en procesos críticos como el **Match** y el **Control de Inscripciones**.
 
 ---
 
