@@ -10,6 +10,7 @@ import { CrearVoluntariadoModal } from '../../../components/organization/crear-v
 
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-mis-voluntariados-organizacion',
@@ -60,25 +61,41 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   loadAllData() {
     this.isLoading = true;
 
-    // Get CIF dynamically from authenticated user
-    const user = this.authService.getCurrentUser();
-    const profile = this.authService.getCurrentProfile();
+    this.isLoading = true;
 
-    // Fallback logic if profile isn't fully loaded yet but we have user
-    // Ideally we rely on profile.datos.cif
-    if (profile && profile.tipo === 'organizacion') {
-      this.currentCif = profile.datos.cif;
-    } else {
-      // Graceful fallback or error
-      console.warn('Profile not loaded or not organization. Trying localStorage as backup.');
-      this.currentCif = localStorage.getItem('user_id') || '';
-    }
+    // Use userProfile$ observable to wait for the profile to be loaded
+    this.authService.userProfile$.pipe(
+      filter(profile => !!profile && profile.tipo === 'organizacion'), // Wait for a valid organization profile
+      take(1) // Take only the first valid value to avoid repeated calls if profile updates
+    ).subscribe(profile => {
+      this.currentCif = profile!.datos.cif;
 
-    if (!this.currentCif) {
-      console.error('No CIF found for logged in user.');
-      this.isLoading = false;
-      return;
+      if (!this.currentCif) {
+        console.error('No CIF found for logged in user.');
+        this.isLoading = false;
+        return;
+      }
+
+      this.fetchActivities();
+    });
+
+    // Fallback: If profile doesn't load within a timeout (e.g. user not logged in or error), handle it.
+    // However, the Observable pattern above is cleaner. 
+    // If we want to support the "localStorage backup" immediately if profile is null but user exists:
+    if (!this.authService.getCurrentProfile()) {
+      // Check if we have backup in localStorage to show something while waiting or if auth fails
+      const backupCif = localStorage.getItem('user_cif'); // We specifically saved this in AuthService now
+      if (backupCif) {
+        console.log('Using backup CIF while waiting for profile...');
+        this.currentCif = backupCif;
+        this.fetchActivities();
+        return;
+      }
     }
+  }
+
+  fetchActivities() {
+    if (!this.currentCif) return;
 
     console.log('Fetching activities for CIF:', this.currentCif);
 
