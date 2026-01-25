@@ -63,7 +63,9 @@ export class VoluntariadoService {
   }
 
   loadVoluntariados(): Observable<Voluntariado[]> {
-    return this.http.get<Voluntariado[]>(this.apiUrl).pipe(
+    // Cache busting
+    const timestamp = new Date().getTime();
+    return this.http.get<Voluntariado[]>(`${this.apiUrl}?t=${timestamp}`).pipe(
       tap(data => this.actividadesSubject.next(data))
     );
   }
@@ -139,4 +141,9 @@ export class VoluntariadoService {
   actualizarEstadoActividad(id: number, estado: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
   }
+
+  updateActivity(id: number, actividad: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}/editar`, actividad);
+  }
+
 }

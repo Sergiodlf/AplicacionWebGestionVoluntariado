@@ -43,6 +43,10 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $direccion = null;
 
+    #[ORM\Column(name: 'SECTOR', type: Types::STRING, length: 50, nullable: true)]
+    #[Groups(['org:read'])]
+    private ?string $sector = null;
+    
     // #[ORM\Column(type: Types::TEXT, nullable: true)]
     // #[Groups(['org:read'])]
     // private ?string $descripcion = null;
@@ -184,6 +188,17 @@ class Actividad
     public function setDireccion(string $direccion): static
     {
         $this->direccion = $direccion;
+        return $this;
+    }
+
+    public function getSector(): ?string
+    {
+        return $this->sector;
+    }
+
+    public function setSector(?string $sector): static
+    {
+        $this->sector = $sector;
         return $this;
     }
 

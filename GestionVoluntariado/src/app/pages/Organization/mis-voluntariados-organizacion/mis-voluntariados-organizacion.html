@@ -81,8 +81,9 @@
                             <app-voluntariado-card [title]="item.title" [organization]="item.organization"
                                 [skills]="item.skills" [date]="item.date" [ciclo]="item.ciclo" [ods]="item.ods"
                                 [status]="item.status" [isOrganization]="true" [buttonText]="item.buttonText"
-                                (onAction)="onAction(item)">
+                                (onAction)="onAction(item)" (onEdit)="openEditModal(item)">
                             </app-voluntariado-card>
+
                         </div>
                         }
 
@@ -147,6 +148,8 @@
 
     <!-- Modal Crear Voluntariado -->
     <app-crear-voluntariado-modal *ngIf="modalOpen" (close)="modalOpen = false"
-        (created)="onVoluntariadoCreated($event)" [cifOrganization]="currentCif">
+        (created)="onVoluntariadoCreated($event)" (updated)="onVoluntariadoCreated($event)"
+        [cifOrganization]="currentCif" [activityToEdit]="editingActivity">
     </app-crear-voluntariado-modal>
+
 </div>

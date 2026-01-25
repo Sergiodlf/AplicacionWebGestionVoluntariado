@@ -16,8 +16,11 @@ import { Organization } from '../../../models/organizationModel';
 })
 export class CrearVoluntariadoModal implements OnInit, OnDestroy {
   @Input() cifOrganization: string = '';
+  @Input() activityToEdit: any = null;
   @Output() close = new EventEmitter<void>();
   @Output() created = new EventEmitter<any>();
+  @Output() updated = new EventEmitter<any>();
+
 
   availableOds: ODS[] = [];
   availableHabilidades: Category[] = [];
@@ -55,26 +58,53 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
 
     // Load Accepted Organizations
     this.organizationService.getOrganizations().subscribe(orgs => {
-      console.log('Raw Organizations fetched:', orgs);
-
+      // ... logic skipped for brevity, keeping it same ...
       this.availableOrganizations = orgs.filter(o => {
         const estado = (o.estado || '').toLowerCase();
-        // Include if Accepted OR if it matches the forced CIF (e.g. the logged-in org itself)
         const isAccepted = estado === 'aprobado' || estado === 'aceptada' || estado === 'aceptado' || estado === 'confirmado';
         const isForced = this.cifOrganization && o.cif === this.cifOrganization;
 
         return isAccepted || isForced;
       });
 
-      console.log('Filtered Organizations:', this.availableOrganizations);
-
       // If Input cifOrganization is provided, try to pre-select it
       if (this.cifOrganization) {
         this.form.selectedCif = this.cifOrganization;
       }
+
+      // Pre-fill if editing
+      if (this.activityToEdit) {
+        this.fillFormForEdit();
+      }
     });
 
+
     this.setBodyScroll(true);
+  }
+
+  fillFormForEdit() {
+    const a = this.activityToEdit;
+    this.form.title = a.nombre;
+    this.form.selectedCif = a.cif_organizacion || this.cifOrganization;
+    this.form.zone = a.direccion;
+    this.form.maxParticipants = a.maxParticipantes;
+    this.form.sector = a.sector;
+
+    // Dates (Expects YYYY-MM-DD from 'YYYY-MM-DD HH:mm:ss')
+    if (a.fechaInicio) this.form.startDate = a.fechaInicio.substring(0, 10);
+
+    if (a.fechaFin) {
+      this.form.endDate = a.fechaFin.substring(0, 10);
+    } else if (this.form.startDate) {
+      // Fallback: If no end date, set to +30 days from start
+      const d = new Date(this.form.startDate);
+      d.setDate(d.getDate() + 30);
+      this.form.endDate = d.toISOString().substring(0, 10);
+    }
+
+    // Lists (Assuming API returns arrays of objects {id, nombre})
+    this.form.ods = a.ods ? [...a.ods] : [];
+    this.form.skills = (a.habilidades || a.skills) ? [...(a.habilidades || a.skills)] : [];
   }
 
   ngOnDestroy() {
@@ -137,19 +167,35 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
 
     console.log('Enviando actividad:', payload);
 
-    this.voluntariadoService.crearActividad(payload).subscribe({
-      next: (res) => {
-        console.log('Actividad creada:', res);
-        this.notificationService.showSuccess('Actividad creada con éxito');
-        this.created.emit(res);
-        this.onClose();
-      },
-      error: (err) => {
-        console.error('Error creando actividad:', err);
-        const errorMessage = err.error?.message || err.error?.error || err.message || 'Inténtalo de nuevo.';
-        this.notificationService.showError('Error al crear la actividad: ' + errorMessage);
-      }
-    });
+    if (this.activityToEdit) {
+      this.voluntariadoService.updateActivity(this.activityToEdit.codActividad, payload).subscribe({
+        next: (res) => {
+          this.notificationService.showSuccess('Actividad actualizada con éxito');
+          this.updated.emit(res);
+          this.onClose();
+        },
+        error: (err) => {
+          console.error('Error actualizando:', err);
+          const errorMessage = err.error?.message || err.error?.error || 'Error desconocido';
+          this.notificationService.showError('Error al actualizar: ' + errorMessage);
+        }
+      });
+    } else {
+      this.voluntariadoService.crearActividad(payload).subscribe({
+        next: (res) => {
+          console.log('Actividad creada:', res);
+          this.notificationService.showSuccess('Actividad creada con éxito');
+          this.created.emit(res);
+          this.onClose();
+        },
+        error: (err) => {
+          console.error('Error creando actividad:', err);
+          const errorMessage = err.error?.message || err.error?.error || err.message || 'Inténtalo de nuevo.';
+          this.notificationService.showError('Error al crear la actividad: ' + errorMessage);
+        }
+      });
+    }
+
   }
 
   onClose() {
