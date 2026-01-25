@@ -65,7 +65,11 @@ class ActivityService
         }
         
         $actividad->setMaxParticipantes($data['maxParticipantes']);
+        $actividad->setMaxParticipantes($data['maxParticipantes']);
         $actividad->setDireccion($data['direccion']);
+        if (isset($data['sector'])) {
+            $actividad->setSector($data['sector']);
+        }
 
         // Link ODS
         if (!empty($data['odsIds'])) { // Nota: en el DTO se llama 'ods', mapeado a este campo
@@ -118,6 +122,74 @@ class ActivityService
         $this->entityManager->persist($actividad);
         $this->entityManager->flush();
 
+        return $actividad;
+    }
+
+    /**
+     * Updates an existing activity.
+     */
+    public function updateActivity(Actividad $actividad, array $data): Actividad
+    {
+        if (isset($data['nombre'])) $actividad->setNombre($data['nombre']);
+        if (isset($data['direccion'])) $actividad->setDireccion($data['direccion']);
+        if (isset($data['sector'])) $actividad->setSector($data['sector']);
+        if (isset($data['maxParticipantes'])) $actividad->setMaxParticipantes($data['maxParticipantes']);
+
+        // Dates
+        if (isset($data['fechaInicio']) && !empty($data['fechaInicio'])) {
+            $fInicio = $data['fechaInicio'] instanceof \DateTimeInterface 
+                ? $data['fechaInicio'] 
+                : new \DateTime($data['fechaInicio']);
+            $actividad->setFechaInicio($fInicio);
+        }
+        if (isset($data['fechaFin']) && !empty($data['fechaFin'])) {
+            $fFin = $data['fechaFin'] instanceof \DateTimeInterface 
+                ? $data['fechaFin'] 
+                : new \DateTime($data['fechaFin']);
+            $actividad->setFechaFin($fFin);
+        }
+        
+        // ODS Sync
+        if (isset($data['odsIds'])) {
+            // Remove old
+            foreach ($actividad->getOds() as $od) {
+                $actividad->removeOd($od);
+            }
+            // Add new
+             foreach ($data['odsIds'] as $item) {
+                $ods = null;
+                if (is_numeric($item)) {
+                    $ods = $this->odsRepository->find($item);
+                } elseif (is_string($item)) {
+                    $ods = $this->odsRepository->findOneBy(['nombre' => $item]);
+                }
+                
+                if ($ods) {
+                    $actividad->addOd($ods);
+                }
+            }
+        }
+
+        // Habilidades Sync
+        if (isset($data['habilidadIds'])) {
+            foreach ($actividad->getHabilidades() as $h) {
+                $actividad->removeHabilidad($h);
+            }
+             foreach ($data['habilidadIds'] as $item) {
+                $h = null;
+                if (is_numeric($item)) {
+                    $h = $this->habilidadRepository->find($item);
+                } elseif (is_string($item)) {
+                    $h = $this->habilidadRepository->findOneBy(['nombre' => $item]);
+                }
+
+                if ($h) {
+                    $actividad->addHabilidad($h);
+                }
+            }
+        }
+
+        $this->entityManager->flush();
         return $actividad;
     }
 }

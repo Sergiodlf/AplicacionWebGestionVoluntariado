@@ -222,7 +222,16 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   }
 
 
+  editingActivity: any = null;
+
   openCreateModal() {
+    this.editingActivity = null;
+    this.modalOpen = true;
+  }
+
+  openEditModal(item: any) {
+    console.log('Opening edit modal for:', item);
+    this.editingActivity = item;
     this.modalOpen = true;
   }
 

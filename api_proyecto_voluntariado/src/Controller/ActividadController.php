@@ -137,9 +137,10 @@ class ActividadController extends AbstractController
                 'nombre'           => $dto->nombre,
                 'estado'           => $estadoCalculado, // Forzar estado explícito
                 'fechaInicio'      => $dto->fechaInicio,
-                'fechaFin'         => $dto->fechaFin,
+                'fechaFin'         => $dto->fechaFin ?? $fechaFinSql, // Use DTO or computed default
                 'maxParticipantes' => $maxParticipantes,
                 'direccion'        => $direccion,
+                'sector'           => $dto->sector,
                 'odsIds'           => $dto->ods, 
                 'habilidadIds'    => $dto->habilidades,
                 'necesidadIds'    => [] // Extend DTO if needed later
@@ -153,6 +154,63 @@ class ActividadController extends AbstractController
         }
 
         return $this->json(['message' => 'Actividad creada con éxito'], 201);
+    }
+
+    // EDITAR ACTIVIDAD
+    #[Route('/{id}/editar', name: 'edit', methods: ['PUT'])]
+    public function edit(int $id, Request $request, EntityManagerInterface $em, SerializerInterface $serializer): JsonResponse
+    {
+        $actividad = $em->getRepository(Actividad::class)->find($id);
+
+        if (!$actividad) {
+            return $this->json(['error' => 'Actividad no encontrada'], 404);
+        }
+
+        // Security Check: Only the organization that owns it can edit (or admin)
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'No autorizado'], 401);
+        }
+        
+        // If user is Organization, check ownership
+        if ($user instanceof Organizacion) {
+            if ($actividad->getOrganizacion() !== $user) {
+                return $this->json(['error' => 'No tienes permiso para editar esta actividad'], 403);
+            }
+        }
+
+        $json = $request->getContent();
+        try {
+            /** @var CrearActividadDTO $dto */
+            $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
+        } catch (\Exception $e) {
+             return $this->json(['error' => 'JSON inválido'], 400);
+        }
+
+        try {
+            // Prepare update data array
+            $updateData = [
+                'nombre'           => $dto->nombre,
+                'fechaInicio'      => $dto->fechaInicio,
+                'fechaFin'         => $dto->fechaFin,
+                'maxParticipantes' => $dto->maxParticipantes,
+                'direccion'        => $dto->direccion,
+                'sector'           => $dto->sector,
+                'odsIds'           => $dto->ods, 
+                'habilidadIds'    => $dto->habilidades,
+            ];
+
+            $updatedActividad = $this->activityService->updateActivity($actividad, $updateData);
+
+            // Re-calculate status just in case dates changed
+            $this->checkAndUpdateStatus($updatedActividad);
+            $em->flush();
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error actualizando actividad: ' . $e->getMessage()], 500);
+        }
+
+        return $this->json(['message' => 'Actividad actualizada con éxito'], 200);
     }
     
     // LISTAR TODAS
@@ -211,6 +269,7 @@ class ActividadController extends AbstractController
                 'estado' => $actividad->getEstado(),
                 'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                 'direccion' => $actividad->getDireccion(),
+                'sector'    => $actividad->getSector(),
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                 'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i:s') : null,
                 'maxParticipantes' => $actividad->getMaxParticipantes(),
@@ -375,6 +434,7 @@ class ActividadController extends AbstractController
                 'estado' => $actividad->getEstado(),
                 'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                 'direccion' => $actividad->getDireccion(),
+                'sector'    => $actividad->getSector(),
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                 'maxParticipantes' => $actividad->getMaxParticipantes(),
                 'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),
@@ -430,6 +490,7 @@ class ActividadController extends AbstractController
                     'estado' => $actividad->getEstado(),
                     'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                     'direccion' => $actividad->getDireccion(),
+                    'sector'    => $actividad->getSector(),
                     'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
                     'maxParticipantes' => $actividad->getMaxParticipantes(),
                     'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),

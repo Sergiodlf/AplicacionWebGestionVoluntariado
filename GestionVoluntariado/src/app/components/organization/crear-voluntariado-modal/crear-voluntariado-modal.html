@@ -7,7 +7,9 @@
       <button type="button" class="btn-close custom-close shadow-none" aria-label="Close" (click)="onClose()"></button>
 
       <div class="text-center mb-5 mt-2">
-        <h3 class="fw-bold text-custom-blue mb-0">Nuevo Voluntariado</h3>
+        <h3 class="fw-bold text-custom-blue mb-0">{{ activityToEdit ? 'Editar Voluntariado' : 'Nuevo Voluntariado' }}
+        </h3>
+
       </div>
 
       <form (ngSubmit)="crear()" class="premium-form modal-form-scroll">
@@ -169,7 +171,8 @@
         <div class="text-center pb-2 mt-2">
           <button type="submit"
             class="btn btn-custom-blue px-5 py-3 rounded-pill fw-bold text-white shadow-lg hover-lift submit-btn">
-            <i class="bi bi-send me-2"></i> Publicar Actividad
+            <i class="bi bi-send me-2"></i> {{ activityToEdit ? 'Guardar Cambios' : 'Publicar Actividad' }}
+
           </button>
         </div>
       </form>

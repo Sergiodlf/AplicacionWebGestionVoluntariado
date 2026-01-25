@@ -51,7 +51,7 @@ export class Voluntariados implements OnInit {
 
   loadData() {
     // 1. Get all available activities
-    this.voluntariadoService.getAllVoluntariados().subscribe({
+    this.voluntariadoService.getAllVoluntariados(true).subscribe({
       next: (data) => {
         this.allVoluntariados = data.map((v: any) => {
           return {

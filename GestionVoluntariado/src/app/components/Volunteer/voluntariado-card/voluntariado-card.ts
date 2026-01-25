@@ -18,6 +18,8 @@ export class VoluntariadoCard {
   @Input() status: string = '';
   @Input() isOrganization: boolean = false;
   @Input() buttonText: string = '';
+  @Input() editButton: boolean = false;
 
   @Output() onAction = new EventEmitter<void>();
+  @Output() onEdit = new EventEmitter<void>();
 }

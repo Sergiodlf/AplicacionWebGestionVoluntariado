@@ -6,29 +6,40 @@
         <small class="text-muted"><i class="bi bi-building me-1"></i>{{ organization }}</small>
       </div>
     </div>
-    @if(status === ''){
-    @if(!isOrganization) {
-    <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
-      Apuntarse
-    </button>
-    }
-    }@else {
-    @if(buttonText) {
-    <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill"
-      (click)="onAction.emit(); $event.stopPropagation()">
-      {{ buttonText }}
-    </button>
-    } @else {
-    <div class="status-pill" [ngClass]="{
+    <div class="d-flex align-items-center gap-2">
+      <!-- Edit Button for Organizations -->
+      @if(isOrganization) {
+      <button class="btn btn-light btn-sm rounded-circle shadow-sm text-muted"
+        (click)="onEdit.emit(); $event.stopPropagation()" title="Editar Actividad"
+        style="width: 32px; height: 32px; display: grid; place-items: center;">
+        <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+      </button>
+      }
+
+      @if(status === ''){
+      @if(!isOrganization) {
+      <button class="btn btn-custom-blue text-white btn-sm px-4 rounded-pill" (click)="onAction.emit()">
+        Apuntarse
+      </button>
+      }
+      }@else {
+      @if(buttonText) {
+      <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill"
+        (click)="onAction.emit(); $event.stopPropagation()">
+        {{ buttonText }}
+      </button>
+      } @else {
+      <div class="status-pill" [ngClass]="{
       'sin-comenzar': status === 'Sin comenzar',
       'en-curso': status === 'En curso',
       'completado': status === 'Completado',
       'pendiente': status === 'Pendiente'
     }">
-      {{ status }}
+        {{ status }}
+      </div>
+      }
+      }
     </div>
-    }
-    }
 
   </div>
 
