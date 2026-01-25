@@ -746,21 +746,7 @@ paths:
   # ==========================================
   # CATEGORÍAS (DATA MAESTRA)
   # ==========================================
-  /ciclos:
-    get:
-      tags:
-        - Categorías
-      summary: Listar Ciclos Formativos
-      description: Devuelve la lista de ciclos formativos disponibles.
-      responses:
-        '200':
-          description: Lista de ciclos recuperada con éxito
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CicloDetalle'
+
 
   /categories/ods:
     get:

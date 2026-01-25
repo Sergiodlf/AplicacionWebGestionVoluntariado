@@ -63,6 +63,14 @@
 
             <div class="flex-grow-1 overflow-auto">
                 <div class="container-fluid px-4 pb-4">
+                    @if (isLoading) {
+                    <div class="d-flex flex-column align-items-center justify-content-center py-5">
+                        <div class="mb-3">
+                            <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
+                        </div>
+                        <h5 class="text-custom-blue fw-light">Cargando organizaciones...</h5>
+                    </div>
+                    } @else {
                     <div class="row organizations-list g-4">
 
                         @for (org of organizations(); track org.cif) {
@@ -80,6 +88,7 @@
                         </div>
                         }
                     </div>
+                    }
                 </div>
             </div>
         </div>

@@ -59,6 +59,14 @@
 
       <div class="flex-grow-1 overflow-auto">
         <div class="container-fluid px-4 pb-4">
+          @if (isLoading) {
+          <div class="d-flex flex-column align-items-center justify-content-center py-5">
+            <div class="mb-3">
+              <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
+            </div>
+            <h5 class="text-custom-blue fw-light">Cargando voluntarios...</h5>
+          </div>
+          } @else {
           <div class="row g-4">
             @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
             volunteer.email) {
@@ -76,6 +84,7 @@
             </div>
             }
           </div>
+          }
         </div>
       </div>
     </div>

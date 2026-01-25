@@ -134,7 +134,11 @@ class ActividadController extends AbstractController
         // Determinar estado inicial basado en fecha
         // $fInicio ya fue instanciado arriba (líneas 67 o 70)
         $now = new \DateTime();
-        $estadoCalculado = ($fInicio > $now) ? 'PENDIENTE' : 'ABIERTA';
+        $estadoCalculado = 'En curso';
+        if ($fInicio > $now) {
+            $estadoCalculado = 'Sin comenzar';
+        }
+
 
         // 4. Create Activity via Service
         try {
@@ -217,6 +221,17 @@ class ActividadController extends AbstractController
 
         $actividades = $qb->getQuery()->getResult();
         
+        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        $modificado = false;
+        foreach ($actividades as $actividad) {
+            if ($this->checkAndUpdateStatus($actividad)) {
+                $modificado = true;
+            }
+        }
+        if ($modificado) {
+            $em->flush();
+        }
+
         $data = [];
         foreach ($actividades as $actividad) {
             $data[] = [
@@ -434,6 +449,17 @@ class ActividadController extends AbstractController
 
         $actividades = $qb->getQuery()->getResult();
 
+        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        $modificado = false;
+        foreach ($actividades as $actividad) {
+            if ($this->checkAndUpdateStatus($actividad)) {
+                $modificado = true;
+            }
+        }
+        if ($modificado) {
+            $em->flush();
+        }
+
         $data = [];
         foreach ($actividades as $actividad) {
             $data[] = [
@@ -476,6 +502,17 @@ class ActividadController extends AbstractController
             }
 
             $actividades = $em->getRepository(Actividad::class)->findBy($criteria);
+
+            // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+            $modificado = false;
+            foreach ($actividades as $actividad) {
+                if ($this->checkAndUpdateStatus($actividad)) {
+                    $modificado = true;
+                }
+            }
+            if ($modificado) {
+                $em->flush();
+            }
 
             $data = [];
             foreach ($actividades as $actividad) {
@@ -532,6 +569,7 @@ class ActividadController extends AbstractController
         }
     }
 
+
     // ELIMINAR O CANCELAR ACTIVIDAD
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     public function delete(int $id): JsonResponse
@@ -557,5 +595,34 @@ class ActividadController extends AbstractController
             }
             return $this->json(['error' => $e->getMessage()], $code);
         }
+    }
+
+    // MÉTODO PRIVADO PARA CHEQUEAR Y ACTUALIZAR ESTADO SEGÚN FECHAS
+    private function checkAndUpdateStatus(Actividad $actividad): bool
+    {
+        $now = new \DateTime();
+        $start = $actividad->getFechaInicio();
+        $end = $actividad->getFechaFin();
+        $estadoActual = $actividad->getEstado();
+        $nuevoEstado = null;
+
+        // Reglas de negocio
+        if ($start && $now < $start) {
+            $nuevoEstado = 'Sin comenzar';
+        } elseif ($end && $now > $end) {
+            $nuevoEstado = 'Completada';
+        } else {
+            // Si ya empezó y no ha terminado (o no tiene fin), está en curso
+            $nuevoEstado = 'En curso';
+        }
+
+
+        // Solo actualizamos si cambia
+        if ($nuevoEstado && $estadoActual !== $nuevoEstado) {
+            $actividad->setEstado($nuevoEstado);
+            return true;
+        }
+
+        return false;
     }
 }

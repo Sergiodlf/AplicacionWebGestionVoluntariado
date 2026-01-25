@@ -32,6 +32,7 @@ export class MatchesComponent implements OnInit {
   matches: any[] = [];
   showCreateModal = false;
   searchTerm: string = ''; // Added search term
+  isLoading = true;
 
   ngOnInit() {
     this.loadMatches();
@@ -78,8 +79,12 @@ export class MatchesComponent implements OnInit {
           status: item.status || item.estado
         }));
         this.applyFilters();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Error loading matches', err)
+      error: (err) => {
+        console.error('Error loading matches', err);
+        this.isLoading = false;
+      }
     });
   }
 

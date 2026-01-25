@@ -33,5 +33,6 @@ export const routes: Routes = [
   { path: 'volunteer/mis-voluntariados', component: MisVoluntariados },
   { path: 'volunteer/profile', loadComponent: () => import('./pages/Volunteer/profile/profile').then(m => m.ProfileComponent) },
   { path: 'organization/profile', loadComponent: () => import('./pages/Organization/profile/profile').then(m => m.ProfileOrganizationComponent) },
-  { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion }
+  { path: 'organization/mis-voluntariados-organizacion', component: MisVoluntariadosOrganizacion },
+
 ];

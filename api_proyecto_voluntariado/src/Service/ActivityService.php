@@ -142,8 +142,21 @@ class ActivityService
         }
 
         $nuevoEstadoUpper = strtoupper($nuevoEstado);
+        
+        // --- WHITELISTS & MAPPINGS ---
         $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
-        $estadosEjecucion = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'];
+        
+        // Map UPPER -> StoredValue (Sentence Case)
+        $mapaEjecucion = [
+            'SIN COMENZAR' => 'Sin comenzar',
+            'EN CURSO'     => 'En curso',
+            'COMPLETADA'   => 'Completada',
+            'COMPLETADO'   => 'Completada',
+            'FINALIZADO'   => 'Completada',
+            'CANCELADO'    => 'CANCELADO', // Exception: UPPER
+            'ABIERTA'      => 'En curso',
+            'PENDIENTE'    => 'Sin comenzar'
+        ];
         
         $campoActualizado = 'estado'; // Default fallback
 
@@ -157,12 +170,12 @@ class ActivityService
             $campoActualizado = 'estadoAprobacion';
 
         } elseif ($tipo === 'ejecucion') {
-            file_put_contents('debug_activity.txt', "Type is 'ejecucion'. Checking whitelist...\n", FILE_APPEND);
-            if (!in_array($nuevoEstadoUpper, $estadosEjecucion)) {
+            file_put_contents('debug_activity.txt', "Type is 'ejecucion'. Checking map...\n", FILE_APPEND);
+            if (!array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
                 file_put_contents('debug_activity.txt', "ERROR: Invalid execution status: $nuevoEstadoUpper\n", FILE_APPEND);
                 throw new \InvalidArgumentException("Estado de ejecución inválido: $nuevoEstadoUpper");
             }
-            $actividad->setEstado($nuevoEstadoUpper);
+            $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
             $campoActualizado = 'estado';
 
         } else {
@@ -172,14 +185,10 @@ class ActivityService
                 $actividad->setEstadoAprobacion($nuevoEstadoUpper);
                 $campoActualizado = 'estadoAprobacion';
                 
-            } elseif (in_array($nuevoEstadoUpper, ['EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'])) {
-                $actividad->setEstado($nuevoEstadoUpper);
+            } elseif (array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
+                $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
                 $campoActualizado = 'estado';
 
-            } elseif ($nuevoEstadoUpper === 'PENDIENTE') {
-                // 'PENDIENTE' is ambiguous, default to execution state for backward compatibility
-                $actividad->setEstado('PENDIENTE');
-                $campoActualizado = 'estado';
             } else {
                  file_put_contents('debug_activity.txt', "ERROR: Unknown status: $nuevoEstadoUpper\n", FILE_APPEND);
                  throw new \InvalidArgumentException("Estado desconocido o inválido: $nuevoEstadoUpper");
