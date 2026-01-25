@@ -120,4 +120,116 @@ class ActivityService
 
         return $actividad;
     }
+
+    /**
+     * Updates the status of an activity.
+     * Handles both 'estado' (execution) and 'estadoAprobacion' (approval).
+     * 
+     * @param int $id The activity ID
+     * @param string $nuevoEstado The new status string
+     * @param string|null $tipo Optional type ('aprobacion' or 'ejecucion') to disambiguate
+     * @return array Result metadata including which field was updated
+     * @throws \Exception If activity not found or status invalid
+     */
+    public function updateActivityStatus(int $id, string $nuevoEstado, ?string $tipo = null): array
+    {
+        file_put_contents('debug_activity.txt', "\n--- UPDATE ACTIVITY STATUS ---\nID: $id, NewState: $nuevoEstado, Type: " . ($tipo ?? 'NULL') . "\n", FILE_APPEND);
+        
+        $actividad = $this->entityManager->getRepository(Actividad::class)->find($id);
+        if (!$actividad) {
+            file_put_contents('debug_activity.txt', "ERROR: Activity not found.\n", FILE_APPEND);
+            throw new \Exception('Actividad no encontrada', 404);
+        }
+
+        $nuevoEstadoUpper = strtoupper($nuevoEstado);
+        $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
+        $estadosEjecucion = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'];
+        
+        $campoActualizado = 'estado'; // Default fallback
+
+        if ($tipo === 'aprobacion') {
+            file_put_contents('debug_activity.txt', "Type is 'aprobacion'. Checking whitelist...\n", FILE_APPEND);
+            if (!in_array($nuevoEstadoUpper, $estadosAprobacion)) {
+                file_put_contents('debug_activity.txt', "ERROR: Invalid approval status: $nuevoEstadoUpper\n", FILE_APPEND);
+                throw new \InvalidArgumentException("Estado de aprobación inválido: $nuevoEstadoUpper");
+            }
+            $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+            $campoActualizado = 'estadoAprobacion';
+
+        } elseif ($tipo === 'ejecucion') {
+            file_put_contents('debug_activity.txt', "Type is 'ejecucion'. Checking whitelist...\n", FILE_APPEND);
+            if (!in_array($nuevoEstadoUpper, $estadosEjecucion)) {
+                file_put_contents('debug_activity.txt', "ERROR: Invalid execution status: $nuevoEstadoUpper\n", FILE_APPEND);
+                throw new \InvalidArgumentException("Estado de ejecución inválido: $nuevoEstadoUpper");
+            }
+            $actividad->setEstado($nuevoEstadoUpper);
+            $campoActualizado = 'estado';
+
+        } else {
+            // Auto-detection logic
+            file_put_contents('debug_activity.txt', "No type provided. Auto-detecting...\n", FILE_APPEND);
+            if (in_array($nuevoEstadoUpper, ['ACEPTADA', 'RECHAZADA'])) {
+                $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+                $campoActualizado = 'estadoAprobacion';
+                
+            } elseif (in_array($nuevoEstadoUpper, ['EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'])) {
+                $actividad->setEstado($nuevoEstadoUpper);
+                $campoActualizado = 'estado';
+
+            } elseif ($nuevoEstadoUpper === 'PENDIENTE') {
+                // 'PENDIENTE' is ambiguous, default to execution state for backward compatibility
+                $actividad->setEstado('PENDIENTE');
+                $campoActualizado = 'estado';
+            } else {
+                 file_put_contents('debug_activity.txt', "ERROR: Unknown status: $nuevoEstadoUpper\n", FILE_APPEND);
+                 throw new \InvalidArgumentException("Estado desconocido o inválido: $nuevoEstadoUpper");
+            }
+        }
+        
+        file_put_contents('debug_activity.txt', "Field updated: $campoActualizado. Flushing to DB...\n", FILE_APPEND);
+
+        $this->entityManager->flush();
+
+        return [
+            'campo_actualizado' => $campoActualizado,
+            'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion(),
+            'actividad' => $actividad
+        ];
+    }
+
+    /**
+     * Deletes or Cancels an activity based on existing inscriptions.
+     * 
+     * @param int $id The activity ID
+     * @return string 'deleted' or 'cancelled'
+     * @throws \Exception If activity not found
+     */
+    public function deleteActivity(int $id): string
+    {
+        file_put_contents('debug_activity.txt', "\n--- DELETE ACTIVITY ---\nID: $id\n", FILE_APPEND);
+        
+        $actividad = $this->entityManager->getRepository(Actividad::class)->find($id);
+        if (!$actividad) {
+            file_put_contents('debug_activity.txt', "ERROR: Activity not found.\n", FILE_APPEND);
+            throw new \Exception('Actividad no encontrada', 404);
+        }
+
+        // Check if there are any inscriptions
+        $inscripcionesCount = $actividad->getInscripciones()->count();
+        file_put_contents('debug_activity.txt', "Inscriptions found: $inscripcionesCount\n", FILE_APPEND);
+
+        if ($inscripcionesCount > 0) {
+            // Soft Delete: Mark as CANCELADO
+            file_put_contents('debug_activity.txt', "Action: Soft Delete (CANCELADO)\n", FILE_APPEND);
+            $actividad->setEstado('CANCELADO');
+            $this->entityManager->flush();
+            return 'cancelled';
+        } else {
+            // Hard Delete: Remove entity
+            file_put_contents('debug_activity.txt', "Action: Hard Delete (REMOVE)\n", FILE_APPEND);
+            $this->entityManager->remove($actividad);
+            $this->entityManager->flush();
+            return 'deleted';
+        }
+    }
 }

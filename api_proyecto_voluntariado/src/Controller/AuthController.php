@@ -19,15 +19,19 @@ use App\Service\VolunteerService;
 use Kreait\Firebase\Contract\Auth;
 use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 
+use App\Service\OrganizationService;
+
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
 {
     private $volunteerService;
+    private $organizationService; // INJECTED
     private $firebaseAuth;
 
-    public function __construct(VolunteerService $volunteerService, Auth $firebaseAuth)
+    public function __construct(VolunteerService $volunteerService, OrganizationService $organizationService, Auth $firebaseAuth)
     {
         $this->volunteerService = $volunteerService;
+        $this->organizationService = $organizationService;
         $this->firebaseAuth = $firebaseAuth;
     }
     // =========================================================================
@@ -69,14 +73,68 @@ class AuthController extends AbstractController
             return $this->json(['error' => $error], $status);
         }
 
+        // --- PRE-CHECK ADMIN --- 
+        $currentUser = $this->getUser();
+        $isAdmin = false;
+        
+        $logMsg = "--- New Register Request ---\n";
+        $logMsg .= "RegisterVoluntario: Checking Admin Status...\n";
+
+        if ($currentUser) {
+            $logMsg .= "RegisterVoluntario: User found via getUser(): " . $currentUser->getUserIdentifier() . "\n";
+            if ($currentUser instanceof \App\Security\User\AdminUser || (method_exists($currentUser, 'getRoles') && in_array('ROLE_ADMIN', $currentUser->getRoles()))) {
+                $isAdmin = true;
+                $logMsg .= "RegisterVoluntario: User IS Admin (via object check).\n";
+            }
+        } else {
+            $logMsg .= "RegisterVoluntario: getUser() is null. Checking headers manually.\n";
+            // Si getUser() es null (ruta pública), verificamos manualmente el token si existe
+            $authHeader = $request->headers->get('Authorization');
+            $logMsg .= "RegisterVoluntario: Authorization Header: " . ($authHeader ? "PRESENT" : "MISSING") . "\n";
+            
+            if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                try {
+                    $token = $matches[1];
+                    $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
+                    $claims = $verifiedIdToken->claims();
+                    $email = (string) $claims->get('email');
+                    
+                    $logMsg .= "RegisterVoluntario: Manual Token Email: $email\n";
+                    $logMsg .= "RegisterVoluntario: Claims: " . json_encode($claims->all()) . "\n";
+
+                    if (($claims->has('admin') && $claims->get('admin') === true) || 
+                        ($claims->has('rol') && $claims->get('rol') === 'admin') ||
+                        $email === 'admin@admin.com' || $email === 'adminTest5666@gmail.com') {
+                        $isAdmin = true;
+                        $logMsg .= "RegisterVoluntario: User IS Admin (via manual token check).\n";
+                    } else {
+                         $logMsg .= "RegisterVoluntario: User is NOT Admin (claims mismatch).\n";
+                    }
+                } catch (\Throwable $e) {
+                    $logMsg .= "RegisterVoluntario: Token Verification Failed: " . $e->getMessage() . "\n";
+                }
+            }
+        }
+        
+        $logMsg .= "RegisterVoluntario: Final isAdmin decision: " . ($isAdmin ? "TRUE" : "FALSE") . "\n";
+        file_put_contents('debug_auth.txt', $logMsg, FILE_APPEND);
+
         // --- REGISTRO (Vía Service) ---
         try {
-            $this->volunteerService->registerVolunteer($dto);
+            $this->volunteerService->registerVolunteer($dto, $isAdmin);
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+            // Logueamos el error completo para debug
+            file_put_contents('last_error.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            // Si es un mensaje conocido (validación o duplicado), devolvemos 400/409
+            if (str_contains($e->getMessage(), 'ya está registrado')) {
+                return $this->json(['error' => $e->getMessage()], 409);
+            }
+            
+            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage()], 500);
         }
 
-        return $this->json(['message' => 'Voluntario registrado correctamente'], 201);
+        return $this->json(['message' => 'Voluntario registrado correctamente' . ($isAdmin ? ' (Auto-Aceptado)' : '')], 201);
     }
 
     // =========================================================================
@@ -114,36 +172,51 @@ class AuthController extends AbstractController
         if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
             return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
         }
-
-        $repo = $entityManager->getRepository(Organizacion::class);
-
-        if ($repo->find($dto->cif)) {
-            return $this->json(['error' => 'CIF ya registrado'], 409);
-        }
-        if ($repo->findOneBy(['email' => $dto->email])) {
-            return $this->json(['error' => 'Email ya registrado'], 409);
+        
+        // --- VALIDACIÓN DUP (Vía Service) ---
+        $error = $this->organizationService->checkDuplicates($dto->cif, $dto->email);
+        if ($error) {
+            return $this->json(['error' => $error], 409);
         }
 
-        $org = new Organizacion();
-        $org->setCif($dto->cif);
-        $org->setNombre($dto->nombre);
-        $org->setEmail($dto->email);
-        $org->setDireccion($dto->direccion);
-        $org->setCp($dto->cp);
-        $org->setLocalidad($dto->localidad);
-        $org->setDescripcion($dto->descripcion);
-        $org->setContacto($dto->contacto);
+        // --- PRE-CHECK ADMIN ---
+        $currentUser = $this->getUser();
+        $isAdmin = false;
+        
+        if ($currentUser) {
+            if ($currentUser instanceof \App\Security\User\AdminUser || (method_exists($currentUser, 'getRoles') && in_array('ROLE_ADMIN', $currentUser->getRoles()))) {
+                $isAdmin = true;
+            }
+        } else {
+            // Manual Token Verification for Public Route
+            $authHeader = $request->headers->get('Authorization');
+            if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                try {
+                    $token = $matches[1];
+                    $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
+                    $claims = $verifiedIdToken->claims();
+                    $email = (string) $claims->get('email');
+                    
+                    if (($claims->has('admin') && $claims->get('admin') === true) || 
+                        ($claims->has('rol') && $claims->get('rol') === 'admin') ||
+                         $email === 'admin@admin.com' || $email === 'adminTest5666@gmail.com') { // Whitelist check unificado
+                        $isAdmin = true;
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore token errors
+                }
+            }
+        }
 
-        if ($dto->sector) $org->setSector($dto->sector);
-
-        $hashedPassword = $passwordHasher->hashPassword($org, $dto->password);
-        $org->setPassword($hashedPassword);
-
+        // --- REGISTRO (Vía Service) ---
         try {
-            $entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
-            $entityManager->persist($org);
-            $entityManager->flush();
-        } catch (\Exception $e) {
+            $this->organizationService->registerOrganization($dto, $isAdmin);
+        } catch (\Throwable $e) {
+            file_put_contents('last_error_org.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            if (str_contains($e->getMessage(), 'ya está registrado')) {
+                return $this->json(['error' => $e->getMessage()], 409);
+            }
             return $this->json(['error' => 'Error al guardar organización', 'mensaje_tecnico' => $e->getMessage()], 500);
         }
 

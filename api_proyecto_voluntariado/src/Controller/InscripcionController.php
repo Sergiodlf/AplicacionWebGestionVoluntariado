@@ -39,6 +39,11 @@ class InscripcionController extends AbstractController
             if ($estado) {
                 // Support multiple statuses separated by comma (e.g., "PENDIENTE,CONFIRMADO")
                 $estados = array_map('strtoupper', array_map('trim', explode(',', $estado)));
+                // Map 'ACEPTADO' to 'CONFIRMADO' just in case
+                foreach ($estados as $k => $v) {
+                    if ($v === 'ACEPTADO') $estados[$k] = 'CONFIRMADO';
+                }
+
                 $inscripciones = $repo->findBy(['estado' => $estados]);
             } else {
                 // Default: get all
@@ -115,26 +120,89 @@ class InscripcionController extends AbstractController
             'actividad' => $actividad
         ]);
 
+        // Estados que permiten re-inscripción
+        $estadosReInscripcion = ['RECHAZADO', 'CANCELADO', 'FINALIZADO'];
+
         if ($existing) {
-            return $this->json(['error' => 'El voluntario ya está inscrito en esta actividad'], 409);
+            // Si está en un estado que permite reintentar, lo reactivamos (lógica abajo)
+            if (!in_array($existing->getEstado(), $estadosReInscripcion)) {
+                return $this->json([
+                    'error' => 'El voluntario ya está inscrito en esta actividad',
+                    'code' => 'DUPLICATE_INSCRIPTION',
+                    'id_inscripcion' => $existing->getId(),
+                    'estado' => $existing->getEstado()
+                ], 409);
+            }
+            // Si permitimos re-inscribir, usamos la instancia existente
+            $inscripcion = $existing;
+        } else {
+            // VALIDACIÓN DE CUPO MÁXIMO (Solo si es nueva inscripción)
+             $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
+             if ($ocupadas >= $actividad->getMaxParticipantes()) {
+                 return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
+             }
+
+            $inscripcion = new Inscripcion();
+            $inscripcion->setVoluntario($voluntario);
+            $inscripcion->setActividad($actividad);
+             $em->persist($inscripcion); // Solo persistimos si es nueva
         }
 
-        // VALIDACIÓN DE CUPO MÁXIMO
-        $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
-        if ($ocupadas >= $actividad->getMaxParticipantes()) {
-            return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
+        
+        // Auto-aceptar si es Admin o la Organización dueña
+        $user = $this->getUser();
+        $estadoInicial = 'PENDIENTE';
+
+        // Check if user is Admin using the custom AdminUser class or role check if simple user
+        $isAdmin = false;
+        if ($user instanceof \App\Security\User\AdminUser) {
+            $isAdmin = true;
+        } elseif (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
+            $isAdmin = true;
         }
 
-        $inscripcion = new Inscripcion();
-        $inscripcion->setVoluntario($voluntario);
-        $inscripcion->setActividad($actividad);
-        $inscripcion->setEstado('PENDIENTE');
+        // Check if user is the organization owner
+        // FIX: Usar getCif() en lugar de getId(), y manejar posible null en getOrganizacion()
+        $isOwnerOrg = false;
+        if ($user instanceof Organizacion) {
+            $orgActividad = $actividad->getOrganizacion();
+            if ($orgActividad && $user->getCif() === $orgActividad->getCif()) {
+                $isOwnerOrg = true;
+            }
+        }
 
-        $em->persist($inscripcion);
+        if ($isAdmin || $isOwnerOrg) {
+            $estadoInicial = 'CONFIRMADO';
+        }
+
+        $inscripcion->setEstado($estadoInicial);
+
+        // $em->persist($inscripcion); // Moved to ELSE block above for NEW entities only.
+        // But wait, if modifying existing, persist is not needed but harmless. 
+        // Best practice: persist is only for new entities. 
+        // But to be safe cleanly:
+        if (!$existing) {
+             // Already persisted above
+        }
+
         $em->flush();
 
-        return $this->json(['message' => 'Inscripción creada correctamente'], 201);
+        return $this->json([
+            'message' => $existing ? 'Re-inscripción realizada correctamente' : 'Inscripción creada correctamente', 
+            'estado' => $inscripcion->getEstado(),
+            'id_inscripcion' => $inscripcion->getId(),
+            'debug' => [
+                'user_class' => get_class($user),
+                'roles' => $user->getRoles(),
+                'is_admin' => $isAdmin,
+                'is_owner_org' => $isOwnerOrg,
+                'cif_org_actividad' => ($actividad->getOrganizacion() ? $actividad->getOrganizacion()->getCif() : 'null'),
+                'user_id' => ($user instanceof Organizacion ? $user->getCif() : $user->getUserIdentifier()) // Assuming Voluntario doesn't have getCif or getId for this context easily accessible as string without casting
+            ]
+        ], $existing ? 200 : 201);
     }
+
+
 
     #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
     public function updateEstado(int $id, Request $request, EntityManagerInterface $em): JsonResponse

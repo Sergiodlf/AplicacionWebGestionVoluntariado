@@ -14,19 +14,22 @@ class VolunteerService
     private $habilidadRepository;
     private $interesRepository;
     private $cicloRepository;
+    private $firebaseAuth;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         UserPasswordHasherInterface $passwordHasher,
         \App\Repository\HabilidadRepository $habilidadRepository,
         \App\Repository\InteresRepository $interesRepository,
-        \App\Repository\CicloRepository $cicloRepository
+        \App\Repository\CicloRepository $cicloRepository,
+        \Kreait\Firebase\Contract\Auth $firebaseAuth
     ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->habilidadRepository = $habilidadRepository;
         $this->interesRepository = $interesRepository;
         $this->cicloRepository = $cicloRepository;
+        $this->firebaseAuth = $firebaseAuth;
     }
 
     /**
@@ -47,10 +50,41 @@ class VolunteerService
     /**
      * Registers a new volunteer.
      */
-    public function registerVolunteer(RegistroVoluntarioDTO $dto): Voluntario
+    public function registerVolunteer(RegistroVoluntarioDTO $dto, bool $isAdmin = false): Voluntario
     {
         error_log('Registering volunteer: ' . $dto->email);
         error_log('Disponibilidad received: ' . json_encode($dto->disponibilidad));
+        
+        // 1. Create User in Firebase (If not exists)
+        try {
+            $userProperties = [
+                'email' => $dto->email,
+                'emailVerified' => false,
+                'password' => $dto->password,
+                'displayName' => $dto->nombre,
+                'disabled' => false,
+            ];
+            
+            try {
+                // Attempt creation
+                $createdUser = $this->firebaseAuth->createUser($userProperties);
+                error_log("Firebase user created: " . $createdUser->uid);
+                
+                // Set custom claims (rol: voluntario)
+                $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'voluntario']);
+
+            } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
+                // Si el email ya existe en Firebase, lanzamos error para avisar al usuario
+                // (Para que la App muestre "El correo ya existe")
+                throw new \Exception('El correo electrónico ya está registrado en Firebase.');
+            }
+
+        } catch (\Exception $e) {
+            error_log("Error creating Firebase user: " . $e->getMessage());
+            // Depending on requirements, we might want to stop here.
+            // But if it's a "weak password" error from Firebase, we should probably return it.
+            throw $e;
+        }
 
         $voluntario = new Voluntario();
         $voluntario->setDni($dto->dni);
@@ -119,7 +153,10 @@ class VolunteerService
         }
         $voluntario->setIdiomas($dto->idiomas ?? []);
         $voluntario->setDisponibilidad($dto->disponibilidad ?? []);
-        $voluntario->setEstadoVoluntario('PENDIENTE');
+        
+        // AUTO-ACCEPTANCE LOGIC
+        $estadoInicial = $isAdmin ? 'ACEPTADO' : 'PENDIENTE';
+        $voluntario->setEstadoVoluntario($estadoInicial);
 
         $this->entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
         $this->entityManager->persist($voluntario);

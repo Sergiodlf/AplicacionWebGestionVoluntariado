@@ -1,0 +1,453 @@
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'adminvoluntariotext@gmail.com'
+User NOT found in DB.
+Error: User not in DB and not Admin. Denying.
+--- Firewall Token Check ---
+Email from token: 'adminvoluntariotext@gmail.com'
+User NOT found in DB.
+Error: General Exception: Usuario no registrado en el sistema.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.

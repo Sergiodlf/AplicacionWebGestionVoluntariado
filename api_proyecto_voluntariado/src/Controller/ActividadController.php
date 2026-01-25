@@ -48,6 +48,11 @@ class ActividadController extends AbstractController
         // 1. Validar Organización (Token o CIF explícito)
         $organizacion = null;
         $user = $this->getUser();
+        
+        // --- DEBUG LOGGING ---
+        error_log("DEBUG: createActividad caller class: " . ($user ? get_class($user) : 'Guest'));
+        error_log("DEBUG: createActividad DTO cif: " . ($dto->cifOrganizacion ?? 'NULL'));
+        // ---------------------
 
         // A. Prioridad: Token de Organización
         if ($user instanceof Organizacion) {
@@ -59,7 +64,11 @@ class ActividadController extends AbstractController
         }
 
         if (!$organizacion) {
-            return $this->json(['error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.'], 401);
+            return $this->json([
+                'error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.',
+                'debug_user_class' => $user ? get_class($user) : 'null',
+                'debug_cif_received' => $dto->cifOrganizacion
+            ], 401);
         }
 
         // --- CONTROL DE DUPLICIDAD (PV-40) ---
@@ -129,9 +138,19 @@ class ActividadController extends AbstractController
 
         // 4. Create Activity via Service
         try {
+            // --- AUTO-APROBACIÓN PARA ADMINS ---
+            $estadoAprobacion = 'PENDIENTE';
+            
+            // Check if user is explicitly AdminUser or has ROLE_ADMIN
+            if ($user instanceof \App\Security\User\AdminUser || 
+               (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles()))) {
+                $estadoAprobacion = 'ACEPTADA';
+            }
+
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
                 'estado'           => $estadoCalculado, // Forzar estado explícito
+                'estadoAprobacion' => $estadoAprobacion, // <--- Nueva variable
                 'fechaInicio'      => $dto->fechaInicio,
                 'fechaFin'         => $dto->fechaFin,
                 'maxParticipantes' => $maxParticipantes,
@@ -160,6 +179,16 @@ class ActividadController extends AbstractController
         if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
             $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
                ->setParameter('estadoAprobacion', $estadoAprobacion);
+        }
+
+        // Filtro por Estado de Ejecución (Ocultar canceladas por defecto)
+        $estado = $request->query->get('estado');
+        if ($estado) {
+            $qb->andWhere('a.estado = :estado')
+               ->setParameter('estado', $estado);
+        } else {
+            $qb->andWhere('a.estado != :estadoCancelado')
+               ->setParameter('estadoCancelado', 'CANCELADO');
         }
 
         // NUEVO FILTRO INTELIGENTE: SI HAY TOKEN DE VOLUNTARIO, FILTRAR AUTOMÁTICAMENTE
@@ -243,8 +272,6 @@ class ActividadController extends AbstractController
         }
 
         // 0. Comprobar si la actividad está completada o finalizada
-        // Asumiendo que 'FINALIZADO', 'COMPLETADA', 'CERRADA' son estados finales.
-        // También podríamos verificar la fechaFin < hoy
         $estadoActividad = strtoupper($actividad->getEstado());
         $estadosFinales = ['FINALIZADO', 'COMPLETADA', 'CERRADA', 'CANCELADO'];
         $now = new \DateTime();
@@ -253,33 +280,86 @@ class ActividadController extends AbstractController
              return $this->json(['error' => 'La actividad ya está completada o finalizada'], 409);
         }
 
-        // 1. Comprobar si ya existe la inscripción (Vía Service)
-        if ($this->inscripcionService->isVolunteerInscribed($actividad, $voluntario)) {
-            return $this->json(['error' => 'El voluntario ya está inscrito en esta actividad'], 409);
+        // 1. Comprobar si ya existe la inscripción
+        // NOTA: Usamos repositorio directo para obtener la entidad completa, no solo boolean
+        $existing = $em->getRepository(\App\Entity\Inscripcion::class)->findOneBy([
+            'voluntario' => $voluntario,
+            'actividad' => $actividad
+        ]);
+
+        $estadosReInscripcion = ['RECHAZADO', 'CANCELADO', 'FINALIZADO'];
+
+        if ($existing) {
+             // Si permite re-inscribir
+             if (in_array($existing->getEstado(), $estadosReInscripcion)) {
+                 $inscripcion = $existing;
+             } else {
+                 return $this->json([
+                    'error' => 'El voluntario ya está inscrito en esta actividad',
+                    'code' => 'DUPLICATE_INSCRIPTION',
+                    'id_inscripcion' => $existing->getId(),
+                    'estado' => $existing->getEstado()
+                 ], 409);
+             }
+        } else {
+            // 2. VALIDACIÓN DE CUPO MÁXIMO (Solo si es nueva)
+            $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
+            if ($ocupadas >= $actividad->getMaxParticipantes()) {
+                return $this->json([
+                    'error' => 'El cupo máximo de participantes se ha alcanzado.',
+                    'maximo' => $actividad->getMaxParticipantes(),
+                    'ocupadas' => $ocupadas
+                ], 409); 
+            }
+
+            // Crear nueva
+            $inscripcion = new \App\Entity\Inscripcion(); // Direct instance due to Service limit
+            $inscripcion->setVoluntario($voluntario);
+            $inscripcion->setActividad($actividad);
+            $em->persist($inscripcion);
         }
 
-        // 2. VALIDACIÓN DE CUPO MÁXIMO (Vía Service)
-        $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
-
-        if ($ocupadas >= $actividad->getMaxParticipantes()) {
-            return $this->json([
-                'error' => 'El cupo máximo de participantes se ha alcanzado.',
-                'maximo' => $actividad->getMaxParticipantes(),
-                'ocupadas' => $ocupadas
-            ], 409); 
+        // --- AUTO-ACEPTACIÓN ADMIN/OWNER ---
+        $estadoInicial = 'PENDIENTE';
+        $isAdmin = false;
+        
+        // Admin user check
+        if ($user instanceof \App\Security\User\AdminUser) {
+            $isAdmin = true;
+        } elseif (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
+            $isAdmin = true;
         }
 
-        // 3. Crear nueva inscripción (Vía Service)
+        // Owner check
+        $isOwnerOrg = false;
+        if ($user instanceof Organizacion) {
+            $orgActividad = $actividad->getOrganizacion();
+            if ($orgActividad && $user->getCif() === $orgActividad->getCif()) {
+                $isOwnerOrg = true;
+            }
+        }
+
+        if ($isAdmin || $isOwnerOrg) {
+            $estadoInicial = 'CONFIRMADO';
+        }
+
+        $inscripcion->setEstado($estadoInicial);
+
         try {
-            $this->inscripcionService->createInscription($actividad, $voluntario);
+            $em->flush();
         } catch (\Exception $e) {
-            return $this->json([
-                'error' => 'Error al inscribir voluntario',
-                'mensaje_tecnico' => $e->getMessage()
-            ], 500);
+            return $this->json(['error' => 'Error al guardar inscripción: ' . $e->getMessage()], 500);
         }
 
-        return $this->json(['message' => 'Solicitud de inscripción enviada con estado PENDIENTE'], 201);
+        return $this->json([
+            'message' => 'Solicitud de inscripción procesada correctamente', 
+            'estado' => $estadoInicial,
+            'id_inscripcion' => $inscripcion->getId(),
+            'debug' => [
+                 'is_admin' => $isAdmin,
+                 'is_owner' => $isOwnerOrg
+            ]
+        ], 201);
     }
 
     // DESINSCRIBIR VOLUNTARIO (Smart Unsubscribe via Activity ID)
@@ -329,17 +409,30 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Acceso denegado. Debes iniciar sesión como Organización.'], 403);
         }
 
-        // Reutilizar lógica de búsqueda
-        $criteria = ['organizacion' => $user];
+        $qb = $em->getRepository(Actividad::class)->createQueryBuilder('a');
+        $qb->where('a.organizacion = :org')
+           ->setParameter('org', $user)
+           ->orderBy('a.fechaInicio', 'DESC');
 
+        // Filtro por Estado de Aprobación (ACEPTADA, PENDIENTE, RECHAZADA)
         if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
-            $criteria['estadoAprobacion'] = $estadoAprobacion;
-        }
-        if ($estado = $request->query->get('estado')) {
-            $criteria['estado'] = $estado;
+            $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
+               ->setParameter('estadoAprobacion', $estadoAprobacion);
         }
 
-        $actividades = $em->getRepository(Actividad::class)->findBy($criteria, ['fechaInicio' => 'DESC']);
+        // Filtro por Estado de Ejecución y Lógica de Exclusión
+        $estado = $request->query->get('estado');
+        if ($estado) {
+            // Si el cliente pide un estado específico (ej: ?estado=CANCELADO), se muestra SOLO eso
+            $qb->andWhere('a.estado = :estado')
+               ->setParameter('estado', $estado);
+        } else {
+            // COMPORTAMIENTO POR DEFECTO: Ocultar canceladas
+            $qb->andWhere('a.estado != :estadoCancelado')
+               ->setParameter('estadoCancelado', 'CANCELADO');
+        }
+
+        $actividades = $qb->getQuery()->getResult();
 
         $data = [];
         foreach ($actividades as $actividad) {
@@ -407,80 +500,62 @@ class ActividadController extends AbstractController
     }
     // ACTUALIZAR ESTADO DE ACTIVIDAD
     #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
-    public function updateEstado(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    public function updateEstado(int $id, Request $request): JsonResponse
     {
-        $actividad = $em->getRepository(Actividad::class)->find($id);
-
-        if (!$actividad) {
-            return $this->json(['error' => 'Actividad no encontrada'], 404);
-        }
-
+        file_put_contents('debug_activity.txt', "\n=== CONTROLLER: PATCH STATUS REQUEST ===\nID: $id\nPayload: " . $request->getContent() . "\n", FILE_APPEND);
+        
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
-        // Nuevo campo opcional para desambiguar 'PENDIENTE'
-        $tipo = $data['tipo'] ?? null; // 'aprobacion' o 'ejecucion'
+        $tipo = $data['tipo'] ?? null;
 
         if (!$nuevoEstado) {
             return $this->json(['error' => 'Falta el campo "estado"'], 400);
         }
 
-        $nuevoEstadoUpper = strtoupper($nuevoEstado); // Normalizamos input
-        
-        // --- DEFINICIÓN DE LISTAS BLANCAS ---
-        $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
-        $estadosEjecucion = ['PENDIENTE', 'EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'];
-
-        // --- LÓGICA INTELEGENTE DE ASIGNACIÓN ---
-        
-        // Caso 1: Forzado explícitamente por el cliente (ej: quiere poner Aprobación en PENDIENTE)
-        if ($tipo === 'aprobacion') {
-            if (!in_array($nuevoEstadoUpper, $estadosAprobacion)) {
-                return $this->json(['error' => "Estado de aprobación inválido: $nuevoEstadoUpper"], 400);
-            }
-            $actividad->setEstadoAprobacion($nuevoEstadoUpper);
-            $campoActualizado = 'estadoAprobacion';
-
-        } elseif ($tipo === 'ejecucion') {
-            if (!in_array($nuevoEstadoUpper, $estadosEjecucion)) {
-                 return $this->json(['error' => "Estado de ejecución inválido: $nuevoEstadoUpper"], 400);
-            }
-            $actividad->setEstado($nuevoEstadoUpper);
-             $campoActualizado = 'estado';
-
-        } else {
-            // Caso 2: Auto-detección (Sin 'tipo')
-            // Prioridad a valores únicos de Aprobación
-            if (in_array($nuevoEstadoUpper, ['ACEPTADA', 'RECHAZADA'])) {
-                $actividad->setEstadoAprobacion($nuevoEstadoUpper);
-                $campoActualizado = 'estadoAprobacion';
-                
-            } elseif (in_array($nuevoEstadoUpper, ['EN CURSO', 'FINALIZADO', 'CANCELADO', 'ABIERTA'])) {
-                $actividad->setEstado($nuevoEstadoUpper);
-                $campoActualizado = 'estado';
-
-            } elseif ($nuevoEstadoUpper === 'PENDIENTE') {
-                // AMBIGÜEDAD: 'PENDIENTE' existe en ambos.
-                // Decisión de diseño: Sin 'tipo', asumimos ESTADO (Ejecución) para no romper clientes antiguos.
-                $actividad->setEstado('PENDIENTE');
-                $campoActualizado = 'estado';
-            } else {
-                 return $this->json([
-                    'error' => 'Estado desconocido o inválido', 
-                    'valor' => $nuevoEstadoUpper
-                ], 400);
-            }
-        }
-
         try {
-            $em->flush();
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar el estado: ' . $e->getMessage()], 500);
-        }
+            $result = $this->activityService->updateActivityStatus($id, $nuevoEstado, $tipo);
+            
+            return $this->json([
+                'message' => 'Estado actualizado correctamente',
+                'campo_actualizado' => $result['campo_actualizado'],
+                'valor_nuevo' => $result['valor_nuevo']
+            ]);
 
-        return $this->json([
-            'message' => 'Estado actualizado correctamente',
-            'campo_actualizado' => $campoActualizado,
-            'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion()
-        ]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            $code = 500;
+            if ($e->getMessage() === 'Actividad no encontrada') {
+                $code = 404;
+            }
+            return $this->json(['error' => $e->getMessage()], $code);
+        }
+    }
+
+    // ELIMINAR O CANCELAR ACTIVIDAD
+    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    public function delete(int $id): JsonResponse
+    {
+        file_put_contents('debug_activity.txt', "\n=== CONTROLLER: DELETE REQUEST ===\nID: $id\n", FILE_APPEND);
+        
+        try {
+            $action = $this->activityService->deleteActivity($id);
+            
+            $message = ($action === 'cancelled') 
+                ? 'Actividad cancelada porque tenía inscripciones.'
+                : 'Actividad eliminada permanentemente.';
+            
+            return $this->json([
+                'message' => $message,
+                'action' => $action
+            ], 200);
+
+        } catch (\Exception $e) {
+            $code = 500;
+            if ($e->getMessage() === 'Actividad no encontrada') {
+                $code = 404;
+            }
+            return $this->json(['error' => $e->getMessage()], $code);
+        }
     }
 }

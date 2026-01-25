@@ -98,6 +98,14 @@ class OrganizacionController extends AbstractController
         );
         $organizacion->setPassword($hashedPassword);
 
+        // --- AUTO-APROBACIÓN PARA ADMINS ---
+        // Si el que crea la org es un usuario logueado con rol ADMIN
+        $user = $this->getUser();
+        if ($user && method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
+            $organizacion->setEstado('aprobado');
+        }
+        // -----------------------------------
+
         // 3. VALIDACIÓN: Verifica si el objeto cumple con las reglas de Doctrine/Symfony.
         $errors = $validator->validate($organizacion);
 
