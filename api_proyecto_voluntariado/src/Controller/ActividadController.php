@@ -37,14 +37,11 @@ class ActividadController extends AbstractController
     ): JsonResponse
     {
 
-        
-        $json = $request->getContent();
         $json = $request->getContent();
 
         try {
             /** @var CrearActividadDTO $dto */
             $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
-        } catch (\Exception $e) {
         } catch (\Exception $e) {
             return $this->json(['error' => 'JSON inválido'], 400);
         }
@@ -69,7 +66,6 @@ class ActividadController extends AbstractController
         }
 
         if (!$organizacion) {
-        if (!$organizacion) {
             return $this->json([
                 'error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.',
                 'debug_user_class' => $user ? get_class($user) : 'null',
@@ -79,7 +75,6 @@ class ActividadController extends AbstractController
 
         // --- CONTROL DE DUPLICIDAD (PV-40) ---
         if ($this->activityService->activityExists($dto->nombre, $organizacion)) {
-        if ($activityService->activityExists($dto->nombre, $organizacion)) {
             return $this->json(['error' => 'Ya existe una actividad con este nombre en tu organización'], 409);
         }
 
