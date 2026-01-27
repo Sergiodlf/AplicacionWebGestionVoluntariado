@@ -11,4 +11,4 @@
 ###< symfony/framework-bundle ###
 
 # Firebase Secrets
-/config/secrets/*.json
+# /config/secrets/*.json
