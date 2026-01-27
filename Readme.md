@@ -24,6 +24,11 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 *   **Contenido**: Interfaz de usuario para Voluntarios y Organizaciones.
 *   **[Ver Guía de Instalación Frontend](GestionVoluntariado/README.md)**
 
+### 📱 [Mobile App (Android)](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
+*   **Repositorio Externo**: [Gari885/AplicacionMovilGestionVoluntariado](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
+*   **Tecnología**: Android Nativo.
+*   **Contenido**: Cliente móvil para Voluntarios.
+
 ---
 
 ## Funcionalidades Core
