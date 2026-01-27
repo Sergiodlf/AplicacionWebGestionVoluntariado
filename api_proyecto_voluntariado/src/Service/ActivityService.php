@@ -46,6 +46,9 @@ class ActivityService
     {
         $actividad = new Actividad();
         $actividad->setNombre($data['nombre']);
+        if (isset($data['descripcion'])) {
+            $actividad->setDescripcion($data['descripcion']);
+        }
         $now = new \DateTime();
         $fechaInicio = isset($data['fechaInicio']) ? new \DateTime($data['fechaInicio']) : new \DateTime();
         
@@ -227,23 +230,18 @@ class ActivityService
             throw new \Exception('Actividad no encontrada', 404);
         }
 
-        // Check if there are any inscriptions
-        $inscripcionesCount = $actividad->getInscripciones()->count();
-        file_put_contents('debug_activity.txt', "Inscriptions found: $inscripcionesCount\n", FILE_APPEND);
-
-        if ($inscripcionesCount > 0) {
-            // Soft Delete: Mark as CANCELADO
-            file_put_contents('debug_activity.txt', "Action: Soft Delete (CANCELADO)\n", FILE_APPEND);
-            $actividad->setEstado('CANCELADO');
-            $this->entityManager->flush();
-            return 'cancelled';
-        } else {
-            // Hard Delete: Remove entity
-            file_put_contents('debug_activity.txt', "Action: Hard Delete (REMOVE)\n", FILE_APPEND);
-            $this->entityManager->remove($actividad);
-            $this->entityManager->flush();
-            return 'deleted';
+        // Hard Delete Logic (Modified per user request)
+        // 1. Remove all inscriptions explicitly to avoid FK constraints
+        foreach ($actividad->getInscripciones() as $inscripcion) {
+            $this->entityManager->remove($inscripcion);
         }
+        
+        // 2. Remove the activity
+        file_put_contents('debug_activity.txt', "Action: Hard Delete (REMOVE with " . $actividad->getInscripciones()->count() . " inscriptions cleaned)\n", FILE_APPEND);
+        $this->entityManager->remove($actividad);
+        $this->entityManager->flush();
+        
+        return 'deleted';
     }
 
     /**
@@ -252,6 +250,7 @@ class ActivityService
     public function updateActivity(Actividad $actividad, array $data): Actividad
     {
         if (isset($data['nombre'])) $actividad->setNombre($data['nombre']);
+        if (isset($data['descripcion'])) $actividad->setDescripcion($data['descripcion']); // <--- FIXED
         if (isset($data['direccion'])) $actividad->setDireccion($data['direccion']);
         if (isset($data['sector'])) $actividad->setSector($data['sector']);
         if (isset($data['maxParticipantes'])) $actividad->setMaxParticipantes($data['maxParticipantes']);

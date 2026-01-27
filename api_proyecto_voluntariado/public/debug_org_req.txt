@@ -1,6 +1,0 @@
---- New Org Request ---
-JSON: {"direccion":"adf","cif":"G12369304","descripcion":"asdfas","email":"test1222@gmail.com","localidad":"sdfafsdf","nombre":"AdminTestio","password":"1231231231","contacto":"123123123","cp":"12312","sector":"Salud"}
---- New Org Request ---
-JSON: {"direccion":"sdfasdfa","cif":"G2121356","descripcion":"afdaf","email":"testoALgo@gmailk.com","localidad":"sdfafs","nombre":"asdfas","password":"1231231231","contacto":"123123123","cp":"12345","sector":"Educación"}
---- New Org Request ---
-JSON: {"direccion":"adfsaf","cif":"C12351231","descripcion":"asdf","email":"adfasdf@gmail.com","localidad":"sdfsadf","nombre":"Aasdfaf","password":"1231231231","contacto":"123123123","cp":"12345","sector":"Educación"}

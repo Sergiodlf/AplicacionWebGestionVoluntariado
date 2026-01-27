@@ -1161,6 +1161,8 @@ components:
           type: integer
         nombre:
           type: string
+        descripcion:
+          type: string
         estado:
           type: string
         estadoAprobacion:
@@ -1348,6 +1350,8 @@ components:
         codActividad:
           type: integer
         nombre:
+          type: string
+        descripcion:
           type: string
         estado:
           type: string

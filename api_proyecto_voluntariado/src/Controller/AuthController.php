@@ -233,7 +233,6 @@ class AuthController extends AbstractController
     // =========================================================================
     // 5. OBTENER PERFIL (UNIFICADO)
     // =========================================================================
-    #[Route('/profile', name: 'profile', methods: ['POST'])]
     // =========================================================================
     // 5. OBTENER PERFIL (UNIFICADO)
     // =========================================================================
@@ -242,70 +241,76 @@ class AuthController extends AbstractController
         SerializerInterface $serializer
     ): JsonResponse
     {
-        // El usuario ya viene autenticado por el Token Handler (UnifiedUserProvider)
-        $user = $this->getUser();
+        try {
+            // El usuario ya viene autenticado por el Token Handler (UnifiedUserProvider)
+            $user = $this->getUser();
 
-        if (!$user) {
-            return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
-        }
-
-        // --- 0. Caso Admin (Virtual) ---
-        if ($user instanceof \App\Security\User\AdminUser) {
-             return $this->json([
-                'tipo' => 'admin',
-                'datos' => [
-                    'dni' => 'ADMIN01',
-                    'nombre' => 'Administrador Sistema',
-                    'correo' => $user->getUserIdentifier(),
-                    'zona' => 'Global'
-                ]
-            ]);
-        }
-
-        // --- 1. Caso Voluntario ---
-        if ($user instanceof Voluntario) {
-            // (El backdoor antiguo se puede eliminar o dejar por seguridad, pero AdminUser tiene prioridad)
-
-            return $this->json([
-                'tipo' => 'voluntario',
-                'datos' => [
-                    'dni' => $user->getDni(),
-                    'nombre' => $user->getNombre(),
-                    'apellido1' => $user->getApellido1(),
-                    'apellido2' => $user->getApellido2(),
-                    'correo' => $user->getCorreo(),
-                    'zona' => $user->getZona(),
-                    'fechaNacimiento' => $user->getFechaNacimiento() ? $user->getFechaNacimiento()->format('Y-m-d') : null,
-                    'experiencia' => $user->getExperiencia(),
-                    'coche' => $user->isCoche(),
-                    'habilidades' => $user->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
-                    'intereses' => $user->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
-                    'idiomas' => $user->getIdiomas(),
-                    'estado_voluntario' => $user->getEstadoVoluntario(),
-                    'disponibilidad' => $user->getDisponibilidad(),
-                    'ciclo' => $user->getCiclo() ? (string)$user->getCiclo() : null,
-                ]
-            ]);
-        }
-
-        // --- 2. Caso Organización ---
-        if ($user instanceof Organizacion) {
-            // Serialización automática
-            $jsonOrg = $serializer->serialize($user, 'json', ['groups' => ['org:read']]);
-            $arrayOrg = json_decode($jsonOrg, true);
-            
-            // Eliminamos las actividades para aligerar la respuesta (solo datos editables)
-            if (isset($arrayOrg['actividades'])) {
-                unset($arrayOrg['actividades']);
+            if (!$user) {
+                return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
             }
 
-            return $this->json([
-                'tipo' => 'organizacion',
-                'datos' => $arrayOrg
-            ]);
-        }
+            // --- 0. Caso Admin (Virtual) ---
+            if ($user instanceof \App\Security\User\AdminUser) {
+                 return $this->json([
+                    'tipo' => 'admin',
+                    'datos' => [
+                        'dni' => 'ADMIN01',
+                        'nombre' => 'Administrador Sistema',
+                        'correo' => $user->getUserIdentifier(),
+                        'zona' => 'Global'
+                    ]
+                ]);
+            }
 
-        return $this->json(['error' => 'Tipo de usuario desconocido'], 500);
+            // --- 1. Caso Voluntario ---
+            if ($user instanceof Voluntario) {
+                // (El backdoor antiguo se puede eliminar o dejar por seguridad, pero AdminUser tiene prioridad)
+
+                return $this->json([
+                    'tipo' => 'voluntario',
+                    'datos' => [
+                        'dni' => $user->getDni(),
+                        'nombre' => $user->getNombre(),
+                        'apellido1' => $user->getApellido1(),
+                        'apellido2' => $user->getApellido2(),
+                        'correo' => $user->getCorreo(),
+                        'zona' => $user->getZona(),
+                        'fechaNacimiento' => $user->getFechaNacimiento() ? $user->getFechaNacimiento()->format('Y-m-d') : null,
+                        'experiencia' => $user->getExperiencia(),
+                        'coche' => $user->isCoche(),
+                        'habilidades' => $user->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
+                        'intereses' => $user->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
+                        'idiomas' => $user->getIdiomas(),
+                        'estado_voluntario' => $user->getEstadoVoluntario(),
+                        'disponibilidad' => $user->getDisponibilidad(),
+                        'ciclo' => $user->getCiclo() ? (string)$user->getCiclo() : null,
+                    ]
+                ]);
+            }
+
+            // --- 2. Caso Organización ---
+            if ($user instanceof Organizacion) {
+                // Serialización automática
+                $jsonOrg = $serializer->serialize($user, 'json', ['groups' => ['org:read']]);
+                $arrayOrg = json_decode($jsonOrg, true);
+                
+                // Eliminamos las actividades para aligerar la respuesta (solo datos editables)
+                if (isset($arrayOrg['actividades'])) {
+                    unset($arrayOrg['actividades']);
+                }
+
+                return $this->json([
+                    'tipo' => 'organizacion',
+                    'datos' => $arrayOrg
+                ]);
+            }
+
+            return $this->json(['error' => 'Tipo de usuario desconocido: ' . get_class($user)], 500);
+
+        } catch (\Throwable $e) {
+            file_put_contents('debug_profile_error.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
+            return $this->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
+        }
     }
 
     // =========================================================================

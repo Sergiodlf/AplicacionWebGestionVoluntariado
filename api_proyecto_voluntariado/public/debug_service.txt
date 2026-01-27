@@ -1,4 +1,0 @@
-Service Entered: adfasdf@gmail.com
-Firebase Created: eHHqQ7Tj3RcOL9vCgkBO3Uzz64u1
-State set to ACEPTADA (Admin)
-DB Flush Success.

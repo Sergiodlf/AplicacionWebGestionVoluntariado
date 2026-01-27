@@ -36,11 +36,15 @@ class ActividadController extends AbstractController
         SerializerInterface $serializer
     ): JsonResponse
     {
+
+        
+        $json = $request->getContent();
         $json = $request->getContent();
 
         try {
             /** @var CrearActividadDTO $dto */
             $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
+        } catch (\Exception $e) {
         } catch (\Exception $e) {
             return $this->json(['error' => 'JSON inválido'], 400);
         }
@@ -49,20 +53,22 @@ class ActividadController extends AbstractController
         $organizacion = null;
         $user = $this->getUser();
         
-        // --- DEBUG LOGGING ---
-        error_log("DEBUG: createActividad caller class: " . ($user ? get_class($user) : 'Guest'));
-        error_log("DEBUG: createActividad DTO cif: " . ($dto->cifOrganizacion ?? 'NULL'));
-        // ---------------------
+        $log .= "User Class: " . ($user ? get_class($user) : 'Guest') . "\n";
+        $log .= "DTO CIF: " . ($dto->cifOrganizacion ?? 'NULL') . "\n";
 
         // A. Prioridad: Token de Organización
         if ($user instanceof Organizacion) {
             $organizacion = $user;
+            $log .= "User identified as Organizacion: " . $organizacion->getNombre() . "\n";
         }
         // B. Fallback: CIF en el JSON (para admins o debug)
         elseif (!empty($dto->cifOrganizacion)) {
+             $log .= "Looking up Organizacion by CIF: " . $dto->cifOrganizacion . "\n";
              $organizacion = $em->getRepository(Organizacion::class)->find($dto->cifOrganizacion);
+             $log .= "Found: " . ($organizacion ? $organizacion->getNombre() : 'NO') . "\n";
         }
 
+        if (!$organizacion) {
         if (!$organizacion) {
             return $this->json([
                 'error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.',
@@ -73,6 +79,7 @@ class ActividadController extends AbstractController
 
         // --- CONTROL DE DUPLICIDAD (PV-40) ---
         if ($this->activityService->activityExists($dto->nombre, $organizacion)) {
+        if ($activityService->activityExists($dto->nombre, $organizacion)) {
             return $this->json(['error' => 'Ya existe una actividad con este nombre en tu organización'], 409);
         }
 
@@ -117,7 +124,7 @@ class ActividadController extends AbstractController
                 return $this->json(['error' => 'La fecha de fin no puede ser anterior a la de inicio'], 400);
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->json(['error' => 'Formato de fecha inválido. Usa AAAA-MM-DD'], 400);
         }
 
@@ -151,12 +158,16 @@ class ActividadController extends AbstractController
                 $estadoAprobacion = 'ACEPTADA';
             }
 
+            $log .= "Creating Activity via Service... (Estado: $estadoCalculado, Aprobacion: $estadoAprobacion)\n";
+
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
+                'descripcion'      => $dto->descripcion, // <--- Add description
                 'estado'           => $estadoCalculado, // Forzar estado explícito
                 'estadoAprobacion' => $estadoAprobacion, // <--- Nueva variable
-                'fechaInicio'      => $dto->fechaInicio,
-                'fechaFin'         => $dto->fechaFin ?? $fechaFinSql, // Use DTO or computed default
+                'fechaInicio'      => $fechaInicioSql,   // Use normalized Ymd string
+                'fechaFin'         => $fechaFinSql,      // Use normalized Ymd string (guaranteed not null)
+
                 'maxParticipantes' => $maxParticipantes,
                 'direccion'        => $direccion,
                 'sector'           => $dto->sector,
@@ -206,10 +217,20 @@ class ActividadController extends AbstractController
              return $this->json(['error' => 'JSON inválido'], 400);
         }
 
+        file_put_contents('debug_spy_edit.txt', 
+            "\n=== SPY: EDIT ACTIVITY [".date('Y-m-d H:i:s')."] ===\n" .
+            "ID: $id\n" .
+            "Raw Payload: " . $request->getContent() . "\n" .
+            "DTO Desc: " . ($dto->descripcion ?? 'NULL') . "\n" . // <--- DEBUG
+            "Parsed Sector: " . ($dto->sector ?? 'NULL') . "\n", 
+            FILE_APPEND
+        );
+
         try {
             // Prepare update data array
             $updateData = [
                 'nombre'           => $dto->nombre,
+                'descripcion'      => $dto->descripcion, // <--- Add description
                 'fechaInicio'      => $dto->fechaInicio,
                 'fechaFin'         => $dto->fechaFin,
                 'maxParticipantes' => $dto->maxParticipantes,
@@ -295,6 +316,7 @@ class ActividadController extends AbstractController
             $data[] = [
                 'codActividad' => $actividad->getCodActividad(),
                 'nombre' => $actividad->getNombre(),
+                'descripcion' => $actividad->getDescripcion(), // <--- ADDED
                 'estado' => $actividad->getEstado(),
                 'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                 'direccion' => $actividad->getDireccion(),
@@ -497,9 +519,17 @@ class ActividadController extends AbstractController
         // Filtro por Estado de Ejecución y Lógica de Exclusión
         $estado = $request->query->get('estado');
         if ($estado) {
-            // Si el cliente pide un estado específico (ej: ?estado=CANCELADO), se muestra SOLO eso
-            $qb->andWhere('a.estado = :estado')
-               ->setParameter('estado', $estado);
+            // FIX: If the app asks for 'pendiente', it means 'Pending Approval' for the organization
+            if (strtolower($estado) === 'pendiente') {
+                $qb->andWhere('a.estadoAprobacion = :pend')
+                   ->setParameter('pend', 'PENDIENTE')
+                   ->andWhere('a.estado != :estadoCancelado') // <--- NEW: Hide cancelled ones
+                   ->setParameter('estadoCancelado', 'CANCELADO');
+            } else {
+                 // Si el cliente pide un estado específico (ej: ?estado=CANCELADO), se muestra SOLO eso
+                 $qb->andWhere('a.estado = :estado')
+                    ->setParameter('estado', $estado);
+            }
         } else {
             // COMPORTAMIENTO POR DEFECTO: Ocultar canceladas
             $qb->andWhere('a.estado != :estadoCancelado')
@@ -524,11 +554,13 @@ class ActividadController extends AbstractController
             $data[] = [
                 'codActividad' => $actividad->getCodActividad(),
                 'nombre' => $actividad->getNombre(),
+                'descripcion' => $actividad->getDescripcion(), // <--- ADDED
                 'estado' => $actividad->getEstado(),
                 'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                 'direccion' => $actividad->getDireccion(),
                 'sector'    => $actividad->getSector(),
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,
+                'fechaFin'    => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i:s') : null, // <--- ADDED MISSING FIELD
                 'maxParticipantes' => $actividad->getMaxParticipantes(),
                 'ods'              => $actividad->getOds()->map(fn($o) => ['id' => $o->getId(), 'nombre' => $o->getNombre(), 'color' => $o->getColor()])->toArray(),
                 'habilidades'      => $actividad->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
@@ -580,6 +612,7 @@ class ActividadController extends AbstractController
                 $data[] = [
                     'codActividad' => $actividad->getCodActividad(),
                     'nombre' => $actividad->getNombre(),
+                    'descripcion' => $actividad->getDescripcion(), // <--- ADDED
                     'estado' => $actividad->getEstado(),
                     'estadoAprobacion' => $actividad->getEstadoAprobacion(),
                     'direccion' => $actividad->getDireccion(),
@@ -600,8 +633,6 @@ class ActividadController extends AbstractController
     #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
     public function updateEstado(int $id, Request $request): JsonResponse
     {
-        file_put_contents('debug_activity.txt', "\n=== CONTROLLER: PATCH STATUS REQUEST ===\nID: $id\nPayload: " . $request->getContent() . "\n", FILE_APPEND);
-        
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
         $tipo = $data['tipo'] ?? null;
@@ -613,11 +644,13 @@ class ActividadController extends AbstractController
         try {
             $result = $this->activityService->updateActivityStatus($id, $nuevoEstado, $tipo);
             
-            return $this->json([
+            $jsonResponse = [
                 'message' => 'Estado actualizado correctamente',
                 'campo_actualizado' => $result['campo_actualizado'],
                 'valor_nuevo' => $result['valor_nuevo']
-            ]);
+            ];
+
+            return $this->json($jsonResponse);
 
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
@@ -635,8 +668,6 @@ class ActividadController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
     public function delete(int $id): JsonResponse
     {
-        file_put_contents('debug_activity.txt', "\n=== CONTROLLER: DELETE REQUEST ===\nID: $id\n", FILE_APPEND);
-        
         try {
             $action = $this->activityService->deleteActivity($id);
             
@@ -644,19 +675,18 @@ class ActividadController extends AbstractController
                 ? 'Actividad cancelada porque tenía inscripciones.'
                 : 'Actividad eliminada permanentemente.';
             
-            return $this->json([
+            $jsonResponse = [
                 'message' => $message,
                 'action' => $action
-            ], 200);
+            ];
+            
+            return $this->json($jsonResponse, 200);
 
         } catch (\Exception $e) {
-            $code = 500;
-            if ($e->getMessage() === 'Actividad no encontrada') {
-                $code = 404;
-            }
-            return $this->json(['error' => $e->getMessage()], $code);
+            return $this->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
     // MÉTODO PRIVADO PARA CHEQUEAR Y ACTUALIZAR ESTADO SEGÚN FECHAS
     private function checkAndUpdateStatus(Actividad $actividad): bool

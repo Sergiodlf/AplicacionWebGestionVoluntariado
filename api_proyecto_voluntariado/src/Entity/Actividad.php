@@ -47,9 +47,9 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $sector = null;
     
-    // #[ORM\Column(type: Types::TEXT, nullable: true)]
-    // #[Groups(['org:read'])]
-    // private ?string $descripcion = null;
+    #[ORM\Column(name: 'DESCRIPCION', type: Types::TEXT, nullable: true)]
+    #[Groups(['org:read'])]
+    private ?string $descripcion = null;
 
     #[ORM\Column(name: 'FECHA_INICIO', type: Types::DATETIME_MUTABLE)]
     #[Groups(['org:read'])]
@@ -202,7 +202,6 @@ class Actividad
         return $this;
     }
 
-    /*
     public function getDescripcion(): ?string
     {
         return $this->descripcion;
@@ -213,7 +212,6 @@ class Actividad
         $this->descripcion = $descripcion;
         return $this;
     }
-    */
 
     public function getFechaInicio(): ?\DateTimeInterface
     {
