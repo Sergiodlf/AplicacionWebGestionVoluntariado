@@ -3,82 +3,55 @@
 ![Branching](https://img.shields.io/badge/gitflow-branching-orange)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen)
 ![PHP](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php)
+![Angular](https://img.shields.io/badge/Angular-17-dd0031?logo=angular)
 
 ## Objetivo del Proyecto
 El objetivo central es proporcionar una aplicación web para la gestión del voluntariado de cuatrovientos. El sistema orquesta la relación entre organizaciones que publican causas sociales y voluntarios dispuestos a participar, garantizando la integridad de los datos en procesos críticos como el **Match** y el **Control de Inscripciones**.
 
 ---
 
-## Funcionalidades Core (Actualizado)
+## Estructura del Proyecto
 
-1.  **Gestión de Identidad (Auth):**
-    *   Registro y Login diferenciado por roles (`Voluntario` y `Organización`) con autenticación segura y hash de contraseñas.
-    *   **Perfiles Completos:** Los voluntarios registran habilidades, intereses, disponibilidad, zona y ciclo formativo. Las organizaciones gestionan su perfil público.
+Este repositorio contiene tanto el Backend como el Frontend de la aplicación. Para ver las guías de instalación y configuración detalladas de cada parte, por favor consulta sus respectivos READMEs:
 
-2.  **Ciclo de Actividades:**
-    *   Publicación de ofertas por parte de organizaciones con validación de metadatos (fechas, cupos, ODS, habilidades requeridas).
-    *   **Filtrado Avanzado:** Los voluntarios pueden buscar actividades por Zona, Habilidades, Disponibilidad, Intereses y Estado.
-    *   **Dashboards:** Paneles de control específicos para Administradores, Organizaciones y Voluntarios con métricas en tiempo real.
+### 🔙 [Backend (API Symfony)](api_proyecto_voluntariado/README.md)
+*   **Tecnología**: Symfony 7, PHP 8.2, MySQL.
+*   **Contenido**: API REST, gestión de base de datos, autenticación con Firebase, lógica de negocio.
+*   **[Ver Guía de Instalación Backend](api_proyecto_voluntariado/README.md)**
 
-3.  **Motor de Inscripción y Matching:**
-    *   Sistema de registro de voluntarios en actividades con estados: `PENDIENTE`, `CONFIRMADO`, `RECHAZADO`, `EN CURSO`, `FINALIZADO`.
-    *   **Match Administrativo:** Los administradores pueden asignar manualmente voluntarios aceptados a actividades.
-    *   **Control de Aforo:** Validaciones de negocio para prevenir sobrecupo.
-
-4.  **Gestión Administrativa:**
-    *   Validación de nuevos Voluntarios y Organizaciones (Aceptar/Rechazar registros).
-    *   Supervisión global de todas las actividades y matches.
-    *   **Interfaz Premium:** Diseño moderno con encabezados fijos, tarjetas interactivas y búsqueda optimizada.
+### 🎨 [Frontend (Angular App)](GestionVoluntariado/README.md)
+*   **Tecnología**: Angular 17+, TypeScript.
+*   **Contenido**: Interfaz de usuario para Voluntarios y Organizaciones.
+*   **[Ver Guía de Instalación Frontend](GestionVoluntariado/README.md)**
 
 ---
 
-## Flujo de Trabajo y Aportaciones (Git Strategy)
+## Funcionalidades Core
 
-Para mantener la estabilidad del código, implementamos una estrategia de **Git Flow** simplificada.
+1.  **Gestión de Identidad (Auth):**
+    *   Registro y Login diferenciado por roles (`Voluntario` y `Organización`) con autenticación segura.
+    *   **Perfiles Completos:** Gestión de habilidades, intereses y disponibilidad.
 
-### 1. Modelo de Ramas
+2.  **Ciclo de Actividades:**
+    *   Publicación de ofertas con validación de metadatos.
+    *   **Filtrado Avanzado:** Búsqueda por Zona, Habilidades, etc.
+    *   **Dashboards:** Paneles de control métricas en tiempo real.
 
-*   **`main`**: Código productivo. Solo se toca mediante merges de versiones estables.
-*   **`develop`**: Rama de integración. Aquí se fusionan todas las tareas terminadas.
-*   **`feature/` / `fix/`**: Ramas efímeras para nuevas funcionalidades o correcciones.
+3.  **Motor de Inscripción y Matching:**
+    *   Estados: `PENDIENTE`, `CONFIRMADO`, `RECHAZADO`, `EN CURSO`, `FINALIZADO`.
+    *   **Match Administrativo:** Asignación manual de voluntarios.
+    *   **Control de Aforo:** Validaciones de negocio.
 
-### Guías de Instalación
+4.  **Gestión Administrativa:**
+    *   Validación de usuarios.
+    *   Supervisión global.
 
-### Requisitos
+---
 
-*   **Backend:** PHP 8.2+, Composer, Symfony CLI, SQL Server / MySQL.
-*   **Frontend:** Node.js, Angular CLI.
+## Flujo de Trabajo (Git Strategy)
 
-### Instalación Backend (Symfony)
+Implementamos una estrategia de **Git Flow** simplificada.
 
-1.  **Instalar dependencias:**
-    ```bash
-    composer install
-    ```
-2.  **Configurar entorno:**
-    - Asegurarse de que `.env` / `.env.local` y `DATABASE_URL` tenga su usuario y contraseña corresponiente.
-    - Asegurarse de que no haya ningún archivo `.php` en la carptea `/migrations`.
-3.  **Base de Datos:**
-    ```bash
-    php bin/console doctrine:database:create
-    php bin/console make:migration
-    php bin/console doctrine:migrations:migrate
-    php bin/console doctrine:fixtures:load  # (Opcional: Cargar datos de prueba)
-    ```
-4.  **Iniciar Servidor:**
-    ```bash
-    symfony server:start
-    ```
-
-### Instalación Frontend (Angular)
-
-1.  **Instalar dependencias:**
-    ```bash
-    npm install --legacy-peer-deps
-    ```
-2.  **Iniciar Servidor:**
-    ```bash
-    ng serve
-    ```
-
-
+*   **`main`**: Código productivo. Solo merges de versiones estables.
+*   **`develop`**: Rama de integración.
+*   **`feature/` / `fix/`**: Ramas para nuevas funcionalidades o correcciones.
