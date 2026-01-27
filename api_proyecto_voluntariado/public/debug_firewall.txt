@@ -49,3 +49,39 @@ User found in DB. Returning Badge.
 --- Firewall Token Check ---
 Email from token: 'g@gmail.com'
 User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'g@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'g@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'g@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@admin.com'
+User NOT found in DB.
+Email whitelist matched.
+User is ADMIN (Memory). Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'garinovoselskyyjaka@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'garinovoselskyyjaka@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'garinovoselskyyjaka@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'garinovoselskyyjaka@gmail.com'
+User found in DB. Returning Badge.
