@@ -53,6 +53,20 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 
 ---
 
+## Usuarios de Prueba
+
+Para facilitar las pruebas de la aplicación y validar los diferentes niveles de acceso, se proporcionan los siguientes usuarios predeterminados:
+
+| Rol | Email | Contraseña |
+| :--- | :--- | :--- |
+| **Voluntario** | `garinovoselskyyjaka@gmail.com` | `adiosBola*` |
+| **Organización** | `g@gmail.com` | `1234567890` |
+| **Admin** | `admin@admin.com` | `adminTest` |
+
+> **Nota:** Estos usuarios deben utilizarse únicamente en el entorno de desarrollo local para verificar la lógica de permisos y el flujo de trabajo del sistema.
+
+---
+
 ## Flujo de Trabajo (Git Strategy)
 
 Implementamos una estrategia de **Git Flow** simplificada.
@@ -60,3 +74,4 @@ Implementamos una estrategia de **Git Flow** simplificada.
 *   **`main`**: Código productivo. Solo merges de versiones estables.
 *   **`develop`**: Rama de integración.
 *   **`feature/` / `fix/`**: Ramas para nuevas funcionalidades o correcciones.
+
