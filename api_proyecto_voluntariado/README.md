@@ -57,8 +57,13 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 3. Crea la base de datos y las tablas:
    ```bash
    php bin/console doctrine:database:create
+   php bin/console make:migration
    php bin/console doctrine:migrations:migrate
    ```
+4. Cargar datos de prueba (opcional)
+   ```bash
+   php bin/console doctrine:fixtures:load
+   ``` 
 
 ---
 
