@@ -12,7 +12,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       // Exclude registration endpoints from sending the token
       // This prevents 401 errors if the backend tries to validate a token for a user that doesn't fully exist yet in its DB
       // or if public access is preferred without auth overhead.
-      if (req.url.includes('/register/')) {
+      if (req.url.includes('/register/') || req.url.includes('/categories') || req.url.includes('/ciclos')) {
         return next(req);
       }
 

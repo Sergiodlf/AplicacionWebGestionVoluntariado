@@ -18,7 +18,7 @@ export class App implements OnInit {
 
   constructor(private authService: AuthService, private router: Router) {
     this.authService.user$.subscribe(user => {
-      if (user && !this.authService.getCurrentProfile()) {
+      if (user && !this.authService.getCurrentProfile() && !this.authService.isRegistrationInProgress) {
         this.authService.loadProfile().subscribe({
           error: err => console.error('Error restoring profile on app load', err)
         });

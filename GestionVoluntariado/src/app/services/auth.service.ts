@@ -11,6 +11,7 @@ import { VoluntariadoService } from './voluntariado-service';
   providedIn: 'root'
 })
 export class AuthService {
+  isRegistrationInProgress = false;
   private auth: Auth = inject(Auth);
   private firestore: Firestore = inject(Firestore);
   readonly user$: Observable<User | null> = authState(this.auth);

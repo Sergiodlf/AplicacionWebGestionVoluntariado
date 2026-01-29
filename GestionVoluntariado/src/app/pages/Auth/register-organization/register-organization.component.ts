@@ -26,6 +26,7 @@ export class RegisterOrganizationComponent {
         console.log('Registrando organización:', org);
 
         // 1. Register in Firebase (also sends verification email)
+        this.authService.isRegistrationInProgress = true;
         this.authService.register(org.email, org.password)
             .then(() => {
                 const currentUser = this.authService.getCurrentUser();
@@ -37,22 +38,26 @@ export class RegisterOrganizationComponent {
                             this.organizationService.createOrganization(org).subscribe({
                                 next: () => {
                                     alert('Organización registrada con éxito. Se ha enviado un correo de verificación.');
+                                    this.authService.isRegistrationInProgress = false;
                                     this.router.navigate(['/login']);
                                 },
                                 error: (error) => {
                                     console.error('Error during backend registration:', error);
+                                    this.authService.isRegistrationInProgress = false;
                                     alert('Error en el registro del backend: ' + (error.error?.error || 'Inténtalo de nuevo.'));
                                 }
                             });
                         })
                         .catch((error) => {
                             console.error('Error saving role to Firestore:', error);
+                            this.authService.isRegistrationInProgress = false;
                             alert('Error guardando datos de usuario: ' + error.message);
                         });
                 }
             })
             .catch((error) => {
                 console.error('Error during Firebase registration:', error);
+                this.authService.isRegistrationInProgress = false;
                 if (error.code === 'auth/email-already-in-use') {
                     alert('El correo electrónico ya está en uso.');
                 } else if (error.code === 'auth/weak-password') {

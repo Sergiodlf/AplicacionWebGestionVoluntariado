@@ -74,9 +74,10 @@ class VolunteerService
                 $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'voluntario']);
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
-                // Si el email ya existe en Firebase, lanzamos error para avisar al usuario
-                // (Para que la App muestre "El correo ya existe")
-                throw new \Exception('El correo electrónico ya está registrado en Firebase.');
+                // Si el email ya existe en Firebase, recuperamos el usuario para asignarle claims
+                // Esto ocurre porque el Frontend ya crea el usuario antes de llamar al Backend.
+                $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
+                $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'voluntario']);
             }
 
         } catch (\Exception $e) {
