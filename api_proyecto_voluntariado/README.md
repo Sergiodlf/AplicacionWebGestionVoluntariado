@@ -57,7 +57,6 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 3. Crea la base de datos y las tablas:
    ```bash
    php bin/console doctrine:database:create
-   php bin/console make:migration
    php bin/console doctrine:migrations:migrate
    ```
 4. Cargar datos de prueba (opcional)
@@ -79,4 +78,28 @@ O usando PHP directamente:
 php -S 127.0.0.1:8000 -t public
 ```
 
-La API estará disponible en: `http://127.0.0.1:8000/api`
+
+---
+
+## 6. Usuarios de Prueba y Verificación
+
+### Arquitectura "Thin Client" y Emails
+Este proyecto utiliza una arquitectura donde el Backend gestiona la lógica crítica.
+- **Registro**: El backend crea el usuario en Firebase y envía un email de verificación (usando Gmail).
+- **Login**: Se requiere que el email esté verificado.
+- **Olvido de Contraseña**: Endpoint `/api/auth/forgot-password`.
+
+### Credenciales de Test
+Puedes crear usuarios de prueba verificados usando el comando:
+```bash
+php bin/console app:create-test-users
+```
+Esto generará/actualizará los siguientes usuarios:
+
+| Rol | Email | Password | Estado |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@curso.com` | `123456` | Verificado |
+| **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
+| **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
+
+*Nota: Estos usuarios tienen `emailVerified: true` en Firebase para poder hacer login inmediatamente.*

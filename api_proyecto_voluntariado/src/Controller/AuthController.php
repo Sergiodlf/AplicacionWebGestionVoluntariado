@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Administrador;
 use App\Entity\Organizacion;
 use App\Entity\Voluntario;
 use App\Model\RegistroOrganizacionDTO;
@@ -25,14 +26,21 @@ use App\Service\OrganizationService;
 class AuthController extends AbstractController
 {
     private $volunteerService;
-    private $organizationService; // INJECTED
+    private $organizationService;
     private $firebaseAuth;
+    private $notificationService; // NEW
 
-    public function __construct(VolunteerService $volunteerService, OrganizationService $organizationService, Auth $firebaseAuth)
+    public function __construct(
+        VolunteerService $volunteerService, 
+        OrganizationService $organizationService, 
+        Auth $firebaseAuth,
+        \App\Service\NotificationService $notificationService // INJECTED
+    )
     {
         $this->volunteerService = $volunteerService;
         $this->organizationService = $organizationService;
         $this->firebaseAuth = $firebaseAuth;
+        $this->notificationService = $notificationService;
     }
     // =========================================================================
     // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
@@ -66,6 +74,11 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
         }
 
+        // --- VALIDACIÓN DE CONTRASEÑA (Mínimo 6 caracteres) ---
+        if (strlen($dto->password) < 6) {
+            return $this->json(['error' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+        }
+
         // --- VALIDACIÓN DE UNICIDAD (Vía Service) ---
         $error = $this->volunteerService->checkDuplicates($dto->dni, $dto->email);
         if ($error) {
@@ -73,47 +86,21 @@ class AuthController extends AbstractController
             return $this->json(['error' => $error], $status);
         }
 
+        // --- VALIDACIÓN DE NEGOCIO (Vía Service) --- (DNI, Age)
+        $validationError = $this->volunteerService->validateDTO($dto);
+        if ($validationError) {
+            return $this->json(['error' => $validationError], 400);
+        }
+
         // --- PRE-CHECK ADMIN --- 
-        $currentUser = $this->getUser();
         $isAdmin = false;
+        $currentUser = $this->getUser();
         
-        $logMsg = "--- New Register Request ---\n";
-        $logMsg .= "RegisterVoluntario: Checking Admin Status...\n";
-
-        if ($currentUser) {
-            $logMsg .= "RegisterVoluntario: User found via getUser(): " . $currentUser->getUserIdentifier() . "\n";
-            if ($currentUser instanceof \App\Security\User\AdminUser || (method_exists($currentUser, 'getRoles') && in_array('ROLE_ADMIN', $currentUser->getRoles()))) {
-                $isAdmin = true;
-                $logMsg .= "RegisterVoluntario: User IS Admin (via object check).\n";
-            }
-        } else {
-            $logMsg .= "RegisterVoluntario: getUser() is null. Checking headers manually.\n";
-            // Si getUser() es null (ruta pública), verificamos manualmente el token si existe
-            $authHeader = $request->headers->get('Authorization');
-            $logMsg .= "RegisterVoluntario: Authorization Header: " . ($authHeader ? "PRESENT" : "MISSING") . "\n";
-            
-            if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-                try {
-                    $token = $matches[1];
-                    $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
-                    $claims = $verifiedIdToken->claims();
-                    $email = (string) $claims->get('email');
-                    
-                    $logMsg .= "RegisterVoluntario: Manual Token Email: $email\n";
-                    $logMsg .= "RegisterVoluntario: Claims: " . json_encode($claims->all()) . "\n";
-
-                    if (($claims->has('admin') && $claims->get('admin') === true) || 
-                        ($claims->has('rol') && $claims->get('rol') === 'admin') ||
-                        $email === 'admin@admin.com' || $email === 'adminTest5666@gmail.com') {
-                        $isAdmin = true;
-                        $logMsg .= "RegisterVoluntario: User IS Admin (via manual token check).\n";
-                    } else {
-                         $logMsg .= "RegisterVoluntario: User is NOT Admin (claims mismatch).\n";
-                    }
-                } catch (\Throwable $e) {
-                    $logMsg .= "RegisterVoluntario: Token Verification Failed: " . $e->getMessage() . "\n";
-                }
-            }
+        if ($currentUser && (
+            in_array('ROLE_ADMIN', $currentUser->getRoles()) || 
+            $currentUser instanceof Administrador
+        )) {
+            $isAdmin = true;
         }
         
         $logMsg .= "RegisterVoluntario: Final isAdmin decision: " . ($isAdmin ? "TRUE" : "FALSE") . "\n";
@@ -172,6 +159,11 @@ class AuthController extends AbstractController
         if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
             return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
         }
+
+        // --- VALIDACIÓN DE CONTRASEÑA (Mínimo 6 caracteres) ---
+        if (strlen($dto->password) < 6) {
+            return $this->json(['error' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+        }
         
         // --- VALIDACIÓN DUP (Vía Service) ---
         $error = $this->organizationService->checkDuplicates($dto->cif, $dto->email);
@@ -179,33 +171,21 @@ class AuthController extends AbstractController
             return $this->json(['error' => $error], 409);
         }
 
+        // --- VALIDACIÓN DE NEGOCIO (Vía Service) --- (CIF)
+        $validationError = $this->organizationService->validateDTO($dto);
+        if ($validationError) {
+            return $this->json(['error' => $validationError], 400);
+        }
+
         // --- PRE-CHECK ADMIN ---
-        $currentUser = $this->getUser();
         $isAdmin = false;
+        $currentUser = $this->getUser();
         
-        if ($currentUser) {
-            if ($currentUser instanceof \App\Security\User\AdminUser || (method_exists($currentUser, 'getRoles') && in_array('ROLE_ADMIN', $currentUser->getRoles()))) {
-                $isAdmin = true;
-            }
-        } else {
-            // Manual Token Verification for Public Route
-            $authHeader = $request->headers->get('Authorization');
-            if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-                try {
-                    $token = $matches[1];
-                    $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
-                    $claims = $verifiedIdToken->claims();
-                    $email = (string) $claims->get('email');
-                    
-                    if (($claims->has('admin') && $claims->get('admin') === true) || 
-                        ($claims->has('rol') && $claims->get('rol') === 'admin') ||
-                         $email === 'admin@admin.com' || $email === 'adminTest5666@gmail.com') { // Whitelist check unificado
-                        $isAdmin = true;
-                    }
-                } catch (\Throwable $e) {
-                    // Ignore token errors
-                }
-            }
+        if ($currentUser && (
+            in_array('ROLE_ADMIN', $currentUser->getRoles()) || 
+            $currentUser instanceof Administrador
+        )) {
+            $isAdmin = true;
         }
 
         // --- REGISTRO (Vía Service) ---
@@ -226,10 +206,52 @@ class AuthController extends AbstractController
     // =========================================================================
     // 3. LOGIN UNIFICADO (ELIMINADO - Usar Firebase)
     // =========================================================================
-    //
+    
     // =========================================================================
-    // 4. CAMBIO DE CONTRASEÑA (ELIMINADO - Usar Firebase)
+    // 4. FORGOT PASSWORD (UNIFICADO)
     // =========================================================================
+    #[Route('/forgot-password', name: 'forgot_password', methods: ['POST'])]
+    public function forgotPassword(
+        Request $request, 
+        \App\Service\NotificationService $notificationService // Injected here or constructor
+    ): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+
+        if (!$email) {
+            return $this->json(['error' => 'Email es obligatorio'], 400);
+        }
+
+        try {
+            // 1. Generate Link via Firebase
+            $link = $this->firebaseAuth->getPasswordResetLink($email);
+
+            // 2. Send Email via custom Mailer
+            // We use the injected $notificationService (need to update constructor or use container)
+            // Ideally, inject NotificationService in AuthController constructor.
+            // But since I can't easily change constructor in replace_file_content without context, 
+            // I'll assume it's available or I'll add it to methods arguments if Symfony supports it (it does).
+            
+            $notificationService->sendEmail(
+                $email,
+                'Reset Password - Gestión Voluntariado',
+                sprintf(
+                    '<p>Has solicitado restablecer tu contraseña.</p><p>Haz clic aquí para cambiarla: <a href="%s">Restablecer Contraseña</a></p>', 
+                    $link
+                )
+            );
+
+            return $this->json(['message' => 'Si el correo existe, se ha enviado un enlace de recuperación.']);
+
+        } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
+            // Security: Don't reveal if user exists or not, but for UX maybe we simulate success
+            // or just return success message regardless.
+            return $this->json(['message' => 'Si el correo existe, se ha enviado un enlace de recuperación.']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al procesar la solicitud: ' . $e->getMessage()], 500);
+        }
+    }
     // =========================================================================
     // 5. OBTENER PERFIL (UNIFICADO)
     // =========================================================================
@@ -249,14 +271,14 @@ class AuthController extends AbstractController
                 return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
             }
 
-            // --- 0. Caso Admin (Virtual) ---
-            if ($user instanceof \App\Security\User\AdminUser) {
+            // --- 0. Caso Admin (Real) ---
+            if ($user instanceof Administrador) {
                  return $this->json([
                     'tipo' => 'admin',
                     'datos' => [
-                        'dni' => 'ADMIN01',
-                        'nombre' => 'Administrador Sistema',
-                        'correo' => $user->getUserIdentifier(),
+                        'dni' => 'ADMIN-' . $user->getId(),
+                        'nombre' => $user->getNombre() ?? 'Administrador',
+                        'correo' => $user->getEmail(),
                         'zona' => 'Global'
                     ]
                 ]);
@@ -434,6 +456,13 @@ class AuthController extends AbstractController
                  }
             }
 
+
+
+            // FCM Token
+            if (isset($data['fcmToken'])) {
+                $user->setFcmToken($data['fcmToken']);
+            }
+
         } 
         // --- 2. Caso Organización ---
         elseif ($user instanceof Organizacion) {
@@ -445,6 +474,11 @@ class AuthController extends AbstractController
             if (isset($data['cp'])) $user->setCp($data['cp']);
             if (isset($data['descripcion'])) $user->setDescripcion($data['descripcion']);
             if (isset($data['contacto'])) $user->setContacto($data['contacto']);
+            
+            // FCM Token
+            if (isset($data['fcmToken'])) {
+                $user->setFcmToken($data['fcmToken']);
+            }
         }
 
         try {

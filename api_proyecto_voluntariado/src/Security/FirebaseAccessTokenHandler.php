@@ -32,6 +32,13 @@ class FirebaseAccessTokenHandler implements AccessTokenHandlerInterface
                 file_put_contents('debug_firewall.txt', $log . "Error: No email claim.\n", FILE_APPEND);
                 throw new BadCredentialsException('The access token does not contain an email claim.');
             }
+
+            // --- EMAIL VERIFICATION CHECK ---
+            $emailVerified = $claims->get('email_verified');
+            if ($emailVerified === false) {
+                 file_put_contents('debug_firewall.txt', $log . "Error: Email not verified.\n", FILE_APPEND);
+                 throw new \Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException('Debes verificar tu correo electrónico antes de iniciar sesión via API.');
+            }
             
             // 1. INTENTO DE CARGA DESDE DB (Prioridad: Voluntario / Organización Real)
             try {

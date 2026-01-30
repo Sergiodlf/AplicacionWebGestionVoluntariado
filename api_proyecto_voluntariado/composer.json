@@ -7,24 +7,26 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/doctrine-bundle": "^2.12",
-        "doctrine/doctrine-migrations-bundle": "*",
-        "doctrine/orm": "^3.5",
+        "doctrine/doctrine-bundle": "^2.18.2",
+        "doctrine/doctrine-migrations-bundle": ">=3.7",
+        "doctrine/orm": "^3.6.1",
         "kreait/firebase-bundle": "^5.6",
         "paragonie/sodium_compat": "^2.5",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.10",
         "symfony/framework-bundle": "7.3.*",
         "symfony/runtime": "7.3.*",
         "symfony/security-bundle": "7.3.*",
         "symfony/serializer": "7.3.*",
         "symfony/validator": "7.3.*",
-        "symfony/yaml": "7.3.*"
+        "symfony/yaml": "7.3.*",
+        "symfony/mailer": "7.3.*",
+        "symfony/google-mailer": "7.3.*"
     },
     "require-dev": {
-        "doctrine/doctrine-fixtures-bundle": "^4.3",
-        "symfony/maker-bundle": "^1.65"
+        "doctrine/doctrine-fixtures-bundle": "^4.3.1",
+        "symfony/maker-bundle": "^1.65.1"
     },
     "config": {
         "allow-plugins": {

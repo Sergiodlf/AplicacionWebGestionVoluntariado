@@ -74,9 +74,9 @@ export class VolunteerFormComponent implements OnInit {
   private initForm() {
     this.volunteerForm = this.fb.group({
       nombreCompleto: ['', this.isEdit ? [] : Validators.required],
-      dni: ['', this.isEdit ? [] : [Validators.required, Validators.maxLength(9), Validators.pattern(/^\d{8}[a-zA-Z]$/)]],
+      dni: ['', this.isEdit ? [] : [Validators.required, Validators.maxLength(9)]], // Removed regex pattern
       correo: ['', this.isEdit ? [] : [Validators.required, Validators.email]],
-      password: ['', this.isEdit ? [] : [Validators.required, Validators.minLength(6)]],
+      password: ['', this.isEdit ? [] : [Validators.required]], // Removed minLength(6)
       zona: ['', Validators.required],
       ciclo: ['', Validators.required],
       fechaNacimiento: ['', this.isEdit ? [] : Validators.required],

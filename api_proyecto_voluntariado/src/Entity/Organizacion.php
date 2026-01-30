@@ -78,6 +78,10 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['org:read'])]
     private ?string $estado = 'pendiente';
 
+    #[ORM\Column(name: 'FCM_TOKEN', length: 255, nullable: true)]
+    #[Groups(['org:read', 'org:write'])]
+    private ?string $fcmToken = null;
+
     #[ORM\OneToMany(mappedBy: 'organizacion', targetEntity: Actividad::class)]
     // Solo 'org:read' para que las actividades relacionadas se incluyan al obtener la organización.
     #[Groups(['org:read'])] 
@@ -204,6 +208,9 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getEstado(): ?string { return $this->estado; }
     public function setEstado(string $estado): static { $this->estado = $estado; return $this; }
+
+    public function getFcmToken(): ?string { return $this->fcmToken; }
+    public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }
 
     public function getActividades(): Collection { return $this->actividades; }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\Administrador;
 use App\Entity\Organizacion;
 use App\Entity\Voluntario;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,8 +18,13 @@ class UnifiedUserProvider implements UserProviderInterface
 
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        // 1. Try to find a Voluntario
-        $user = $this->entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $identifier]);
+        // 0. Try to find an Administrador (Highest priority)
+        $user = $this->entityManager->getRepository(Administrador::class)->findOneBy(['email' => $identifier]);
+
+        // 1. If not found, try to find a Voluntario
+        if (!$user) {
+            $user = $this->entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $identifier]);
+        }
 
         // 2. If not found, try to find an Organizacion
         if (!$user) {
@@ -26,7 +32,7 @@ class UnifiedUserProvider implements UserProviderInterface
         }
 
         if (!$user) {
-            throw new UserNotFoundException(sprintf('User with email "%s" not found in Voluntarios or Organizaciones.', $identifier));
+            throw new UserNotFoundException(sprintf('User with email "%s" not found in Administradores, Voluntarios or Organizaciones.', $identifier));
         }
 
         return $user;
@@ -41,6 +47,6 @@ class UnifiedUserProvider implements UserProviderInterface
 
     public function supportsClass(string $class): bool
     {
-        return $class === Voluntario::class || $class === Organizacion::class;
+        return $class === Administrador::class || $class === Voluntario::class || $class === Organizacion::class;
     }
 }

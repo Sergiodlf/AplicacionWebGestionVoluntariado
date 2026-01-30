@@ -71,6 +71,9 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20)]
     private ?string $estadoVoluntario = 'PENDIENTE';
 
+    #[ORM\Column(name: 'FCM_TOKEN', length: 255, nullable: true)]
+    private ?string $fcmToken = null;
+
     #[ORM\OneToMany(mappedBy: 'voluntario', targetEntity: Inscripcion::class, orphanRemoval: true)]
     private Collection $inscripciones;
 
@@ -211,6 +214,9 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
     public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }
+    
+    public function getFcmToken(): ?string { return $this->fcmToken; }
+    public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }
 
     public function addInscripcion(Inscripcion $inscripcion): static
     {

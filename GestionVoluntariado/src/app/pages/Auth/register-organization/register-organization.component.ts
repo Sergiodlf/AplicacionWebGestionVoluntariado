@@ -23,48 +23,23 @@ export class RegisterOrganizationComponent {
     ) { }
 
     onRegistrationSuccess(org: any) {
-        console.log('Registrando organización:', org);
+        console.log('Registrando organización (Backend Direct):', org);
 
-        // 1. Register in Firebase (also sends verification email)
         this.authService.isRegistrationInProgress = true;
-        this.authService.register(org.email, org.password)
-            .then(() => {
-                const currentUser = this.authService.getCurrentUser();
-                if (currentUser) {
-                    // 2. Save Role to Firestore (for Android compatibility)
-                    this.authService.saveUserRole(currentUser.uid, org.email, 'organizacion')
-                        .then(() => {
-                            // 3. Register in Backend
-                            this.organizationService.createOrganization(org).subscribe({
-                                next: () => {
-                                    alert('Organización registrada con éxito. Se ha enviado un correo de verificación.');
-                                    this.authService.isRegistrationInProgress = false;
-                                    this.router.navigate(['/login']);
-                                },
-                                error: (error) => {
-                                    console.error('Error during backend registration:', error);
-                                    this.authService.isRegistrationInProgress = false;
-                                    alert('Error en el registro del backend: ' + (error.error?.error || 'Inténtalo de nuevo.'));
-                                }
-                            });
-                        })
-                        .catch((error) => {
-                            console.error('Error saving role to Firestore:', error);
-                            this.authService.isRegistrationInProgress = false;
-                            alert('Error guardando datos de usuario: ' + error.message);
-                        });
-                }
-            })
-            .catch((error) => {
-                console.error('Error during Firebase registration:', error);
+
+        // DIRECT BACKEND REGISTRATION (Thin Client)
+        this.organizationService.createOrganization(org).subscribe({
+            next: () => {
+                alert('Organización registrada con éxito. Se ha enviado un correo de verificación.');
                 this.authService.isRegistrationInProgress = false;
-                if (error.code === 'auth/email-already-in-use') {
-                    alert('El correo electrónico ya está en uso.');
-                } else if (error.code === 'auth/weak-password') {
-                    alert('La contraseña es muy débil (mínimo 6 caracteres).');
-                } else {
-                    alert('Error en el registro de Firebase: ' + error.message);
-                }
-            });
+                this.router.navigate(['/login']);
+            },
+            error: (error) => {
+                console.error('Error during backend registration:', error);
+                this.authService.isRegistrationInProgress = false;
+                const backendMsg = error.error?.error || 'Inténtalo de nuevo.';
+                alert('Error en el registro: ' + backendMsg);
+            }
+        });
     }
 }

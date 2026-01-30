@@ -14,15 +14,18 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 use App\Service\InscripcionService;
+use App\Service\NotificationService;
 
 #[Route('/api/inscripciones', name: 'api_inscripciones_')]
 class InscripcionController extends AbstractController
 {
     private $inscripcionService;
+    private $notificationService;
 
-    public function __construct(InscripcionService $inscripcionService)
+    public function __construct(InscripcionService $inscripcionService, NotificationService $notificationService)
     {
         $this->inscripcionService = $inscripcionService;
+        $this->notificationService = $notificationService;
     }
 
 
@@ -233,6 +236,37 @@ class InscripcionController extends AbstractController
 
         try {
             $em->flush();
+            
+            // --- NOTIFICACIONES ---
+            try {
+                $voluntario = $inscripcion->getVoluntario();
+                $actividad = $inscripcion->getActividad();
+                $actividadNombre = $actividad ? $actividad->getNombre() : 'Actividad';
+                $estadoUpper = strtoupper($nuevoEstado);
+                $titulo = null;
+                $cuerpo = null;
+
+                if ($estadoUpper === 'CONFIRMADO' || $estadoUpper === 'ACEPTADO') {
+                    $titulo = "¡Solicitud Aceptada!";
+                    $cuerpo = "Has sido aceptado en la actividad: " . $actividadNombre;
+                } elseif ($estadoUpper === 'RECHAZADO') {
+                    $titulo = "Solicitud Actualizada";
+                    $cuerpo = "El estado de tu solicitud para " . $actividadNombre . " ha cambiado a " . $estadoUpper;
+                }
+
+                if ($titulo && $voluntario) {
+                    $this->notificationService->sendToUser(
+                        $voluntario, 
+                        $titulo, 
+                        $cuerpo, 
+                        ['click_action' => 'FLUTTER_NOTIFICATION_CLICK', 'id_inscripcion' => (string)$id]
+                    );
+                }
+            } catch (\Exception $e) {
+                // Ignoramos errores de notificación para no fallar la respuesta HTTP
+                // (Idealmente loguear esto)
+            }
+
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error al actualizar el estado'], 500);
         }

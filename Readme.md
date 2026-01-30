@@ -55,15 +55,20 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 
 ## Usuarios de Prueba
 
-Para facilitar las pruebas de la aplicación y validar los diferentes niveles de acceso, se proporcionan los siguientes usuarios predeterminados:
 
-| Rol | Email | Contraseña |
-| :--- | :--- | :--- |
-| **Voluntario** | `garinovoselskyyjaka@gmail.com` | `adiosBola*` |
-| **Organización** | `g@gmail.com` | `1234567890` |
-| **Admin** | `admin@admin.com` | `adminTest` |
+### Generación Automática
+Puedes generar estos usuarios (verificados y listos para usar) ejecutando en el backend:
+```bash
+php bin/console app:create-test-users
+```
 
-> **Nota:** Estos usuarios deben utilizarse únicamente en el entorno de desarrollo local para verificar la lógica de permisos y el flujo de trabajo del sistema.
+| Rol | Email | Contraseña | Estado |
+| :--- | :--- | :--- | :--- |
+| **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
+| **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
+| **Admin** | `admin@admin.com` | `adminTest` | (Legacy) |
+
+> **Nota:** Estos usuarios tienen el email verificado para poder hacer login inmediatamente sin necesidad de enviar correos reales.
 
 ---
 

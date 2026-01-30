@@ -11,21 +11,22 @@ class OrganizationService
 {
     private $entityManager;
     private $passwordHasher;
-    private $firebaseAuth;
+    private $notificationService; // NEW
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         UserPasswordHasherInterface $passwordHasher,
-        \Kreait\Firebase\Contract\Auth $firebaseAuth
+        \Kreait\Firebase\Contract\Auth $firebaseAuth,
+        NotificationService $notificationService // INJECTED
     ) {
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->firebaseAuth = $firebaseAuth;
+        $this->notificationService = $notificationService;
     }
 
-    /**
-     * Checks if an organization with the given CIF or Email already exists.
-     */
+    // ... checkDuplicates and validateDTO remain unchanged ...
+
     public function checkDuplicates(string $cif, string $email): ?string
     {
         $repo = $this->entityManager->getRepository(Organizacion::class);
@@ -37,6 +38,50 @@ class OrganizationService
         }
         return null;
     }
+
+    public function validateDTO(RegistroOrganizacionDTO $dto): ?string
+    {
+        if (!$this->isValidCif($dto->cif)) {
+            return 'CIF inválido';
+        }
+        return null;
+    }
+
+    private function isValidCif(string $cif): bool
+    {
+        // ... (Keep existing implementation logic) ...
+         $cif = strtoupper(trim($cif));
+        if (!preg_match('/^[ABCDEFGHJKLMNPQRSUVW][0-9]{7}[0-9A-J]$/', $cif)) {
+            return false;
+        }
+
+        $letters = 'JABCDEFGHI';
+        $digits = substr($cif, 1, 7);
+        $letter = $cif[0];
+        $control = $cif[8];
+
+        $sum = 0;
+        for ($i = 0; $i < 7; $i++) {
+            $digit = (int)$digits[$i];
+            if ($i % 2 === 0) {
+                $temp = $digit * 2;
+                $sum += $temp > 9 ? $temp - 9 : $temp;
+            } else {
+                $sum += $digit;
+            }
+        }
+
+        $lastDigitSum = $sum % 10;
+        $controlDigit = $lastDigitSum === 0 ? 0 : 10 - $lastDigitSum;
+
+        if (is_numeric($control)) {
+            return (int)$control === $controlDigit;
+        }
+
+        $calculatedLetter = $letters[$controlDigit];
+        return $control === $calculatedLetter;
+    }
+
 
     /**
      * Registers a new organization.
@@ -59,6 +104,19 @@ class OrganizationService
                 
                 // Set custom claims (rol: organizacion)
                 $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'organizacion']);
+
+                // --- NEW: SEND VERIFICATION EMAIL ---
+                try {
+                    $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
+                    $this->notificationService->sendEmail(
+                        $dto->email,
+                        'Verifica tu correo - Gestión Voluntariado',
+                        sprintf('<p>Hola %s,</p><p>Gracias por registrar tu organización. Por favor verifica tu correo en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
+                    );
+                } catch (\Throwable $e) {
+                    error_log("Error sending verification email (Org): " . $e->getMessage());
+                }
+                // ------------------------------------
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
                 // Si el email ya existe en Firebase, lanzamos error para avisar al usuario

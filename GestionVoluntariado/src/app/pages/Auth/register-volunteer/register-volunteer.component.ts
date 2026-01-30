@@ -39,53 +39,29 @@ export class RegisterVolunteerComponent {
       disponibilidad: volunteerData.disponibilidad || []
     };
 
-    console.log('Registering volunteer:', mappedVolunteer);
+    console.log('Registering volunteer (Backend Direct):', mappedVolunteer);
 
-    // 1. Register in Firebase (also sends verification email)
     this.authService.isRegistrationInProgress = true;
-    this.authService.register(mappedVolunteer.email, mappedVolunteer.password)
-      .then(() => {
-        const currentUser = this.authService.getCurrentUser();
-        if (currentUser) {
-          // 2. Save Role to Firestore (for Android compatibility)
-          // Note: Android LoginFragment checks 'usuarios' collection and 'rol' field.
-          this.authService.saveUserRole(currentUser.uid, mappedVolunteer.email, 'voluntario')
-            .then(() => {
-              // 3. Register in Backend
-              this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
-                next: () => {
-                  this.notificationService.showSuccessPopup(
-                    'Registro completado',
-                    'Tu cuenta ha sido creada con éxito. Se ha enviado un correo de verificación.'
-                  ).then(() => {
-                    this.authService.isRegistrationInProgress = false;
-                    this.router.navigate(['/login']);
-                  });
-                },
-                error: (error) => {
-                  console.error('Error during backend registration:', error);
-                  this.authService.isRegistrationInProgress = false;
-                  this.notificationService.showError('Error en el registro del backend: ' + (error.error?.error || 'Inténtalo de nuevo.'));
-                }
-              });
-            })
-            .catch((error) => {
-              console.error('Error saving role to Firestore:', error);
-              this.authService.isRegistrationInProgress = false;
-              this.notificationService.showError('Error guardando datos de usuario: ' + error.message);
-            });
-        }
-      })
-      .catch((error) => {
-        console.error('Error during Firebase registration:', error);
+
+    // DIRECT BACKEND REGISTRATION (Thin Client)
+    // The backend handles validation and Firebase creation.
+    this.volunteerService.createVolunteer(mappedVolunteer).subscribe({
+      next: () => {
+        this.notificationService.showSuccessPopup(
+          'Registro completado',
+          'Tu cuenta ha sido creada con éxito. Se ha enviado un correo de verificación.'
+        ).then(() => {
+          this.authService.isRegistrationInProgress = false;
+          this.router.navigate(['/login']);
+        });
+      },
+      error: (error) => {
+        console.error('Error during backend registration:', error);
         this.authService.isRegistrationInProgress = false;
-        if (error.code === 'auth/email-already-in-use') {
-          this.notificationService.showError('El correo electrónico ya está en uso.');
-        } else if (error.code === 'auth/weak-password') {
-          this.notificationService.showError('La contraseña es muy débil (mínimo 6 caracteres).');
-        } else {
-          this.notificationService.showError('Error en el registro de Firebase: ' + error.message);
-        }
-      });
+        // Display validation error from backend (e.g. "DNI/NIE inválido", "Debes tener al menos 16 años")
+        const backendMsg = error.error?.error || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error en el registro: ' + backendMsg);
+      }
+    });
   }
 }
