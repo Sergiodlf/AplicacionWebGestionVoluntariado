@@ -62,9 +62,9 @@ Ejemplo de contenido para `.env.local`:
 # Configuración Real de Base de Datos
 DATABASE_URL="mysql://root:tu_password@127.0.0.1:3306/nombre_bbdd?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
 
-# Configuración Real de Correo (Ejemplo con Gmail)
-# Si no lo configuras, el sistema usará null://null (no enviará correos)
-MAILER_DSN=gmail://tu_correo@gmail.com:tu_contraseña_de_aplicacion@default
+# Configuración de Correo (Cuenta Compartida)
+# Usar el correo del proyecto. ¡Pedir contraseña por el grupo de WhatsApp/Discord!
+MAILER_DSN=gmail://notificaciones4v@gmail.com:LA_CONTRASEÑA_DEL_GRUPO@default
 ```
 
 ---
