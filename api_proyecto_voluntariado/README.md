@@ -47,13 +47,32 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 
 ---
 
-## 4. Base de Datos
+---
+
+## 4. Configuración del Entorno (.env)
+
+El archivo `.env` incluido en el repositorio tiene valores por defecto seguros. Para configurar tu entorno local (base de datos, correo, etc.) **NO edites el archivo `.env` directamente**.
+
+1. Crea un archivo llamado `.env.local` en la raíz de `api_proyecto_voluntariado/`.
+2. Sobrescribe las variables que necesites. Este archivo es ignorado por Git, así que puedes poner tus contraseñas reales.
+
+Ejemplo de contenido para `.env.local`:
+
+```bash
+# Configuración Real de Base de Datos
+DATABASE_URL="mysql://root:tu_password@127.0.0.1:3306/nombre_bbdd?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
+
+# Configuración Real de Correo (Ejemplo con Gmail)
+# Si no lo configuras, el sistema usará null://null (no enviará correos)
+MAILER_DSN=gmail://tu_correo@gmail.com:tu_contraseña_de_aplicacion@default
+```
+
+---
+
+## 5. Base de Datos
 
 1. Asegúrate de que MySQL está corriendo (XAMPP).
-2. Configura tu conexión en el archivo `.env`:
-   ```bash
-   DATABASE_URL="mysql://root:@127.0.0.1:3306/nombre_bbdd?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
-   ```
+2. Ten configurada tu `DATABASE_URL` en el `.env.local` (ver paso anterior).
 3. Crea la base de datos y las tablas:
    ```bash
    php bin/console doctrine:database:create
@@ -62,11 +81,10 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 4. Cargar datos de prueba (opcional)
    ```bash
    php bin/console doctrine:fixtures:load
-   ``` 
-
+   ```
 ---
 
-## 5. Iniciar Servidor
+## 6. Iniciar Servidor
 
 Para iniciar el servidor de desarrollo de Symfony:
 
@@ -81,7 +99,7 @@ php -S 127.0.0.1:8000 -t public
 
 ---
 
-## 6. Usuarios de Prueba y Verificación
+## 7. Usuarios de Prueba y Verificación
 
 ### Arquitectura "Thin Client" y Emails
 Este proyecto utiliza una arquitectura donde el Backend gestiona la lógica crítica.
