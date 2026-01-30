@@ -1,0 +1,12 @@
+--- Firewall Token Check ---
+Error: Validate Token Failed: The value 'invalid_token' is not a verified ID token:
+- The token is invalidThe JWT string must have two dots
+
+--- Firewall Token Check ---
+Error: Validate Token Failed: The value 'invalid_token' is not a verified ID token:
+- The token is invalidThe JWT string must have two dots
+
+--- Firewall Token Check ---
+Error: Validate Token Failed: The value 'invalid_token' is not a verified ID token:
+- The token is invalidThe JWT string must have two dots
+
