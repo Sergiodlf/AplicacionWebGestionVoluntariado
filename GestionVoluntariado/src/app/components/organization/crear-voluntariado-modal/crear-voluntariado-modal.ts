@@ -2,10 +2,12 @@ import { Component, EventEmitter, Output, Input, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
-import { CategoryService, ODS, Category } from '../../../services/category.service';
+import { CategoryService } from '../../../services/category.service';
 import { OrganizationService } from '../../../services/organization.service';
 import { NotificationService } from '../../../services/notification.service';
 import { Organization } from '../../../models/organizationModel';
+import { ODS } from '../../../models/ODS';
+import { Category } from '../../../models/Category';
 
 @Component({
   selector: 'app-crear-voluntariado-modal',

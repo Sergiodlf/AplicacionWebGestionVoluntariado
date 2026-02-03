@@ -2,7 +2,8 @@ import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { VolunteerService } from '../../../services/volunteer.service';
-import { CategoryService, Category } from '../../../services/category.service';
+import { CategoryService } from '../../../services/category.service';
+import { Category } from '../../../models/Category';
 
 @Component({
   selector: 'app-volunteer-form',

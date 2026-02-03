@@ -4,7 +4,7 @@ import { Component, EventEmitter, Output, Input, OnInit, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { OrganizationService } from '../../../services/organization.service';
-import { Organization, OrganizationCreateData } from '../../../models/organizationModel';
+import { Organization } from '../../../models/organizationModel';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({

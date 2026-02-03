@@ -5,12 +5,12 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
 import { FormsModule } from '@angular/forms';
 import { StatusToggleComponent } from '../../../components/Global-Components/status-toggle/status-toggle.component';
 import { VolunteeringCardComponent } from '../../../components/Administrator/Volunteers/volunteering-card/volunteering-card.component';
-import { VoluntariadoService, Voluntariado } from '../../../services/voluntariado-service';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { CrearVoluntariadoModal } from '../../../components/organization/crear-voluntariado-modal/crear-voluntariado-modal';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
-import { CategoryService, Category } from '../../../services/category.service';
+import { CategoryService } from '../../../services/category.service';
 import { NotificationService } from '../../../services/notification.service';
-import { forkJoin } from 'rxjs';
+import { Category } from '../../../models/Category';
 
 @Component({
   selector: 'app-activities',
@@ -20,7 +20,6 @@ import { forkJoin } from 'rxjs';
     FormsModule,
     StatusToggleComponent,
     VolunteeringCardComponent,
-    Navbar,
     SidebarComponent,
     CrearVoluntariadoModal,
     CreateMatchModalComponent

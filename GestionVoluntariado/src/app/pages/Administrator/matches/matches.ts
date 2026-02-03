@@ -18,7 +18,6 @@ import { NotificationService } from '../../../services/notification.service';
     StatusToggleComponent,
     MatchCardComponent,
     CreateMatchModalComponent,
-    Navbar,
     SidebarComponent
   ],
   templateUrl: './matches.html',

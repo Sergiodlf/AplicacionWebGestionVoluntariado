@@ -1,16 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { StatCard } from '../../../components/Administrator/Dashboard/stat-card/stat-card';
-import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { CommonModule } from '@angular/common';
-import { DashboardService, DashboardMetrics } from '../../../services/dashboard.service';
+import { DashboardService } from '../../../services/dashboard.service';
+import { DashboardMetrics } from '../../../models/DashboardMetrics';
 
 
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SidebarComponent, StatCard, Navbar],
+  imports: [CommonModule, SidebarComponent, StatCard],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

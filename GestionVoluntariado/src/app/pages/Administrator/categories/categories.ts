@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
-import { CategoryService, Category } from '../../../services/category.service';
+import { CategoryService } from '../../../services/category.service';
+import { Category } from '../../../models/Category';
 
 @Component({
     selector: 'app-categories',
     standalone: true,
-    imports: [CommonModule, FormsModule, Navbar, SidebarComponent],
+    imports: [CommonModule, FormsModule, SidebarComponent],
     templateUrl: './categories.html',
     styleUrl: './categories.css'
 })

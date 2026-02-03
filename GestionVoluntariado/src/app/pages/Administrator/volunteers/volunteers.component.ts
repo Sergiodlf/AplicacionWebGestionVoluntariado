@@ -23,7 +23,6 @@ import { SidebarComponent } from '../../../components/Administrator/Sidebar/side
     VolunteerCardComponent,
     VolunteerFormComponent,
     CreateMatchModalComponent,
-    Navbar,
     SidebarComponent,
   ],
   templateUrl: './volunteers.component.html',

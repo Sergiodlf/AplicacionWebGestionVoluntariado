@@ -15,7 +15,7 @@ import { filter, take } from 'rxjs/operators';
 @Component({
   selector: 'app-mis-voluntariados-organizacion',
   standalone: true,
-  imports: [CommonModule, Navbar, StatusToggleVoluntariado, VoluntariadoCard, CrearVoluntariadoModal, FormsModule],
+  imports: [CommonModule, StatusToggleVoluntariado, VoluntariadoCard, CrearVoluntariadoModal, FormsModule],
   templateUrl: './mis-voluntariados-organizacion.html',
   styleUrl: './mis-voluntariados-organizacion.css',
 })

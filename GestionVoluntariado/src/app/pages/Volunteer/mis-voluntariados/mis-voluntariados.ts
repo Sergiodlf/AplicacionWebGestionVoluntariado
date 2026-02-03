@@ -14,7 +14,6 @@ import { StatusToggleVoluntariado } from "../../../components/Volunteer/status-t
   imports: [
     CommonModule,
     FormsModule,
-    Navbar,
     SidebarVolunteer,
     VoluntariadoCard,
     StatusToggleVoluntariado

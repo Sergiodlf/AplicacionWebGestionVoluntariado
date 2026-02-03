@@ -3,14 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarVolunteer } from '../../../components/Volunteer/sidebar-volunteer/sidebar-volunteer';
-import { VoluntariadoService, Voluntariado } from '../../../services/voluntariado-service';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
 import { VoluntariadoCard } from '../../../components/Volunteer/voluntariado-card/voluntariado-card';
 import { NotificationService } from '../../../services/notification.service';
+import { Voluntariado } from '../../../models/Voluntariado';
 
 @Component({
   selector: 'app-voluntariados',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar, SidebarVolunteer, VoluntariadoCard],
+  imports: [CommonModule, FormsModule, SidebarVolunteer, VoluntariadoCard],
   templateUrl: './voluntariados.html',
   styleUrl: './voluntariados.css',
 })

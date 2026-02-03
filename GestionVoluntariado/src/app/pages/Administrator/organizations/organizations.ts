@@ -16,7 +16,6 @@ import { Subscription } from 'rxjs';
   imports: [
     CommonModule,
     FormsModule, // Added to fix ngModel
-    Navbar,
     SidebarComponent,
     StatusToggleComponent,
     OrganizationCardComponent,

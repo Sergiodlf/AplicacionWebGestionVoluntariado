@@ -1,10 +1,11 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { VolunteerService, Volunteer } from '../../../services/volunteer.service';
+import { VolunteerService } from '../../../services/volunteer.service';
 import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { Volunteer } from '../../../models/Volunteer';
 
 @Component({
   selector: 'app-profile',
