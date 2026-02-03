@@ -2,26 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
-
-export interface Voluntariado {
-  codAct: number;
-  nombre: string;
-  estado: string;
-  direccion: string;
-  maxParticipantes: number;
-  organizacion: string;
-  // Optional fields for UI mapping
-  organization?: string;
-  habilidades?: string;
-  fechaInicio?: string;
-  descripcion?: string;
-  // For UI structure compatibility
-  title?: string;
-  skills?: string[];
-  date?: string;
-  ciclo?: string;
-  ods?: any[];
-}
+import { Voluntariado } from '../models/Voluntariado';
 
 @Injectable({
   providedIn: 'root',

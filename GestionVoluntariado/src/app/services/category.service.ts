@@ -1,17 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
-
-export interface Category {
-    id: number;
-    nombre: string;
-}
-
-export interface ODS extends Category {
-    descripcion?: string;
-    color?: string;
-}
+import { tap } from 'rxjs/operators';4
+import { Category } from '../models/Category';
+import { ODS } from '../models/ODS';
 
 @Injectable({
     providedIn: 'root'

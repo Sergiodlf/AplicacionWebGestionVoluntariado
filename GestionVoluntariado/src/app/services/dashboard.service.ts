@@ -5,22 +5,7 @@ import { VolunteerService } from './volunteer.service';
 import { OrganizationService } from './organization.service';
 import { VoluntariadoService } from './voluntariado-service';
 import { CategoryService } from './category.service';
-
-export interface DashboardMetrics {
-    volunteersTotal: number;
-    volunteersPending: number;
-    organizationsTotal: number;
-    organizationsPending: number;
-    matchesTotal: number;
-    matchesAccepted: number;
-    matchesPending: number;
-    matchesCompleted: number;
-    activitiesActive: number;
-    activitiesPending: number;
-    activitiesCompleted: number;
-    acceptanceRate: number;
-    completionRate: number;
-}
+import { DashboardMetrics } from '../models/DashboardMetrics';
 
 @Injectable({
     providedIn: 'root'

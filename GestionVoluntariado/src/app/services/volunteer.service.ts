@@ -2,27 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { Voluntario } from '../models/voluntario';
-
-export interface Volunteer {
-  nombre: string;
-  apellido1: string;
-  email: string;
-  habilidades: any[];
-  disponibilidad: string[];
-  intereses: any[];
-  id?: number;
-  status: string;
-  dni?: string;
-  birthDate?: string;
-  experience?: string;
-  experiencia?: string; // Backend mapping
-  hasCar?: boolean;
-  coche?: boolean; // Backend mapping
-  languages?: any[];
-  zona?: string;
-  ciclo?: string;
-}
+import { Volunteer } from '../models/Volunteer';
 
 @Injectable({
   providedIn: 'root'
