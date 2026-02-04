@@ -22,7 +22,10 @@ final class Version20260204160540 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE ACTIVIDADES ADD SECTOR NVARCHAR(50)');
         $this->addSql('ALTER TABLE ACTIVIDADES ADD DESCRIPCION VARCHAR(MAX)');
-        $this->addSql('ALTER TABLE ORGANIZACIONES DROP CONSTRAINT UQ__ORGANIZA__161CF724435A488C');
+        
+        // Robustly drop the unique constraint (names are dynamic in SQL Server)
+        $this->addSql("DECLARE @constraint NVARCHAR(255) = (SELECT name FROM sys.objects WHERE type_desc = 'UNIQUE_CONSTRAINT' AND parent_object_id = OBJECT_ID('ORGANIZACIONES') AND name LIKE 'UQ__ORGANIZA%'); IF @constraint IS NOT NULL EXEC('ALTER TABLE ORGANIZACIONES DROP CONSTRAINT ' + @constraint)");
+
         $this->addSql('ALTER TABLE ORGANIZACIONES ADD FCM_TOKEN NVARCHAR(255)');
         $this->addSql('ALTER TABLE ORGANIZACIONES ALTER COLUMN CP CHAR(5) NOT NULL');
         $this->addSql('ALTER TABLE VOLUNTARIOS ADD FCM_TOKEN NVARCHAR(255)');
