@@ -22,19 +22,41 @@ class StatsController extends AbstractController
         $organizacionRepo = $em->getRepository(Organizacion::class);
         $inscripcionRepo = $em->getRepository(Inscripcion::class);
 
-        // 2. VOLUNTARIOS
-        $totalVoluntarios = $voluntarioRepo->count([]);
+        // 2. VOLUNTARIOS (Solo activos - ACEPTADO)
+        $totalVoluntarios = $voluntarioRepo->count(['estadoVoluntario' => 'ACEPTADO']);
         $voluntariosPendientes = $voluntarioRepo->count(['estadoVoluntario' => 'PENDIENTE']);
 
-        // 3. ORGANIZACIONES
-        $totalOrganizaciones = $organizacionRepo->count([]);
-        $organizacionesPendientes = $organizacionRepo->count(['estado' => 'pendiente']);
+        // 3. ORGANIZACIONES (Solo activas - ACEPTADA)
+        $totalOrganizaciones = $organizacionRepo->count(['estado' => 'ACEPTADA']);
+        $organizacionesPendientes = $organizacionRepo->count(['estado' => 'PENDIENTE']);
 
         // 4. ACTIVIDADES (PROJECTS)
         $actividadRepo = $em->getRepository(Actividad::class);
-        $totalActividades = $actividadRepo->count([]);
-        // Asumiendo que 'estadoAprobacion' = 'PENDIENTE' significa pendiente de moderación
-        $actividadesPendientes = $actividadRepo->count(['estadoAprobacion' => 'PENDIENTE']);
+        $now = new \DateTime();
+
+        // Total Actividades Visibles (Aceptadas, No Canceladas, No Pasadas)
+        $totalActividades = $actividadRepo->createQueryBuilder('a')
+            ->select('count(a.codActividad)')
+            ->where('a.estadoAprobacion = :aceptada')
+            ->andWhere('a.estado != :cancelado')
+            ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
+            ->setParameter('aceptada', 'ACEPTADA')
+            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Actividades Pendientes de moderación (No Canceladas, No Pasadas)
+        $actividadesPendientes = $actividadRepo->createQueryBuilder('a')
+            ->select('count(a.codActividad)')
+            ->where('a.estadoAprobacion = :pendiente')
+            ->andWhere('a.estado != :cancelado')
+            ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
+            ->setParameter('pendiente', 'PENDIENTE')
+            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         // 5. INSCRIPCIONES (MATCHES)
         // Definimos "Matches" como inscripciones exitosas o en proceso

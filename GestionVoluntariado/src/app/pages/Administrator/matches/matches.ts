@@ -80,7 +80,7 @@ export class MatchesComponent implements OnInit {
         this.applyFilters();
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading matches', err);
         this.isLoading = false;
       }
@@ -148,7 +148,7 @@ export class MatchesComponent implements OnInit {
         this.notificationService.showSuccess('Match aceptado correctamente');
         this.loadMatches(true);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error accepting match', err);
         this.notificationService.showError('Error al aceptar el match');
       }
@@ -165,7 +165,7 @@ export class MatchesComponent implements OnInit {
               this.notificationService.showSuccess('Match rechazado correctamente');
               this.loadMatches(true);
             },
-            error: (err) => {
+            error: (err: any) => {
               console.error('Error rejecting match', err);
               this.notificationService.showError('Error al rechazar el match');
             }
@@ -181,7 +181,7 @@ export class MatchesComponent implements OnInit {
         this.notificationService.showSuccess('Match completado correctamente');
         this.loadMatches(true);
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error completing match', err);
         this.notificationService.showError('Error al completar el match');
       }

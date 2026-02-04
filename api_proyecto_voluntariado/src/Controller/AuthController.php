@@ -14,11 +14,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use App\Security\UnifiedUserProvider;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 
 use App\Service\VolunteerService;
 
 use Kreait\Firebase\Contract\Auth;
-use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 
 use App\Service\OrganizationService;
 
@@ -28,19 +31,25 @@ class AuthController extends AbstractController
     private $volunteerService;
     private $organizationService;
     private $firebaseAuth;
-    private $notificationService; // NEW
+    private $notificationService;
+    private $httpClient;
+    private $unifiedUserProvider;
 
     public function __construct(
         VolunteerService $volunteerService, 
         OrganizationService $organizationService, 
         Auth $firebaseAuth,
-        \App\Service\NotificationService $notificationService // INJECTED
+        \App\Service\NotificationService $notificationService,
+        HttpClientInterface $httpClient,
+        UnifiedUserProvider $unifiedUserProvider
     )
     {
         $this->volunteerService = $volunteerService;
         $this->organizationService = $organizationService;
         $this->firebaseAuth = $firebaseAuth;
         $this->notificationService = $notificationService;
+        $this->httpClient = $httpClient;
+        $this->unifiedUserProvider = $unifiedUserProvider;
     }
     // =========================================================================
     // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
@@ -204,8 +213,269 @@ class AuthController extends AbstractController
     }
 
     // =========================================================================
-    // 3. LOGIN UNIFICADO (ELIMINADO - Usar Firebase)
+    // 3. LOGIN UNIFICADO (PROXY FIREBASE + VERIFICACIÓN DB LOCAL)
     // =========================================================================
+    #[Route('/login', name: 'login', methods: ['POST'])]
+    public function login(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $password = $data['password'] ?? null;
+
+        if (!$email || !$password) {
+            return $this->json(['error' => 'Email y contraseña requeridos'], 400);
+        }
+
+        // Obtener API KEY de variables de entorno
+        // Robust check: $_ENV -> $_SERVER -> getenv
+        $apiKey = $_ENV['FIREBASE_API_KEY'] ?? $_SERVER['FIREBASE_API_KEY'] ?? getenv('FIREBASE_API_KEY');
+        
+        if (!$apiKey) {
+            // Debugging: Log available keys to help diagnose why it's missing
+            $envKeys = implode(', ', array_keys($_ENV));
+            $serverKeys = implode(', ', array_keys($_SERVER));
+            error_log("FIREBASE_API_KEY missing. ENV keys: [$envKeys]. SERVER keys: [$serverKeys]");
+            
+            return $this->json(['error' => 'Error de configuración en servidor: Falta FIREBASE_API_KEY'], 500);
+        }
+
+        try {
+            // 1. Autenticar contra Firebase (REST API)
+            $response = $this->httpClient->request('POST', 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' . $apiKey, [
+                'json' => [
+                    'email' => $email,
+                    'password' => $password,
+                    'returnSecureToken' => true
+                ],
+                'headers' => [
+                    // Use the oficial Auth Domain which is always whitelisted
+                    'Referer' => 'https://proyecto-voluntariado-9c2d5.firebaseapp.com'
+                ]
+            ]);
+
+            // Si falla (4xx), lanzará excepción ClientExceptionInterface
+            $firebaseData = $response->toArray();
+            
+            // 2. Verificar existencia en Base de Datos Local
+            try {
+                $localUser = $this->unifiedUserProvider->loadUserByIdentifier($email);
+            } catch (UserNotFoundException $e) {
+                 return $this->json([
+                     'error' => 'Inconsistencia de cuenta.',
+                     'detalle' => 'El usuario existe en el sistema de autenticación pero no tiene perfil en la base de datos local.'
+                 ], 404);
+            }
+
+            // 2b. Validar estado del usuario (NO ADMINISTRADORES)
+            if ($localUser instanceof Voluntario) {
+                $estado = $localUser->getEstadoVoluntario();
+                // Permitimos ACEPTADO y LIBRE (que es el estado de las cuentas de prueba)
+                if ($estado !== 'ACEPTADO' && $estado !== 'LIBRE') {
+                    if ($estado === 'PENDIENTE') {
+                        return $this->json([
+                            'error' => 'Cuenta pendiente de aprobación',
+                            'message' => 'Tu cuenta está pendiente de aprobación. Por favor, espera a que un administrador revise tu solicitud.'
+                        ], 403);
+                    } elseif ($estado === 'RECHAZADO') {
+                        return $this->json([
+                            'error' => 'Cuenta rechazada',
+                            'message' => 'Tu cuenta ha sido rechazada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } elseif ($estado === 'BAJA') {
+                        return $this->json([
+                            'error' => 'Cuenta desactivada',
+                            'message' => 'Tu cuenta ha sido desactivada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } else {
+                        return $this->json([
+                            'error' => 'Acceso denegado',
+                            'message' => 'Tu cuenta no está activa. Estado: ' . $estado
+                        ], 403);
+                    }
+                }
+            } elseif ($localUser instanceof Organizacion) {
+                $estado = strtolower($localUser->getEstado());
+                if ($estado !== 'aprobado') {
+                    if ($estado === 'pendiente') {
+                        return $this->json([
+                            'error' => 'Organización pendiente de aprobación',
+                            'message' => 'Tu organización está pendiente de aprobación. Por favor, espera a que un administrador revise tu solicitud.'
+                        ], 403);
+                    } elseif ($estado === 'rechazada' || $estado === 'rechazado') {
+                        return $this->json([
+                            'error' => 'Organización rechazada',
+                            'message' => 'Tu organización ha sido rechazada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } else {
+                        return $this->json([
+                            'error' => 'Acceso denegado',
+                            'message' => 'Tu organización no está activa. Estado: ' . $estado
+                        ], 403);
+                    }
+                }
+            }
+            // Administradores siempre tienen acceso
+
+            // 2c. Obtener estado de verificación de email desde Firebase Admin SDK
+            $emailVerified = false;
+            try {
+                $firebaseUser = $this->firebaseAuth->getUser($firebaseData['localId']);
+                $emailVerified = $firebaseUser->emailVerified;
+            } catch (\Exception $e) {
+                error_log("Error getting user verification status: " . $e->getMessage());
+            }
+
+            // 3. Login Exitoso
+            return $this->json([
+                'message' => 'Login correcto',
+                'token' => $firebaseData['idToken'],
+                'refreshToken' => $firebaseData['refreshToken'],
+                'expiresIn' => $firebaseData['expiresIn'],
+                'localId' => $firebaseData['localId'],
+                'email' => $firebaseData['email'],
+                'emailVerified' => $emailVerified,
+                'rol' => $this->getUserRole($localUser) 
+            ]);
+
+        } catch (\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            // Manejo de errores de Firebase (400 Bad Request)
+            try {
+                $errorContent = $e->getResponse()->toArray(false);
+                $msg = $errorContent['error']['message'] ?? 'Error de autenticación';
+            } catch (\Exception $decodeEx) {
+                $msg = 'Error desconocido de autenticación';
+            }
+            
+            if (in_array($msg, ['EMAIL_NOT_FOUND', 'INVALID_PASSWORD', 'INVALID_LOGIN_CREDENTIALS'])) {
+                return $this->json(['error' => 'Credenciales inválidas'], 401);
+            }
+            if ($msg === 'USER_DISABLED') {
+                return $this->json(['error' => 'Usuario deshabilitado'], 403);
+            }
+            if ($msg === 'TOO_MANY_ATTEMPTS_TRY_LATER') {
+                return $this->json(['error' => 'Demasiados intentos. Inténtalo más tarde.'], 429);
+            }
+
+            return $this->json(['error' => 'Error de Firebase: ' . $msg], 400);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function getUserRole($user): string
+    {
+        if ($user instanceof \App\Entity\Administrador) return 'admin';
+        if ($user instanceof \App\Entity\Voluntario) return 'voluntario';
+        if ($user instanceof \App\Entity\Organizacion) return 'organizacion';
+        return 'unknown';
+    }
+
+    // =========================================================================
+    // 3.5 LOGIN CON GOOGLE (Verificación de Token + Check DB)
+    // =========================================================================
+    #[Route('/login/google', name: 'login_google', methods: ['POST'])]
+    public function loginGoogle(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $token = $data['token'] ?? null;
+
+        if (!$token) {
+            return $this->json(['error' => 'Token de Firebase requerido'], 400);
+        }
+
+        try {
+            // 1. Verificar el token con Firebase Admin SDK
+            $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
+            $claims = $verifiedIdToken->claims();
+            $email = $claims->get('email');
+            $uid = $claims->get('sub');
+            $emailVerified = $claims->get('email_verified');
+
+            if (!$email) {
+                return $this->json(['error' => 'El token no contiene un email válido'], 400);
+            }
+
+            // 2. Verificar existencia en Base de Datos Local
+            try {
+                $localUser = $this->unifiedUserProvider->loadUserByIdentifier($email);
+            } catch (UserNotFoundException $e) {
+                 return $this->json([
+                     'error' => 'Usuario no registrado',
+                     'message' => 'No existe una cuenta vinculada a este correo de Google. Por favor, regístrate primero.',
+                     'email' => $email, 
+                     'uid' => $uid
+                 ], 404);
+            }
+
+            // 2b. Validar estado del usuario (NO ADMINISTRADORES)
+            if ($localUser instanceof Voluntario) {
+                $estado = $localUser->getEstadoVoluntario();
+                // Permitimos ACEPTADO y LIBRE (que es el estado de las cuentas de prueba)
+                if ($estado !== 'ACEPTADO' && $estado !== 'LIBRE') {
+                    if ($estado === 'PENDIENTE') {
+                        return $this->json([
+                            'error' => 'Cuenta pendiente de aprobación',
+                            'message' => 'Tu cuenta está pendiente de aprobación. Por favor, espera a que un administrador revise tu solicitud.'
+                        ], 403);
+                    } elseif ($estado === 'RECHAZADO') {
+                        return $this->json([
+                            'error' => 'Cuenta rechazada',
+                            'message' => 'Tu cuenta ha sido rechazada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } elseif ($estado === 'BAJA') {
+                        return $this->json([
+                            'error' => 'Cuenta desactivada',
+                            'message' => 'Tu cuenta ha sido desactivada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } else {
+                        return $this->json([
+                            'error' => 'Acceso denegado',
+                            'message' => 'Tu cuenta no está activa. Estado: ' . $estado
+                        ], 403);
+                    }
+                }
+            } elseif ($localUser instanceof Organizacion) {
+                $estado = strtolower($localUser->getEstado());
+                if ($estado !== 'aprobado') {
+                    if ($estado === 'pendiente') {
+                        return $this->json([
+                            'error' => 'Organización pendiente de aprobación',
+                            'message' => 'Tu organización está pendiente de aprobación. Por favor, espera a que un administrador revise tu solicitud.'
+                        ], 403);
+                    } elseif ($estado === 'rechazada' || $estado === 'rechazado') {
+                        return $this->json([
+                            'error' => 'Organización rechazada',
+                            'message' => 'Tu organización ha sido rechazada. Contacta con el administrador para más información.'
+                        ], 403);
+                    } else {
+                        return $this->json([
+                            'error' => 'Acceso denegado',
+                            'message' => 'Tu organización no está activa. Estado: ' . $estado
+                        ], 403);
+                    }
+                }
+            }
+            // Administradores siempre tienen acceso
+
+            // 3. Login Exitoso 
+            return $this->json([
+                'message' => 'Login correcto (Google)',
+                'token' => $token, 
+                'refreshToken' => null, 
+                'expiresIn' => 3600, 
+                'localId' => $uid,
+                'email' => $email,
+                'emailVerified' => $emailVerified,
+                'rol' => $this->getUserRole($localUser)
+            ]);
+
+        } catch (FailedToVerifyToken $e) {
+            return $this->json(['error' => 'Token inválido o expirado: ' . $e->getMessage()], 401);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => 'Error interno al verificar Google Login: ' . $e->getMessage()], 500);
+        }
+    }
     
     // =========================================================================
     // 4. FORGOT PASSWORD (UNIFICADO)

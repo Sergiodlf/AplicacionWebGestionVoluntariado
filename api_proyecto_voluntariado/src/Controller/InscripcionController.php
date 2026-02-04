@@ -235,20 +235,57 @@ class InscripcionController extends AbstractController
         $inscripcion->setEstado(strtoupper($nuevoEstado));
 
         try {
+            file_put_contents('debug_notification.txt', "--- START TRANSACTION: Update Status to $nuevoEstado ---\n", FILE_APPEND);
             $em->flush();
+            file_put_contents('debug_notification.txt', "Flush success.\n", FILE_APPEND);
             
             // --- NOTIFICACIONES ---
             try {
                 $voluntario = $inscripcion->getVoluntario();
                 $actividad = $inscripcion->getActividad();
                 $actividadNombre = $actividad ? $actividad->getNombre() : 'Actividad';
-                $estadoUpper = strtoupper($nuevoEstado);
+                $estadoUpper = strtoupper(trim($nuevoEstado));
                 $titulo = null;
                 $cuerpo = null;
 
+                // DEBUG LOGGING (DETAILED)
+                $debugMsg = "--- UPDATE ESTADO: '$estadoUpper' (Len: " . strlen($estadoUpper) . ") ---\n";
+                $debugMsg .= "Match CONFIRMADO? " . ($estadoUpper === 'CONFIRMADO' ? 'YES' : 'NO') . "\n";
+                $debugMsg .= "Match ACEPTADO? " . ($estadoUpper === 'ACEPTADO' ? 'YES' : 'NO') . "\n";
+                file_put_contents('debug_notification.txt', $debugMsg, FILE_APPEND);
+                
                 if ($estadoUpper === 'CONFIRMADO' || $estadoUpper === 'ACEPTADO') {
-                    $titulo = "¡Solicitud Aceptada!";
-                    $cuerpo = "Has sido aceptado en la actividad: " . $actividadNombre;
+                     try {
+                        file_put_contents('debug_notification.txt', "Entered IF block.\n", FILE_APPEND);
+                        
+                        $volId = $voluntario ? $voluntario->getDni() : 'NULL';
+                        file_put_contents('debug_notification.txt', "Voluntario DNI resolved: $volId\n", FILE_APPEND);
+
+                        $titulo = "¡Solicitud Aceptada!";
+                        $cuerpo = "Un administrador ha aceptado tu solicitud de voluntariado. Toca para ver más detalles.";
+                        
+                        if ($voluntario) {
+                            $this->notificationService->sendToUser(
+                                $voluntario, 
+                                $titulo, 
+                                $cuerpo, 
+                                [
+                                    'title' => $titulo,
+                                    'body' => $cuerpo,
+                                    'type' => 'MATCH_ACCEPTED',
+                                    'matchId' => (string)$id,
+                                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
+                                ]
+                            );
+                            file_put_contents('debug_notification.txt', "NotificationService called successfully.\n", FILE_APPEND);
+                        } else {
+                            file_put_contents('debug_notification.txt', "WARNING: No volunteer associated.\n", FILE_APPEND);
+                        }
+                        // Prevent generic sending block below
+                        $titulo = null; 
+                    } catch (\Throwable $e) {
+                        file_put_contents('debug_notification.txt', "CRITICAL ERROR inside notification block: " . $e->getMessage() . "\n", FILE_APPEND);
+                    }
                 } elseif ($estadoUpper === 'RECHAZADO') {
                     $titulo = "Solicitud Actualizada";
                     $cuerpo = "El estado de tu solicitud para " . $actividadNombre . " ha cambiado a " . $estadoUpper;
@@ -268,6 +305,7 @@ class InscripcionController extends AbstractController
             }
 
         } catch (\Exception $e) {
+            file_put_contents('debug_notification.txt', "ERROR IN TRANSACTION: " . $e->getMessage() . "\n", FILE_APPEND);
             return $this->json(['error' => 'Error al actualizar el estado'], 500);
         }
 

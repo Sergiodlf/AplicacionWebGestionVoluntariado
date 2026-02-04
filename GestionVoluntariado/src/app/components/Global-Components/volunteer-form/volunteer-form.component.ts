@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { VolunteerService } from '../../../services/volunteer.service';
@@ -12,7 +12,7 @@ import { Category } from '../../../models/Category';
   templateUrl: './volunteer-form.component.html',
   styleUrl: './volunteer-form.component.css'
 })
-export class VolunteerFormComponent implements OnInit {
+export class VolunteerFormComponent implements OnInit, OnChanges {
   @Input() submitLabel: string = 'Registrarme';
   @Input() isModal: boolean = true;
   @Input() isEdit: boolean = false;
@@ -72,6 +72,13 @@ export class VolunteerFormComponent implements OnInit {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    // React to initialData changes
+    if (changes['initialData'] && !changes['initialData'].firstChange) {
+      this.loadInitialData();
+    }
+  }
+
   private initForm() {
     this.volunteerForm = this.fb.group({
       nombreCompleto: ['', this.isEdit ? [] : Validators.required],
@@ -93,17 +100,34 @@ export class VolunteerFormComponent implements OnInit {
   private loadInitialData() {
     if (!this.isEdit || !this.initialData) return;
 
+    // Determine ciclo value - handle string, object, or null
+    let cicloValue = '';
+    if (this.initialData.ciclo) {
+      if (typeof this.initialData.ciclo === 'string') {
+        cicloValue = this.initialData.ciclo;
+      } else if (this.initialData.ciclo.nombre) {
+        cicloValue = this.initialData.ciclo.nombre;
+      }
+      
+      // Remove the (Xº) suffix if present to match dropdown options
+      // Backend returns "Administración y Finanzas (2º)"
+      // But dropdown has "Administración y Finanzas"
+      cicloValue = cicloValue.replace(/\s*\(\d+º\)\s*$/, '').trim();
+    }
+
     // Direct field mapping
     this.volunteerForm.patchValue({
-      nombreCompleto: this.initialData.nombreCompleto || this.initialData.nombre + ' ' + (this.initialData.apellido1 || ''),
+      nombreCompleto: this.initialData.nombreCompleto || (this.initialData.nombre && this.initialData.apellido1 ? `${this.initialData.nombre} ${this.initialData.apellido1}`.trim() : ''),
       dni: this.initialData.dni,
       correo: this.initialData.correo || this.initialData.email,
       zona: this.initialData.zona,
-      ciclo: (this.initialData.ciclo && this.initialData.ciclo.nombre) ? this.initialData.ciclo.nombre : this.initialData.ciclo,
+      ciclo: cicloValue,
       fechaNacimiento: this.initialData.fechaNacimiento,
       experiencia: this.initialData.experiencia || this.initialData.experience,
-      coche: this.initialData.coche || (this.initialData.hasCar ? 'Si' : 'No')
+      coche: this.initialData.coche === true || this.initialData.coche === 'Si' || this.initialData.hasCar === true ? 'Si' : 
+             (this.initialData.coche === false || this.initialData.coche === 'No' || this.initialData.hasCar === false ? 'No' : this.initialData.coche)
     });
+
 
     // Habilidades mapping
     if (this.initialData.habilidades && this.availableSkills.length > 0) {
@@ -121,14 +145,14 @@ export class VolunteerFormComponent implements OnInit {
       this.volunteerForm.patchValue({ intereses: this.addedInterests.map(i => i.id) });
     }
 
-    // Idiomas mapping
-    if (this.initialData.idiomas && this.addedIdiomas.length === 0) {
+    // Idiomas mapping - always reload
+    if (this.initialData.idiomas) {
       this.addedIdiomas = [...this.initialData.idiomas];
       this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
     }
 
-    // Disponibilidad mapping
-    if (this.initialData.disponibilidad && this.addedAvailability.length === 0) {
+    // Disponibilidad mapping - always reload
+    if (this.initialData.disponibilidad) {
       this.addedAvailability = Array.isArray(this.initialData.disponibilidad)
         ? [...this.initialData.disponibilidad]
         : [this.initialData.disponibilidad];
@@ -215,7 +239,7 @@ export class VolunteerFormComponent implements OnInit {
           next: (response) => {
             this.onSubmit.emit(response);
           },
-          error: (err) => {
+          error: (err: any) => {
             this.errorMessage = 'Error al actualizar el perfil. Por favor, intente de nuevo.';
             console.error('Error updating profile:', err);
           }

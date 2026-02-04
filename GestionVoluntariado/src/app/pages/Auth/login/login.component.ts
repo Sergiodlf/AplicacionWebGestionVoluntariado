@@ -34,7 +34,7 @@ export class LoginComponent {
         console.log('Firebase login successful');
         this.loadUserProfile();
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Firebase login error:', error);
         this.isLoading = false;
         if (error.code === 'auth/invalid-email') {
@@ -78,7 +78,7 @@ export class LoginComponent {
         }
         // Note: We don't set isLoading = false here because we are navigating away.
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading profile:', err);
         this.isLoading = false;
         if (err.error && err.error.error === 'Voluntario no encontrado') {

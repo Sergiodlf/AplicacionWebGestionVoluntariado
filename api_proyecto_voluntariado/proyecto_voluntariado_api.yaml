@@ -12,7 +12,6 @@ paths:
   # AUTENTICACIÓN Y REGISTRO
   # ==========================================
 
-
   /auth/profile:
     post:
       tags:
@@ -31,7 +30,7 @@ paths:
                 email:
                   type: string
       responses:
-        '200':
+        "200":
           description: Perfil del usuario
           content:
             application/json:
@@ -42,9 +41,9 @@ paths:
                     type: string
                   datos:
                     type: object
-        '401':
+        "401":
           description: No autorizado
-        '404':
+        "404":
           description: Usuario no encontrado
     put:
       tags:
@@ -64,14 +63,12 @@ paths:
                 zona: "Norte"
                 habilidades: [1, 2]
       responses:
-        '200':
+        "200":
           description: Perfil actualizado correctamente
-        '401':
+        "401":
           description: No autorizado
-        '500':
+        "500":
           description: Error del servidor
-
-
 
   /auth/register/voluntario:
     post:
@@ -84,11 +81,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VoluntarioRegistro'
+              $ref: "#/components/schemas/VoluntarioRegistro"
       responses:
-        '201':
+        "201":
           description: Voluntario creado correctamente
-        '409':
+        "409":
           description: El DNI o Correo ya existen
 
   /auth/register/organizacion:
@@ -101,11 +98,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrganizacionRegistro'
+              $ref: "#/components/schemas/OrganizacionRegistro"
       responses:
-        '201':
+        "201":
           description: Organización creada correctamente
-        '409':
+        "409":
           description: El CIF o Email ya existen
 
   /organizations:
@@ -123,14 +120,14 @@ paths:
           required: false
           description: Filtrar organizaciones por su estado.
       responses:
-        '200':
+        "200":
           description: Lista recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OrganizacionDetalle'
+                  $ref: "#/components/schemas/OrganizacionDetalle"
     post:
       tags:
         - Organizaciones
@@ -141,17 +138,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrganizacionRegistro'
+              $ref: "#/components/schemas/OrganizacionRegistro"
       responses:
-        '201':
+        "201":
           description: Organización creada correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizacionDetalle'
-        '400':
+                $ref: "#/components/schemas/OrganizacionDetalle"
+        "400":
           description: Datos inválidos
-        '409':
+        "409":
           description: El CIF o Email ya existen
 
   /organizations/{cif}:
@@ -189,13 +186,13 @@ paths:
                 contacto:
                   type: string
       responses:
-        '200':
+        "200":
           description: Organización actualizada correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizacionDetalle'
-        '404':
+                $ref: "#/components/schemas/OrganizacionDetalle"
+        "404":
           description: Organización no encontrada
     delete:
       tags:
@@ -208,9 +205,9 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Organización eliminada (sin contenido)
-        '404':
+        "404":
           description: Organización no encontrada
 
   /organizations/{cif}/state:
@@ -239,15 +236,15 @@ paths:
                   enum: [pendiente, aprobado, rechazado]
                   example: "aprobado"
       responses:
-        '200':
+        "200":
           description: Estado actualizado correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizacionDetalle'
-        '400':
+                $ref: "#/components/schemas/OrganizacionDetalle"
+        "400":
           description: Estado inválido
-        '404':
+        "404":
           description: Organización no encontrada
 
   /voluntarios/email/{email}:
@@ -263,13 +260,13 @@ paths:
           required: true
           description: Correo electrónico del voluntario
       responses:
-        '200':
+        "200":
           description: Datos del voluntario.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VoluntarioDetalle'
-        '404':
+                $ref: "#/components/schemas/VoluntarioDetalle"
+        "404":
           description: Voluntario no encontrado.
 
   /organizations/by-email:
@@ -290,15 +287,15 @@ paths:
                   format: email
                   example: "organizacion@email.com"
       responses:
-        '200':
+        "200":
           description: Datos de la organización.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrganizacionDetalle'
-        '400':
+                $ref: "#/components/schemas/OrganizacionDetalle"
+        "400":
           description: Email requerido.
-        '404':
+        "404":
           description: Organización no encontrada.
 
   # ==========================================
@@ -325,15 +322,15 @@ paths:
           required: false
           description: Filtra las actividades por el visto bueno del organizador.
       responses:
-        '200':
+        "200":
           description: Lista de actividades con información detallada e inscripciones.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ActividadConInscripciones'
-        '404':
+                  $ref: "#/components/schemas/ActividadConInscripciones"
+        "404":
           description: Organización no encontrada.
 
   /actividades:
@@ -351,14 +348,14 @@ paths:
           required: false
           description: Filtrar actividades por su estado de aprobación.
       responses:
-        '200':
+        "200":
           description: Lista recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ActividadDetalle'
+                  $ref: "#/components/schemas/ActividadDetalle"
 
   /actividades/crear:
     post:
@@ -371,9 +368,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ActividadCreacion'
+              $ref: "#/components/schemas/ActividadCreacion"
       responses:
-        '201':
+        "201":
           description: Actividad creada exitosamente
 
   /actividades/{codActividad}/inscribir:
@@ -394,15 +391,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InscripcionRequest'
+              $ref: "#/components/schemas/InscripcionRequest"
       responses:
-        '201':
+        "201":
           description: Inscripción creada.
-        '404':
+        "404":
           description: Actividad o Voluntario no encontrado.
-        '409':
+        "409":
           description: Ya inscrito.
-
 
   /actividades/{id}/desinscribir:
     delete:
@@ -418,11 +414,11 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Te has desapuntado correctamente
-        '403':
+        "403":
           description: No autorizado (Token inválido)
-        '404':
+        "404":
           description: Actividad no encontrada o no estás inscrito en ella
 
   /actividades/{id}/estado:
@@ -453,11 +449,11 @@ paths:
                   enum: [ejecucion, aprobacion]
                   description: "Tipo de estado a cambiar (opcional)"
       responses:
-        '200':
+        "200":
           description: Estado actualizado.
-        '400':
+        "400":
           description: Estado inválido o faltante.
-        '404':
+        "404":
           description: Actividad no encontrada.
 
   # ==========================================
@@ -470,14 +466,14 @@ paths:
       summary: Listar todas las inscripciones pendientes
       description: Devuelve una lista de todas las inscripciones con estado PENDIENTE en el sistema.
       responses:
-        '200':
+        "200":
           description: Lista de pendientes recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InscripcionDetalle'
+                  $ref: "#/components/schemas/InscripcionDetalle"
     post:
       tags:
         - Inscripciones
@@ -488,21 +484,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InscripcionNueva'
+              $ref: "#/components/schemas/InscripcionNueva"
       responses:
-        '201':
+        "201":
           description: Inscripción creada correctamente
           content:
             application/json:
               example:
                 message: "Inscripción creada correctamente"
-        '400':
+        "400":
           description: Faltan datos o son inválidos
-        '404':
+        "404":
           description: Voluntario o Actividad no encontrados
-        '409':
+        "409":
           description: El voluntario ya está inscrito
-
 
   /inscripciones/{id}:
     delete:
@@ -518,11 +513,11 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Inscripción cancelada correctamente
-        '403':
+        "403":
           description: No tienes permiso
-        '404':
+        "404":
           description: Inscripción no encontrada
 
   /inscripciones/{id}/estado:
@@ -543,20 +538,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateEstadoRequest'
+              $ref: "#/components/schemas/UpdateEstadoRequest"
       responses:
-        '200':
+        "200":
           description: Estado actualizado correctamente
           content:
             application/json:
               example:
                 message: "Estado actualizado correctamente"
                 nuevo_estado: "CONFIRMADO"
-        '400':
+        "400":
           description: Estado inválido o falta campo
-        '404':
+        "404":
           description: Inscripción no encontrada
-
 
   /inscripciones/me:
     get:
@@ -573,15 +567,15 @@ paths:
             enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO]
           description: Estado de la inscripción (opcional)
       responses:
-        '200':
+        "200":
           description: Lista de inscripciones del usuario
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Inscripcion'
-        '401':
+                  $ref: "#/components/schemas/ActividadInscritaDetalle"
+        "401":
           description: No autenticado
 
   /inscripciones/voluntario/{dni}/actividades-aceptadas:
@@ -606,15 +600,15 @@ paths:
             enum: ["PENDIENTE", "EN_CURSO", "FINALIZADO"]
             example: "PENDIENTE"
       responses:
-        '200':
+        "200":
           description: Lista de actividades filtradas
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ActividadInscritaDetalle'
-        '404':
+                  $ref: "#/components/schemas/ActividadInscritaDetalle"
+        "404":
           description: Voluntario no encontrado
 
   /inscripciones/organizacion/{cif}:
@@ -636,18 +630,19 @@ paths:
           description: Filtrar por estado de la inscripción
           schema:
             type: string
-            enum: ["PENDIENTE", "CONFIRMADO", "RECHAZADO", "EN_CURSO", "FINALIZADO"]
+            enum:
+              ["PENDIENTE", "CONFIRMADO", "RECHAZADO", "EN_CURSO", "FINALIZADO"]
             example: "PENDIENTE"
       responses:
-        '200':
+        "200":
           description: Lista de inscripciones recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InscripcionOrganizacionDetalle'
-        '404':
+                  $ref: "#/components/schemas/InscripcionOrganizacionDetalle"
+        "404":
           description: Organización no encontrada
 
   /voluntarios:
@@ -665,14 +660,14 @@ paths:
           required: false
           description: Filtrar voluntarios por su estado en la plataforma.
       responses:
-        '200':
+        "200":
           description: Lista recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VoluntarioDetalle'
+                  $ref: "#/components/schemas/VoluntarioDetalle"
 
   /voluntarios/{dni}/estado:
     patch:
@@ -692,20 +687,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateEstadoRequest'
+              $ref: "#/components/schemas/UpdateEstadoRequest"
       responses:
-        '200':
+        "200":
           description: Estado actualizado correctamente
           content:
             application/json:
               example:
                 message: "Estado del voluntario actualizado correctamente"
                 nuevo_estado: "ACEPTADO"
-        '400':
+        "400":
           description: Estado inválido
-        '404':
+        "404":
           description: Voluntario no encontrado
-
 
   # ==========================================
   # CICLOS FORMATIVOS
@@ -717,14 +711,14 @@ paths:
       summary: Listar todos los ciclos formativos
       description: Devuelve la lista de ciclos y cursos disponibles para el registro de voluntarios.
       responses:
-        '200':
+        "200":
           description: Lista de ciclos recuperada con éxito
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CicloDetalle'
+                  $ref: "#/components/schemas/CicloDetalle"
 
   # ==========================================
   # ESTADÍSTICAS (DASHBOARD)
@@ -736,17 +730,16 @@ paths:
         - Estadísticas
       description: Devuelve los contadores de voluntarios, organizaciones y matches para el panel de control.
       responses:
-        '200':
+        "200":
           description: Estadísticas recuperadas correctamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DashboardStats'
+                $ref: "#/components/schemas/DashboardStats"
 
   # ==========================================
   # CATEGORÍAS (DATA MAESTRA)
   # ==========================================
-
 
   /categories/ods:
     get:
@@ -754,14 +747,14 @@ paths:
         - Categorías
       summary: Listar ODS
       responses:
-        '200':
+        "200":
           description: Lista de ODS
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ODS'
+                  $ref: "#/components/schemas/ODS"
 
   /categories/habilidades:
     get:
@@ -769,14 +762,14 @@ paths:
         - Categorías
       summary: Listar Habilidades
       responses:
-        '200':
+        "200":
           description: Lista de Habilidades
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Habilidad'
+                  $ref: "#/components/schemas/Habilidad"
     post:
       tags:
         - Categorías
@@ -793,9 +786,9 @@ paths:
                   type: string
                   example: "Primeros Auxilios"
       responses:
-        '201':
+        "201":
           description: Habilidad creada exitosamente
-        '400':
+        "400":
           description: Nombre inválido o vacío
 
   /categories/habilidades/{id}:
@@ -810,9 +803,9 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Habilidad eliminada exitosamente
-        '404':
+        "404":
           description: Habilidad no encontrada
 
   /categories/intereses:
@@ -821,14 +814,14 @@ paths:
         - Categorías
       summary: Listar Intereses
       responses:
-        '200':
+        "200":
           description: Lista de Intereses
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Interes'
+                  $ref: "#/components/schemas/Interes"
     post:
       tags:
         - Categorías
@@ -845,9 +838,9 @@ paths:
                   type: string
                   example: "Protección Animal"
       responses:
-        '201':
+        "201":
           description: Interés creado exitosamente
-        '400':
+        "400":
           description: Nombre inválido o vacío
 
   /categories/intereses/{id}:
@@ -862,9 +855,9 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Interés eliminado exitosamente
-        '404':
+        "404":
           description: Interés no encontrado
 
   /categories/necesidades:
@@ -873,14 +866,14 @@ paths:
         - Categorías
       summary: Listar Necesidades
       responses:
-        '200':
+        "200":
           description: Lista de Necesidades
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Necesidad'
+                  $ref: "#/components/schemas/Necesidad"
 
 components:
   securitySchemes:
@@ -895,7 +888,7 @@ components:
     ODS:
       type: object
       properties:
-        id: 
+        id:
           type: integer
         nombre:
           type: string
@@ -908,7 +901,7 @@ components:
     Habilidad:
       type: object
       properties:
-        id: 
+        id:
           type: integer
         nombre:
           type: string
@@ -916,7 +909,7 @@ components:
     Interes:
       type: object
       properties:
-        id: 
+        id:
           type: integer
         nombre:
           type: string
@@ -924,7 +917,7 @@ components:
     Necesidad:
       type: object
       properties:
-        id: 
+        id:
           type: integer
         nombre:
           type: string
@@ -932,7 +925,8 @@ components:
     # --- MODELO REGISTRO VOLUNTARIO ---
     VoluntarioRegistro:
       type: object
-      required: [nombreCompleto, dni, correo, password, zona, ciclo, fechaNacimiento]
+      required:
+        [nombreCompleto, dni, correo, password, zona, ciclo, fechaNacimiento]
       properties:
         nombreCompleto:
           type: string
@@ -1056,7 +1050,18 @@ components:
     # --- MODELO REGISTRO ORGANIZACIÓN ---
     OrganizacionRegistro:
       type: object
-      required: [cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto]
+      required:
+        [
+          cif,
+          nombre,
+          email,
+          password,
+          direccion,
+          localidad,
+          descripcion,
+          cp,
+          contacto,
+        ]
       properties:
         cif:
           type: string
@@ -1121,7 +1126,7 @@ components:
         actividades:
           type: array
           items:
-            $ref: '#/components/schemas/ActividadDetalle'
+            $ref: "#/components/schemas/ActividadDetalle"
 
     # --- MODELOS DE ACTIVIDADES ---
     ActividadCreacion:
@@ -1315,7 +1320,7 @@ components:
         habilidades_actividad:
           type: array
           items:
-             type: object
+            type: object
         estado:
           type: string
           example: "PENDIENTE"

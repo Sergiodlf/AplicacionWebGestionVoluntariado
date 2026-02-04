@@ -173,7 +173,7 @@ export class MisVoluntariadosOrganizacion implements OnInit {
         this.applyFilters();
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error loading organization activities:', err);
         this.isLoading = false;
         if (err.status === 404) {

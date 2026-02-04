@@ -69,7 +69,7 @@ export class Voluntariados implements OnInit {
         this.filterData();
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error fetching voluntariados', err);
         this.isLoading = false;
       }
@@ -180,7 +180,7 @@ export class Voluntariados implements OnInit {
           this.loadData();
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error al inscribirse', err);
         // Try to show more specific error from backend if available
         const serverMsg = err.error?.message || err.error?.error || '';

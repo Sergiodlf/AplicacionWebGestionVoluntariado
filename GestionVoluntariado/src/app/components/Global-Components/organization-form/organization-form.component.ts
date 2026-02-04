@@ -96,7 +96,7 @@ export class OrganizationFormComponent implements OnInit {
                     next: (response) => {
                         this.onSubmit.emit(response);
                     },
-                    error: (err) => {
+                    error: (err: any) => {
                         this.errorMessage = 'Error al actualizar la organización. Por favor, intente de nuevo.';
                         console.error('Error al actualizar la organización:', err);
                     }

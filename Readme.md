@@ -66,7 +66,7 @@ php bin/console app:create-test-users
 | :--- | :--- | :--- | :--- |
 | **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
 | **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
-| **Admin** | `admin@admin.com` | `adminTest` | (Legacy) |
+| **Admin** | `admin@admin.com` | `123456` | (Legacy) |
 
 > **Nota:** Estos usuarios tienen el email verificado para poder hacer login inmediatamente sin necesidad de enviar correos reales.
 

@@ -128,4 +128,8 @@ export class AuthService {
   getCurrentProfile(): ProfileResponse | null {
     return this.userProfileSubject.value;
   }
+
+  changePassword(oldPass: string, newPass: string): Observable<any> {
+    return this.http.post('/api/auth/changePassword', { oldPassword: oldPass, newPassword: newPass });
+  }
 }

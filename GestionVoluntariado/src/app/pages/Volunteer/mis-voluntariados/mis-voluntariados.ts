@@ -113,7 +113,7 @@ export class MisVoluntariados implements OnInit {
         this.applyFilters();
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error fetching data for volunteer', err);
         this.isLoading = false;
       }

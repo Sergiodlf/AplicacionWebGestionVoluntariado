@@ -265,7 +265,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'ACEPTADO').subscribe({
       next: () => this.refresh$.next(true),
-      error: (err) => console.error('Error updating status:', err),
+      error: (err: any) => console.error('Error updating status:', err),
     });
   }
 
@@ -273,7 +273,7 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     if (!volunteer.dni) return console.error('Missing DNI');
     this.volunteerService.updateStatus(volunteer.dni, 'RECHAZADO').subscribe({
       next: () => this.refresh$.next(true),
-      error: (err) => console.error('Error updating status:', err),
+      error: (err: any) => console.error('Error updating status:', err),
     });
   }
 

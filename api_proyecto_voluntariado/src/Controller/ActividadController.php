@@ -254,9 +254,15 @@ class ActividadController extends AbstractController
     {
         $qb = $em->getRepository(Actividad::class)->createQueryBuilder('a');
         
-        if ($estadoAprobacion = $request->query->get('estadoAprobacion')) {
+        // Filtro por Estado de Aprobación (Por defecto: solo ACEPTADAS)
+        $estadoAprobacion = $request->query->get('estadoAprobacion');
+        if ($estadoAprobacion) {
             $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
                ->setParameter('estadoAprobacion', $estadoAprobacion);
+        } else {
+            // DEFAULT: Solo mostrar actividades aprobadas
+            $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
+               ->setParameter('estadoAprobacion', 'ACEPTADA');
         }
 
         // Filtro por Estado de Ejecución (Ocultar canceladas por defecto)

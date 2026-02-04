@@ -93,7 +93,7 @@ class CreateTestUsersCommand extends Command
         $voluntario->setFechaNacimiento(new \DateTime('1990-01-01'));
         $voluntario->setExperiencia('Sin experiencia');
         $voluntario->setCoche(true);
-        $voluntario->setEstadoVoluntario('LIBRE');
+        $voluntario->setEstadoVoluntario('ACEPTADO');
         // $voluntario->setRoles() is removed as it doesn't exist.
 
         $this->em->persist($voluntario);
