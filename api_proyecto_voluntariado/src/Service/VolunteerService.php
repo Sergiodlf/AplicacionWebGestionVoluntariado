@@ -5,19 +5,18 @@ namespace App\Service;
 use App\Entity\Voluntario;
 use App\Model\RegistroVoluntarioDTO;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 class VolunteerService
 {
     private $entityManager;
-    private $passwordHasher;
+
     private $habilidadRepository;
     private $interesRepository;
     private $notificationService; // NEW
 
     public function __construct(
         EntityManagerInterface $entityManager, 
-        UserPasswordHasherInterface $passwordHasher,
         \App\Repository\HabilidadRepository $habilidadRepository,
         \App\Repository\InteresRepository $interesRepository,
         \App\Repository\CicloRepository $cicloRepository,
@@ -25,7 +24,6 @@ class VolunteerService
         NotificationService $notificationService // INJECTED
     ) {
         $this->entityManager = $entityManager;
-        $this->passwordHasher = $passwordHasher;
         $this->habilidadRepository = $habilidadRepository;
         $this->interesRepository = $interesRepository;
         $this->cicloRepository = $cicloRepository;
@@ -96,9 +94,7 @@ class VolunteerService
         $voluntario->setApellido1($partes[1] ?? 'Sin Apellido');
         $voluntario->setApellido2($partes[2] ?? '');
 
-        // Password hashing
-        $hashed = $this->passwordHasher->hashPassword($voluntario, $dto->password);
-        $voluntario->setPassword($hashed);
+
 
         // Optional fields
         if ($dto->zona) $voluntario->setZona($dto->zona);

@@ -4,11 +4,10 @@ namespace App\Entity;
 
 use App\Repository\AdministradorRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: AdministradorRepository::class)]
-class Administrador implements UserInterface, PasswordAuthenticatedUserInterface
+class Administrador implements UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -21,11 +20,7 @@ class Administrador implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
-    #[ORM\Column]
-    private ?string $password = null;
+
 
     #[ORM\Column(length: 255)]
     private ?string $nombre = null;
@@ -76,20 +71,6 @@ class Administrador implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
 
     /**
      * @see UserInterface

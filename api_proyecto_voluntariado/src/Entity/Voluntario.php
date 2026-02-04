@@ -7,12 +7,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: VoluntarioRepository::class)]
 #[ORM\Table(name: 'VOLUNTARIOS')]
-class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
+class Voluntario implements UserInterface
 {
     #[ORM\Id]
     #[ORM\Column(name: 'DNI', type: Types::STRING, length: 9, options: ['fixed' => true])]
@@ -30,8 +29,7 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'CORREO', length: 40, unique: true)]
     private ?string $correo = null;
 
-    #[ORM\Column(name: 'PASSWORD', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
-    private ?string $password = null;
+
 
     #[ORM\Column(name: 'ZONA', length: 100, nullable: true)]
     private ?string $zona = null;
@@ -108,8 +106,7 @@ class Voluntario implements UserInterface, PasswordAuthenticatedUserInterface
     public function setApellido2(?string $a): static { $this->apellido2 = $a; return $this; }
     public function getCorreo(): ?string { return $this->correo; }
     public function setCorreo(string $c): static { $this->correo = $c; return $this; }
-    public function getPassword(): ?string { return $this->password; }
-    public function setPassword(string $p): static { $this->password = $p; return $this; }
+
     public function getZona(): ?string { return $this->zona; }
     public function setZona(?string $z): static { $this->zona = $z; return $this; }
     public function getFechaNacimiento(): ?\DateTimeInterface { return $this->fechaNacimiento; }

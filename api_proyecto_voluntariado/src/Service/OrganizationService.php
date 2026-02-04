@@ -5,22 +5,20 @@ namespace App\Service;
 use App\Entity\Organizacion;
 use App\Model\RegistroOrganizacionDTO;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 class OrganizationService
 {
     private $entityManager;
-    private $passwordHasher;
+
     private $notificationService; // NEW
 
     public function __construct(
         EntityManagerInterface $entityManager, 
-        UserPasswordHasherInterface $passwordHasher,
         \Kreait\Firebase\Contract\Auth $firebaseAuth,
         NotificationService $notificationService // INJECTED
     ) {
         $this->entityManager = $entityManager;
-        $this->passwordHasher = $passwordHasher;
         $this->firebaseAuth = $firebaseAuth;
         $this->notificationService = $notificationService;
     }
@@ -148,8 +146,7 @@ class OrganizationService
 
         if ($dto->sector) $org->setSector($dto->sector);
 
-        $hashedPassword = $this->passwordHasher->hashPassword($org, $dto->password);
-        $org->setPassword($hashedPassword);
+
 
         $this->entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
         $this->entityManager->persist($org);

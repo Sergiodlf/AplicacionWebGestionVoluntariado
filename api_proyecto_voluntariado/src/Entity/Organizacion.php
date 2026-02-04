@@ -8,13 +8,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: OrganizacionRepository::class)]
 #[ORM\Table(name: 'ORGANIZACIONES')]
-class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
+class Organizacion implements UserInterface
 {
     // Grupos de Serialización:
     // 'org:read'  -> Para serializar (enviar a Angular en GET o respuesta POST).
@@ -38,11 +37,7 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email]
     private ?string $email = null;
 
-    #[ORM\Column(name: 'PASSWORD', length: 255, columnDefinition: 'VARCHAR(255) NOT NULL')]
-    // ATENCIÓN: Solo 'org:write'. Se debe recibir, pero NUNCA enviar de vuelta.
-    #[Groups(['org:write'])] 
-    #[Assert\NotBlank]
-    private ?string $password = null;
+
 
     #[ORM\Column(name: 'SECTOR', length: 100, nullable: true)]
     #[Groups(['org:read', 'org:write'])]
@@ -107,10 +102,7 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
         return ['ROLE_ORGANIZACION'];
     }
 
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
+
 
     public function eraseCredentials(): void
     {
@@ -154,11 +146,7 @@ class Organizacion implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-        return $this;
-    }
+
 
     public function getSector(): ?string
     {

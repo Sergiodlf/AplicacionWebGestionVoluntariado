@@ -1,0 +1,718 @@
+﻿php : [debug] 
+Notified event 
+"console.command" to 
+listener "Symfony\Com
+ponent\HttpKernel\Eve
+ntListener\DebugHandl
+ersListener::configur
+e".
+En línea: 1 
+Carácter: 1
++ php bin/console doc
+trine:migrations:migr
+ate --no-interaction 
+-vvv > m ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([debug]   
+  Notifie...er::c    
+onfigure".:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[debug] Notified 
+event 
+"console.command" to 
+listener "Doctrine\Bu
+ndle\MigrationsBundle
+\EventListener\Schema
+FilterListener::onCon
+soleCommand".
+[notice] Migrating up to DoctrineMigrations\Version20260204160540
+[info] User 
+Deprecated: The "Doct
+rine\DBAL\Schema\Sche
+ma" class is 
+considered final. It 
+may change without 
+further notice as of 
+its next major 
+version. You should 
+not extend it from "D
+octrine\Migrations\Pr
+ovider\LazySchema".
+[info] User 
+Deprecated: The "Doct
+rine\Migrations\Provi
+der\LazySchema" 
+class uses "Symfony\C
+omponent\VarExporter\
+LazyProxyTrait" that 
+is deprecated since 
+Symfony 7.3, use 
+native lazy objects 
+instead.
+[info] ++ migrating DoctrineMigrations\Version20260204160540
+[debug] ALTER TABLE ACTIVIDADES ADD SECTOR NVARCHAR(50) 
+[debug] ALTER TABLE ACTIVIDADES ADD DESCRIPCION VARCHAR(MAX) 
+[debug] DROP INDEX UQ__ORGANIZA__161CF724435A488C ON ORGANIZACIONES 
+[error] Migration Doc
+trineMigrations\Versi
+on20260204160540 
+failed during 
+Execution. Error: 
+"An exception 
+occurred while 
+executing a query: 
+SQLSTATE [42000, 
+3723]: 
+[Microsoft][ODBC 
+Driver 17 for SQL 
+Server][SQL 
+Server]No se permite 
+usar expl├¡citamente 
+DROP INDEX con el 
+├¡ndice 'ORGANIZACION
+ES.UQ__ORGANIZA__161C
+F724435A488C'. Se 
+est├í usando para 
+aplicar la 
+restricci├│n UNIQUE 
+KEY."
+[critical] Error 
+thrown while running 
+command "doctrine:mig
+rations:migrate 
+--no-interaction 
+-vvv". Message: "An 
+exception occurred 
+while executing a 
+query: SQLSTATE 
+[42000, 3723]: 
+[Microsoft][ODBC 
+Driver 17 for SQL 
+Server][SQL 
+Server]No se permite 
+usar expl├¡citamente 
+DROP INDEX con el 
+├¡ndice 'ORGANIZACION
+ES.UQ__ORGANIZA__161C
+F724435A488C'. Se 
+est├í usando para 
+aplicar la 
+restricci├│n UNIQUE 
+KEY."
+[debug] Notified 
+event 
+"console.error" to 
+listener "Symfony\Bun
+dle\FrameworkBundle\E
+ventListener\SuggestM
+issingPackageSubscrib
+er::onConsoleError".
+[debug] Notified 
+event 
+"console.error" to 
+listener "Symfony\Bun
+dle\MakerBundle\Event
+\ConsoleErrorSubscrib
+er::onConsoleError".
+[debug] Notified 
+event 
+"console.error" to 
+listener "Symfony\Com
+ponent\Console\EventL
+istener\ErrorListener
+::onConsoleError".
+[debug] Command "doct
+rine:migrations:migra
+te --no-interaction 
+-vvv" exited with 
+code "3723"
+[debug] Notified 
+event 
+"console.terminate" 
+to listener "Symfony\
+Bundle\MakerBundle\Ev
+ent\ConsoleErrorSubsc
+riber::onConsoleTermi
+nate".
+[debug] Notified 
+event 
+"console.terminate" 
+to listener "Symfony\
+Component\Console\Eve
+ntListener\ErrorListe
+ner::onConsoleTermina
+te".
+
+In ExceptionConverter
+.php line 46:
+                     
+                     
+          
+  [Doctrine\DBAL\Exce
+ption\DriverException
+ (3723)]  
+  An exception occu  
+                     
+          
+  rred while execut  
+                     
+          
+  ing a query: SQLS  
+                     
+          
+  TATE [42000, 3723  
+                     
+          
+  ]: [Microsoft][OD  
+                     
+          
+  BC Driver 17 for   
+                     
+          
+  SQL Server][SQL S  
+                     
+          
+  erver]No se permi  
+                     
+          
+  te usar expl├¡cita 
+                     
+           
+  mente DROP INDEX   
+                     
+          
+  con el ├¡ndice 'OR 
+                     
+           
+  GANIZACIONES.UQ__  
+                     
+          
+  ORGANIZA__161CF72  
+                     
+          
+  4435A488C'. Se es  
+                     
+          
+  t├í usando para ap 
+                     
+           
+  licar la restricc  
+                     
+          
+  i├│n UNIQUE KEY.   
+                     
+           
+                     
+                     
+          
+
+Exception trace:
+  at C:\Users\garin\D
+ocuments\PROYECTODAM\
+AplicacionWebGestionV
+oluntariado\api_proye
+cto_voluntariado\vend
+or\doctrine\dbal\src\
+Driver\API\SQLSrv\Exc
+eptionConverter.php:4
+6
+ Doctrine\DBAL\Driver
+\API\SQLSrv\Exception
+Converter->convert() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\dbal\src\Co
+nnection.php:1460
+ Doctrine\DBAL\Connec
+tion->handleDriverExc
+eption() at C:\Users\
+garin\Documents\PROYE
+CTODAM\AplicacionWebG
+estionVoluntariado\ap
+i_proyecto_voluntaria
+do\vendor\doctrine\db
+al\src\Connection.php
+:1396
+ Doctrine\DBAL\Connec
+tion->convertExceptio
+nDuringQuery() at C:\
+Users\garin\Documents
+\PROYECTODAM\Aplicaci
+onWebGestionVoluntari
+ado\api_proyecto_volu
+ntariado\vendor\doctr
+ine\dbal\src\Connecti
+on.php:809
+ Doctrine\DBAL\Connec
+tion->executeQuery() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\migrations\
+src\Version\DbalExecu
+tor.php:275
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>executeResult() at C
+:\Users\garin\Documen
+ts\PROYECTODAM\Aplica
+cionWebGestionVolunta
+riado\api_proyecto_vo
+luntariado\vendor\doc
+trine\migrations\src\
+Version\DbalExecutor.
+php:152
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>executeMigration() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\migrations\
+src\Version\DbalExecu
+tor.php:72
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>execute() at C:\User
+s\garin\Documents\PRO
+YECTODAM\AplicacionWe
+bGestionVoluntariado\
+api_proyecto_voluntar
+iado\vendor\doctrine\
+migrations\src\DbalMi
+grator.php:87
+ Doctrine\Migrations\
+DbalMigrator->execute
+Plan() at C:\Users\ga
+rin\Documents\PROYECT
+ODAM\AplicacionWebGes
+tionVoluntariado\api_
+proyecto_voluntariado
+\vendor\doctrine\migr
+ations\src\DbalMigrat
+or.php:54
+ Doctrine\Migrations\
+DbalMigrator->execute
+Migrations() at C:\Us
+ers\garin\Documents\P
+ROYECTODAM\Aplicacion
+WebGestionVoluntariad
+o\api_proyecto_volunt
+ariado\vendor\doctrin
+e\migrations\src\Dbal
+Migrator.php:134
+ Doctrine\Migrations\
+DbalMigrator->migrate
+() at C:\Users\garin\
+Documents\PROYECTODAM
+\AplicacionWebGestion
+Voluntariado\api_proy
+ecto_voluntariado\ven
+dor\doctrine\migratio
+ns\src\Tools\Console\
+Command\MigrateComman
+d.php:225
+ Doctrine\Migrations\
+Tools\Console\Command
+\MigrateCommand->exec
+ute() at C:\Users\gar
+in\Documents\PROYECTO
+DAM\AplicacionWebGest
+ionVoluntariado\api_p
+royecto_voluntariado\
+vendor\symfony\consol
+e\Command\Command.php
+:318
+ Symfony\Component\Co
+nsole\Command\Command
+->run() at C:\Users\g
+arin\Documents\PROYEC
+TODAM\AplicacionWebGe
+stionVoluntariado\api
+_proyecto_voluntariad
+o\vendor\symfony\cons
+ole\Application.php:1
+091
+ Symfony\Component\Co
+nsole\Application->do
+RunCommand() at C:\Us
+ers\garin\Documents\P
+ROYECTODAM\Aplicacion
+WebGestionVoluntariad
+o\api_proyecto_volunt
+ariado\vendor\symfony
+\framework-bundle\Con
+sole\Application.php:
+123
+ Symfony\Bundle\Frame
+workBundle\Console\Ap
+plication->doRunComma
+nd() at C:\Users\gari
+n\Documents\PROYECTOD
+AM\AplicacionWebGesti
+onVoluntariado\api_pr
+oyecto_voluntariado\v
+endor\symfony\console
+\Application.php:356
+ Symfony\Component\Co
+nsole\Application->do
+Run() at C:\Users\gar
+in\Documents\PROYECTO
+DAM\AplicacionWebGest
+ionVoluntariado\api_p
+royecto_voluntariado\
+vendor\symfony\framew
+ork-bundle\Console\Ap
+plication.php:77
+ Symfony\Bundle\Frame
+workBundle\Console\Ap
+plication->doRun() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\symfony\console\Appl
+ication.php:195
+ Symfony\Component\Co
+nsole\Application->ru
+n() at C:\Users\garin
+\Documents\PROYECTODA
+M\AplicacionWebGestio
+nVoluntariado\api_pro
+yecto_voluntariado\ve
+ndor\symfony\runtime\
+Runner\Symfony\Consol
+eApplicationRunner.ph
+p:49
+ Symfony\Component\Ru
+ntime\Runner\Symfony\
+ConsoleApplicationRun
+ner->run() at C:\User
+s\garin\Documents\PRO
+YECTODAM\AplicacionWe
+bGestionVoluntariado\
+api_proyecto_voluntar
+iado\vendor\autoload_
+runtime.php:29
+ require_once() at C:
+\Users\garin\Document
+s\PROYECTODAM\Aplicac
+ionWebGestionVoluntar
+iado\api_proyecto_vol
+untariado\bin\console
+:15
+
+In Error.php line 38:
+                     
+                     
+              
+  [Doctrine\DBAL\Driv
+er\SQLSrv\Exception\E
+rror (3723)]  
+  SQLSTATE [42000,   
+                     
+              
+  3723]: [Microsoft  
+                     
+              
+  ][ODBC Driver 17   
+                     
+              
+  for SQL Server][S  
+                     
+              
+  QL Server]No se p  
+                     
+              
+  ermite usar expl├¡ 
+                     
+               
+  citamente DROP IN  
+                     
+              
+  DEX con el ├¡ndice 
+                     
+               
+   'ORGANIZACIONES.  
+                     
+              
+  UQ__ORGANIZA__161  
+                     
+              
+  CF724435A488C'. S  
+                     
+              
+  e est├í usando par 
+                     
+               
+  a aplicar la rest  
+                     
+              
+  ricci├│n UNIQUE KE 
+                     
+               
+  Y.                 
+                     
+              
+                     
+                     
+              
+
+Exception trace:
+  at C:\Users\garin\D
+ocuments\PROYECTODAM\
+AplicacionWebGestionV
+oluntariado\api_proye
+cto_voluntariado\vend
+or\doctrine\dbal\src\
+Driver\SQLSrv\Excepti
+on\Error.php:38
+ Doctrine\DBAL\Driver
+\SQLSrv\Exception\Err
+or::new() at C:\Users
+\garin\Documents\PROY
+ECTODAM\AplicacionWeb
+GestionVoluntariado\a
+pi_proyecto_voluntari
+ado\vendor\doctrine\d
+bal\src\Driver\SQLSrv
+\Statement.php:82
+ Doctrine\DBAL\Driver
+\SQLSrv\Statement->ex
+ecute() at C:\Users\g
+arin\Documents\PROYEC
+TODAM\AplicacionWebGe
+stionVoluntariado\api
+_proyecto_voluntariad
+o\vendor\doctrine\dba
+l\src\Driver\SQLSrv\C
+onnection.php:44
+ Doctrine\DBAL\Driver
+\SQLSrv\Connection->q
+uery() at C:\Users\ga
+rin\Documents\PROYECT
+ODAM\AplicacionWebGes
+tionVoluntariado\api_
+proyecto_voluntariado
+\vendor\doctrine\dbal
+\src\Driver\Middlewar
+e\AbstractConnectionM
+iddleware.php:24
+ Doctrine\DBAL\Driver
+\Middleware\AbstractC
+onnectionMiddleware->
+query() at C:\Users\g
+arin\Documents\PROYEC
+TODAM\AplicacionWebGe
+stionVoluntariado\api
+_proyecto_voluntariad
+o\vendor\symfony\doct
+rine-bridge\Middlewar
+e\Debug\Connection.ph
+p:55
+ Symfony\Bridge\Doctr
+ine\Middleware\Debug\
+Connection->query() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\dbal\src\Co
+nnection.php:804
+ Doctrine\DBAL\Connec
+tion->executeQuery() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\migrations\
+src\Version\DbalExecu
+tor.php:275
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>executeResult() at C
+:\Users\garin\Documen
+ts\PROYECTODAM\Aplica
+cionWebGestionVolunta
+riado\api_proyecto_vo
+luntariado\vendor\doc
+trine\migrations\src\
+Version\DbalExecutor.
+php:152
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>executeMigration() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\doctrine\migrations\
+src\Version\DbalExecu
+tor.php:72
+ Doctrine\Migrations\
+Version\DbalExecutor-
+>execute() at C:\User
+s\garin\Documents\PRO
+YECTODAM\AplicacionWe
+bGestionVoluntariado\
+api_proyecto_voluntar
+iado\vendor\doctrine\
+migrations\src\DbalMi
+grator.php:87
+ Doctrine\Migrations\
+DbalMigrator->execute
+Plan() at C:\Users\ga
+rin\Documents\PROYECT
+ODAM\AplicacionWebGes
+tionVoluntariado\api_
+proyecto_voluntariado
+\vendor\doctrine\migr
+ations\src\DbalMigrat
+or.php:54
+ Doctrine\Migrations\
+DbalMigrator->execute
+Migrations() at C:\Us
+ers\garin\Documents\P
+ROYECTODAM\Aplicacion
+WebGestionVoluntariad
+o\api_proyecto_volunt
+ariado\vendor\doctrin
+e\migrations\src\Dbal
+Migrator.php:134
+ Doctrine\Migrations\
+DbalMigrator->migrate
+() at C:\Users\garin\
+Documents\PROYECTODAM
+\AplicacionWebGestion
+Voluntariado\api_proy
+ecto_voluntariado\ven
+dor\doctrine\migratio
+ns\src\Tools\Console\
+Command\MigrateComman
+d.php:225
+ Doctrine\Migrations\
+Tools\Console\Command
+\MigrateCommand->exec
+ute() at C:\Users\gar
+in\Documents\PROYECTO
+DAM\AplicacionWebGest
+ionVoluntariado\api_p
+royecto_voluntariado\
+vendor\symfony\consol
+e\Command\Command.php
+:318
+ Symfony\Component\Co
+nsole\Command\Command
+->run() at C:\Users\g
+arin\Documents\PROYEC
+TODAM\AplicacionWebGe
+stionVoluntariado\api
+_proyecto_voluntariad
+o\vendor\symfony\cons
+ole\Application.php:1
+091
+ Symfony\Component\Co
+nsole\Application->do
+RunCommand() at C:\Us
+ers\garin\Documents\P
+ROYECTODAM\Aplicacion
+WebGestionVoluntariad
+o\api_proyecto_volunt
+ariado\vendor\symfony
+\framework-bundle\Con
+sole\Application.php:
+123
+ Symfony\Bundle\Frame
+workBundle\Console\Ap
+plication->doRunComma
+nd() at C:\Users\gari
+n\Documents\PROYECTOD
+AM\AplicacionWebGesti
+onVoluntariado\api_pr
+oyecto_voluntariado\v
+endor\symfony\console
+\Application.php:356
+ Symfony\Component\Co
+nsole\Application->do
+Run() at C:\Users\gar
+in\Documents\PROYECTO
+DAM\AplicacionWebGest
+ionVoluntariado\api_p
+royecto_voluntariado\
+vendor\symfony\framew
+ork-bundle\Console\Ap
+plication.php:77
+ Symfony\Bundle\Frame
+workBundle\Console\Ap
+plication->doRun() 
+at C:\Users\garin\Doc
+uments\PROYECTODAM\Ap
+licacionWebGestionVol
+untariado\api_proyect
+o_voluntariado\vendor
+\symfony\console\Appl
+ication.php:195
+ Symfony\Component\Co
+nsole\Application->ru
+n() at C:\Users\garin
+\Documents\PROYECTODA
+M\AplicacionWebGestio
+nVoluntariado\api_pro
+yecto_voluntariado\ve
+ndor\symfony\runtime\
+Runner\Symfony\Consol
+eApplicationRunner.ph
+p:49
+ Symfony\Component\Ru
+ntime\Runner\Symfony\
+ConsoleApplicationRun
+ner->run() at C:\User
+s\garin\Documents\PRO
+YECTODAM\AplicacionWe
+bGestionVoluntariado\
+api_proyecto_voluntar
+iado\vendor\autoload_
+runtime.php:29
+ require_once() at C:
+\Users\garin\Document
+s\PROYECTODAM\Aplicac
+ionWebGestionVoluntar
+iado\api_proyecto_vol
+untariado\bin\console
+:15
+
+doctrine:migrations:m
+igrate [--write-sql 
+[WRITE-SQL]] 
+[--dry-run] 
+[--query-time] [--all
+ow-no-migration] 
+[--all-or-nothing 
+[ALL-OR-NOTHING]] [--
+no-all-or-nothing] 
+[--configuration 
+CONFIGURATION] [--em 
+EM] [--conn CONN] 
+[--] [<version>]
+

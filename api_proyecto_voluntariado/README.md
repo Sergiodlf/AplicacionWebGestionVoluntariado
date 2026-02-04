@@ -43,7 +43,7 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
    
    `config/secrets/firebase_service_account.json`
 
-> **Nota**: Al ser un proyecto escolar/demo, este archivo **SE INCLUYE** en el repositorio para facilitar la instalación. En un entorno de producción real, debería ignorarse.
+
 
 ---
 

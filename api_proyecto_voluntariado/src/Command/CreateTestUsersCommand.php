@@ -10,7 +10,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 #[AsCommand(
     name: 'app:create-test-users',
@@ -20,8 +20,7 @@ class CreateTestUsersCommand extends Command
 {
     public function __construct(
         private Auth $firebaseAuth,
-        private EntityManagerInterface $em,
-        private UserPasswordHasherInterface $passwordHasher
+        private EntityManagerInterface $em
     ) {
         parent::__construct();
     }
@@ -88,7 +87,7 @@ class CreateTestUsersCommand extends Command
         $voluntario->setApellido1('Test');
         $voluntario->setApellido2('Pruebas');
         $voluntario->setCorreo($email); // Correct method from inspection
-        $voluntario->setPassword($this->passwordHasher->hashPassword($voluntario, $password));
+
         $voluntario->setZona('Pamplona');
         $voluntario->setFechaNacimiento(new \DateTime('1990-01-01'));
         $voluntario->setExperiencia('Sin experiencia');
@@ -144,7 +143,7 @@ class CreateTestUsersCommand extends Command
 
         $org->setNombre("Organizacion Test S.L.");
         $org->setEmail($email);
-        $org->setPassword($this->passwordHasher->hashPassword($org, $password));
+
         $org->setDireccion("Calle Pruebas 123");
         $org->setLocalidad("Pamplona");
         $org->setCp("31000");
