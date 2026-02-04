@@ -108,10 +108,11 @@ Este proyecto utiliza una arquitectura donde el Backend gestiona la lógica crí
 - **Olvido de Contraseña**: Endpoint `/api/auth/forgot-password`.
 
 ### Credenciales de Test
-Puedes crear usuarios de prueba verificados usando el comando:
+Puedes cargar un set completo de datos de prueba (10 voluntarios, 5 organizaciones, 1 administrador) sincronizados con Firebase usando:
 ```bash
-php bin/console app:create-test-users
+php bin/console doctrine:fixtures:load --append
 ```
+*(Usa `--append` si no quieres borrar el resto de tus datos de la base de datos local).*
 Esto generará/actualizará los siguientes usuarios:
 
 | Rol | Email | Password | Estado |
