@@ -32,6 +32,7 @@ class CreateTestUsersCommand extends Command
         try {
             $this->createTestVolunteer($output);
             $this->createTestOrganization($output);
+            $this->createTestAdmin($output);
             $output->writeln('Test users created successfully!');
             return Command::SUCCESS;
         } catch (\Throwable $e) {
@@ -155,5 +156,56 @@ class CreateTestUsersCommand extends Command
         $this->em->persist($org);
         $this->em->flush();
         $output->writeln("Database: Organization saved.");
+    }
+
+    private function createTestAdmin(OutputInterface $output): void
+    {
+        $email = 'admin@curso.com';
+        $password = '123456';
+        $nombre = 'Admin Test';
+
+        $output->writeln("--- Processing Admin: $email ---");
+
+        // A. Firebase
+        try {
+            try {
+                $user = $this->firebaseAuth->getUserByEmail($email);
+                $this->firebaseAuth->updateUser($user->uid, [
+                    'password' => $password,
+                    'emailVerified' => true,
+                    'displayName' => $nombre
+                ]);
+                $uid = $user->uid;
+                $output->writeln("Firebase: User updated.");
+            } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
+                $user = $this->firebaseAuth->createUser([
+                    'email' => $email,
+                    'password' => $password,
+                    'emailVerified' => true,
+                    'displayName' => $nombre
+                ]);
+                $uid = $user->uid;
+                $output->writeln("Firebase: User created.");
+            }
+            $this->firebaseAuth->setCustomUserClaims($uid, ['rol' => 'admin', 'admin' => true]);
+        } catch (\Throwable $e) {
+            $output->writeln("Firebase Error: " . $e->getMessage());
+        }
+
+        // B. Database
+        $repo = $this->em->getRepository(\App\Entity\Administrador::class);
+        $admin = $repo->findOneBy(['email' => $email]);
+
+        if (!$admin) {
+            $admin = new \App\Entity\Administrador();
+            $admin->setEmail($email);
+        }
+
+        $admin->setNombre($nombre);
+        $admin->setRoles(['ROLE_ADMIN']);
+
+        $this->em->persist($admin);
+        $this->em->flush();
+        $output->writeln("Database: Admin saved.");
     }
 }
