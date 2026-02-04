@@ -1,4 +1,0 @@
-kreait_firebase:
-    projects:
-        default:
-            credentials: '%env(GOOGLE_APPLICATION_CREDENTIALS)%'
