@@ -6,15 +6,12 @@ use App\Entity\Ciclo;
 use App\Entity\Organizacion;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 class AppFixtures extends Fixture
 {
-    private UserPasswordHasherInterface $passwordHasher;
-
-    public function __construct(UserPasswordHasherInterface $passwordHasher)
+    public function __construct()
     {
-        $this->passwordHasher = $passwordHasher;
     }
 
     public function load(ObjectManager $manager): void
@@ -124,7 +121,7 @@ class AppFixtures extends Fixture
         $org1->setDescripcion('Ayuda humanitaria y servicios sociales.');
         $org1->setContacto('Juan Perez');
         $org1->setEmail('contacto@cruzroja.es');
-        $org1->setPassword($this->passwordHasher->hashPassword($org1, 'password123'));
+
         $org1->setEstado('Aprobado');
         $org1->setSector($sectores[1]);
         $manager->persist($org1);
@@ -138,7 +135,7 @@ class AppFixtures extends Fixture
         $org2->setDescripcion('Defensa del medio ambiente y la paz.');
         $org2->setContacto('Maria Garcia');
         $org2->setEmail('info@greenpeace.es');
-        $org2->setPassword($this->passwordHasher->hashPassword($org2, 'password123'));
+
         $org2->setEstado('pendiente');
         $org2->setSector($sectores[2]);
         $manager->persist($org2);
@@ -155,7 +152,7 @@ class AppFixtures extends Fixture
             $vol->setApellido1($apellidos[$i % count($apellidos)]);
             $vol->setApellido2($apellidos[($i + 1) % count($apellidos)]);
             $vol->setCorreo(strtolower($vol->getNombre() . '.' . $vol->getApellido1() . $i . '@email.com'));
-            $vol->setPassword($this->passwordHasher->hashPassword($vol, 'password123'));
+
             $vol->setCoche(true);
             $vol->setFechaNacimiento(new \DateTime('2000-01-01'));
             $vol->setEstadoVoluntario($i % 3 === 0 ? 'PENDIENTE' : 'ACTIVO');

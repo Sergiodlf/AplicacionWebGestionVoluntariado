@@ -11,7 +11,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
 
 #[AsCommand(
     name: 'app:create-admin',
@@ -21,7 +21,6 @@ class CreateAdminCommand extends Command
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private UserPasswordHasherInterface $passwordHasher,
         private Auth $firebaseAuth
     ) {
         parent::__construct();
@@ -89,9 +88,7 @@ class CreateAdminCommand extends Command
         $admin->setNombre($nombre);
         $admin->setRoles(['ROLE_ADMIN']); // Explicitly set role
 
-        // Hash password
-        $hashedPassword = $this->passwordHasher->hashPassword($admin, $password);
-        $admin->setPassword($hashedPassword);
+
 
         $this->entityManager->persist($admin);
         $this->entityManager->flush();

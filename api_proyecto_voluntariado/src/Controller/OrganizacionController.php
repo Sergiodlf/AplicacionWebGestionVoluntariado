@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface; 
+
 use Symfony\Component\Validator\Validator\ValidatorInterface; 
 
 /**
@@ -52,7 +52,7 @@ class OrganizacionController extends AbstractController
      * * @param Request $request La petición HTTP (contiene el JSON con los datos).
      * @param EntityManagerInterface $entityManager Gestor de entidades.
      * @param SerializerInterface $serializer Serializador de JSON.
-     * @param UserPasswordHasherInterface $passwordHasher Servicio para hashear contraseñas.
+
      * @param ValidatorInterface $validator Servicio para validar la entidad.
      * @return JsonResponse La organización creada o un error de validación/datos.
      */
@@ -61,7 +61,6 @@ class OrganizacionController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager,
         SerializerInterface $serializer,
-        UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator
     ): JsonResponse {
         // 1. Deserializar el JSON del cuerpo de la petición a un objeto Organizacion.
@@ -91,12 +90,7 @@ class OrganizacionController extends AbstractController
             return $this->json(['error' => 'El email ya está registrado.'], Response::HTTP_CONFLICT);
         }
 
-        // 2. HASH DE CONTRASEÑA: Codifica la contraseña antes de guardar.
-        $hashedPassword = $passwordHasher->hashPassword(
-            $organizacion,
-            $organizacion->getPassword() 
-        );
-        $organizacion->setPassword($hashedPassword);
+
 
         // --- AUTO-APROBACIÓN PARA ADMINS ---
         // Si el que crea la org es un usuario logueado con rol ADMIN
