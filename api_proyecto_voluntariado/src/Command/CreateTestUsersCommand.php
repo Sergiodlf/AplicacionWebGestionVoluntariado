@@ -161,7 +161,7 @@ class CreateTestUsersCommand extends Command
     private function createTestAdmin(OutputInterface $output): void
     {
         $email = 'admin@curso.com';
-        $password = '123456';
+        $password = 'admin123';
         $nombre = 'Admin Test';
 
         $output->writeln("--- Processing Admin: $email ---");
