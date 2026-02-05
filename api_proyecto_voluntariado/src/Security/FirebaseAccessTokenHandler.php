@@ -83,11 +83,13 @@ class FirebaseAccessTokenHandler implements AccessTokenHandlerInterface
             throw new BadCredentialsException('Usuario no registrado en el sistema.');
 
         } catch (FailedToVerifyToken $e) {
-             file_put_contents('debug_firewall.txt', $log . "Error: Validate Token Failed: " . $e->getMessage() . "\n", FILE_APPEND);
-            throw new BadCredentialsException('Invalid or expired Firebase token: ' . $e->getMessage());
+             $reason = $e->getMessage();
+             file_put_contents('debug_firewall.txt', $log . "❌ Error: Validate Token Failed. Reason: $reason\n", FILE_APPEND);
+            throw new BadCredentialsException('Invalid or expired Firebase token: ' . $reason);
         } catch (\Throwable $e) {
-             file_put_contents('debug_firewall.txt', $log . "Error: General Exception: " . $e->getMessage() . "\n", FILE_APPEND);
-            throw new BadCredentialsException('An error occurred during token verification: ' . $e->getMessage());
+             $errorMsg = $e->getMessage();
+             file_put_contents('debug_firewall.txt', $log . "❌ Error: General Exception: $errorMsg\n", FILE_APPEND);
+            throw new BadCredentialsException('An error occurred during token verification: ' . $errorMsg);
         }
     }
 }

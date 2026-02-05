@@ -9,10 +9,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return idToken(auth).pipe(
     take(1),
     switchMap((token) => {
-      // Exclude registration endpoints from sending the token
-      // This prevents 401 errors if the backend tries to validate a token for a user that doesn't fully exist yet in its DB
+      // Exclude authentication and registration endpoints from sending the token
+      // This prevents 401 errors if the backend tries to validate a token for login/register
       // or if public access is preferred without auth overhead.
-      if (req.url.includes('/register/') || req.url.includes('/categories') || req.url.includes('/ciclos')) {
+      if (req.url.includes('/auth/') || req.url.includes('/categories') || req.url.includes('/ciclos')) {
         return next(req);
       }
 
