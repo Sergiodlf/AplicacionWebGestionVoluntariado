@@ -74,12 +74,19 @@ export class AuthService {
     return this.auth.currentUser;
   }
 
+  private profileRequest$: Observable<ProfileResponse> | null = null;
+
   getProfile(): Observable<ProfileResponse> {
     return this.http.get<ProfileResponse>('/api/auth/profile');
   }
 
   loadProfile(): Observable<ProfileResponse> {
-    return this.getProfile().pipe(
+    // Deduplicate concurrent requests
+    if (this.profileRequest$) {
+      return this.profileRequest$;
+    }
+
+    this.profileRequest$ = this.getProfile().pipe(
       tap(profile => {
         console.log('Profile loaded:', profile);
         this.userProfileSubject.next(profile);
@@ -97,18 +104,19 @@ export class AuthService {
 
         // Handle ID ambiguity for legacy support
         if (profile.tipo === 'organizacion' && profile.datos.cif) {
-          // Some components might still look for 'user_id' expecting a CIF/Email
-          // We prioritize specific keys but keep basic ID available if needed
-          // For now, let's strictly rely on new keys where possible, but set user_id 
-          // to email if that's what legacy organization components expect (e.g. Profile)
-          // However, MisVoluntariados expects CIF in user_id fallback.
-          // Let's set specific keys:
           localStorage.setItem('user_cif', profile.datos.cif);
         } else if (profile.tipo === 'voluntario' && profile.datos.dni) {
           localStorage.setItem('user_dni', profile.datos.dni);
         }
+      }),
+      // Clear the in-flight request on completion (success or error)
+      tap({
+        complete: () => this.profileRequest$ = null,
+        error: () => this.profileRequest$ = null
       })
     );
+
+    return this.profileRequest$;
   }
 
   updateProfile(data: any): Observable<any> {

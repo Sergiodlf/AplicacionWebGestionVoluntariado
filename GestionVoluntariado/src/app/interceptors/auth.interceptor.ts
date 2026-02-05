@@ -9,10 +9,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return idToken(auth).pipe(
     take(1),
     switchMap((token) => {
-      // Exclude authentication and registration endpoints from sending the token
-      // This prevents 401 errors if the backend tries to validate a token for login/register
-      // or if public access is preferred without auth overhead.
-      if (req.url.includes('/auth/') || req.url.includes('/categories') || req.url.includes('/ciclos')) {
+      // Exclude only public authentication endpoints from sending the token
+      // We must ALLOW /api/auth/profile to send the token as it is protected
+      const publicEndpoints = ['/auth/login', '/auth/register', '/auth/forgot-password', '/categories', '/ciclos'];
+      const isPublic = publicEndpoints.some(endpoint => req.url.includes(endpoint));
+
+      if (isPublic) {
         return next(req);
       }
 
