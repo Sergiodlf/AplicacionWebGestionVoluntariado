@@ -31,22 +31,34 @@ class AppFixtures extends Fixture
         $interesesData = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Tecnología', 'Derechos Humanos'];
         $ciudades = ['Pamplona', 'Madrid', 'Barcelona', 'Sevilla', 'Valencia'];
 
-        // 2. SEED BASIC ENTITIES (Habilidades, Intereses, ODS, Ciclos)
+        // 2. SEED BASIC ENTITIES (Habilidades, Intereses, ODS, Ciclos) - IDEMPOTENT
         echo "🌱 Seeding basic entities...\n";
         
         $habilidades = [];
         foreach ($habilidadesData as $name) {
-            $h = new Habilidad();
-            $h->setNombre($name);
-            $manager->persist($h);
+            $h = $manager->getRepository(Habilidad::class)->findOneBy(['nombre' => $name]);
+            if (!$h) {
+                $h = new Habilidad();
+                $h->setNombre($name);
+                $manager->persist($h);
+                echo "  ✨ Created Habilidad: $name\n";
+            } else {
+                echo "  ♻️ Habilidad already exists: $name\n";
+            }
             $habilidades[] = $h;
         }
 
         $intereses = [];
         foreach ($interesesData as $name) {
-            $i = new Interes();
-            $i->setNombre($name);
-            $manager->persist($i);
+            $i = $manager->getRepository(Interes::class)->findOneBy(['nombre' => $name]);
+            if (!$i) {
+                $i = new Interes();
+                $i->setNombre($name);
+                $manager->persist($i);
+                echo "  ✨ Created Interes: $name\n";
+            } else {
+                echo "  ♻️ Interes already exists: $name\n";
+            }
             $intereses[] = $i;
         }
 
@@ -58,32 +70,111 @@ class AppFixtures extends Fixture
         ];
         $odsEntities = [];
         foreach ($odsData as $data) {
-            $o = new ODS();
-            $o->setNombre($data['nombre']);
-            $o->setColor($data['color']);
-            $manager->persist($o);
+            $o = $manager->getRepository(ODS::class)->findOneBy(['nombre' => $data['nombre']]);
+            if (!$o) {
+                $o = new ODS();
+                $o->setNombre($data['nombre']);
+                $o->setColor($data['color']);
+                $manager->persist($o);
+                echo "  ✨ Created ODS: {$data['nombre']}\n";
+            } else {
+                echo "  ♻️ ODS already exists: {$data['nombre']}\n";
+            }
             $odsEntities[] = $o;
         }
 
         $ciclos = [];
         $ciclosData = ['DAM', 'DAW', 'ASIR', 'Marketing', 'Administración'];
         foreach ($ciclosData as $name) {
-            $c = new Ciclo();
-            $c->setNombre($name);
-            $c->setCurso(2);
-            $manager->persist($c);
+            $c = $manager->getRepository(Ciclo::class)->findOneBy(['nombre' => $name]);
+            if (!$c) {
+                $c = new Ciclo();
+                $c->setNombre($name);
+                $c->setCurso(2);
+                $manager->persist($c);
+                echo "  ✨ Created Ciclo: $name\n";
+            } else {
+                echo "  ♻️ Ciclo already exists: $name\n";
+            }
             $ciclos[] = $c;
         }
 
         $manager->flush();
 
-        // 3. GENERATE MASS VOLUNTEERS (10)
+        // 3. CREATE SPECIFIC TEST USERS (as documented in README) - IDEMPOTENT
+        echo "🎯 Creating specific test users (for README)...\n";
+        
+        // 3A. TEST VOLUNTEER: voluntario_test@curso.com
+        $testVolEmail = 'voluntario_test@curso.com';
+        $testVol = $manager->getRepository(Voluntario::class)->findOneBy(['correo' => $testVolEmail]);
+        if (!$testVol) {
+            $this->upsertFirebaseUser($testVolEmail, '123456', 'Voluntario Test', ['rol' => 'voluntario']);
+            
+            $testVol = new Voluntario();
+            $testVol->setDni('12345678T');
+            $testVol->setNombre('Voluntario');
+            $testVol->setApellido1('Test');
+            $testVol->setApellido2('Usuario');
+            $testVol->setCorreo($testVolEmail);
+            $testVol->setZona('Pamplona');
+            $testVol->setFechaNacimiento(new \DateTime('1995-01-01'));
+            $testVol->setExperiencia('Usuario de prueba documentado en el README.');
+            $testVol->setCoche(true);
+            $testVol->setEstadoVoluntario('LIBRE');
+            $testVol->setCiclo($ciclos[0]); // DAM
+            $testVol->addHabilidad($habilidades[0]);
+            $testVol->addInterese($intereses[0]);
+            
+            $manager->persist($testVol);
+            echo "  ✨ Created TEST Voluntario: $testVolEmail\n";
+        } else {
+            // Sync with Firebase even if exists
+            $this->upsertFirebaseUser($testVolEmail, '123456', 'Voluntario Test', ['rol' => 'voluntario']);
+            echo "  ♻️ TEST Voluntario already exists: $testVolEmail\n";
+        }
+        
+        // 3B. TEST ORGANIZATION: organizacion_test@curso.com
+        $testOrgEmail = 'organizacion_test@curso.com';
+        $testOrg = $manager->getRepository(Organizacion::class)->findOneBy(['email' => $testOrgEmail]);
+        if (!$testOrg) {
+            $this->upsertFirebaseUser($testOrgEmail, '123456', 'Organización Test', ['rol' => 'organizacion']);
+            
+            $testOrg = new Organizacion();
+            $testOrg->setCif('B99999999');
+            $testOrg->setNombre('Organización Test');
+            $testOrg->setEmail($testOrgEmail);
+            $testOrg->setDireccion('Calle Test 123');
+            $testOrg->setLocalidad('Pamplona');
+            $testOrg->setCp('31000');
+            $testOrg->setSector('Social');
+            $testOrg->setEstado('ACEPTADA');
+            $testOrg->setDescripcion('Organización de prueba documentada en el README.');
+            $testOrg->setContacto('600000000');
+            
+            $manager->persist($testOrg);
+            echo "  ✨ Created TEST Organización: $testOrgEmail\n";
+        } else {
+            // Sync with Firebase even if exists
+            $this->upsertFirebaseUser($testOrgEmail, '123456', 'Organización Test', ['rol' => 'organizacion']);
+            echo "  ♻️ TEST Organización already exists: $testOrgEmail\n";
+        }
+        
+        $manager->flush();
+
+        // 4. GENERATE MASS VOLUNTEERS (10) - IDEMPOTENT
         echo "👤 Generating 10 Volunteers...\n";
         for ($i = 0; $i < 10; $i++) {
             $nombre = $nombres[$i % count($nombres)];
             $apellido1 = $apellidos[$i % count($apellidos)];
             $email = strtolower($nombre . '.' . $apellido1 . $i . '@test.com');
             $dni = str_pad((string)$i, 8, '0', STR_PAD_LEFT) . 'V';
+
+            // Check if volunteer already exists
+            $vol = $manager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
+            if ($vol) {
+                echo "  ♻️ Voluntario already exists: $email\n";
+                continue;
+            }
 
             $this->upsertFirebaseUser($email, '123456', "$nombre $apellido1", ['rol' => 'voluntario']);
 
@@ -103,9 +194,10 @@ class AppFixtures extends Fixture
             $vol->addInterese($intereses[array_rand($intereses)]);
 
             $manager->persist($vol);
+            echo "  ✨ Created Voluntario: $email\n";
         }
 
-        // 4. GENERATE MASS ORGANIZATIONS (5)
+        // 5. GENERATE MASS ORGANIZATIONS (5) - IDEMPOTENT
         echo "🏢 Generating 5 Organizations...\n";
         $orgNames = ['EcoVida', 'AyudaDirecta', 'Huellas Felices', 'Techo Para Todos', 'Mentes Brillantes'];
         $orgs = [];
@@ -113,6 +205,14 @@ class AppFixtures extends Fixture
             $name = $orgNames[$i % count($orgNames)];
             $email = strtolower(str_replace(' ', '', $name) . $i . '@test.com');
             $cif = 'B' . str_pad((string)$i, 8, '0', STR_PAD_LEFT);
+
+            // Check if organization already exists
+            $org = $manager->getRepository(Organizacion::class)->findOneBy(['email' => $email]);
+            if ($org) {
+                echo "  ♻️ Organización already exists: $email\n";
+                $orgs[] = $org;
+                continue;
+            }
 
             $this->upsertFirebaseUser($email, '123456', $name, ['rol' => 'organizacion']);
 
@@ -130,24 +230,47 @@ class AppFixtures extends Fixture
 
             $manager->persist($org);
             $orgs[] = $org;
+            echo "  ✨ Created Organización: $email\n";
         }
 
-        // 5. CREATE ADMIN MASTER
+        // 6. CREATE ADMIN MASTER - IDEMPOTENT
         echo "⛑️ Creating Admin...\n";
         $adminEmail = 'admin@curso.com';
-        $this->upsertFirebaseUser($adminEmail, 'admin123', 'Admin Master', ['rol' => 'admin', 'admin' => true]);
+        $admin = $manager->getRepository(Administrador::class)->findOneBy(['email' => $adminEmail]);
+        
+        if (!$admin) {
+            $this->upsertFirebaseUser($adminEmail, 'admin123', 'Admin Master', ['rol' => 'admin', 'admin' => true]);
 
-        $admin = new Administrador();
-        $admin->setEmail($adminEmail);
-        $admin->setNombre('Admin Master');
-        $admin->setRoles(['ROLE_ADMIN']);
-        $manager->persist($admin);
+            $admin = new Administrador();
+            $admin->setEmail($adminEmail);
+            $admin->setNombre('Admin Master');
+            $admin->setRoles(['ROLE_ADMIN']);
+            $manager->persist($admin);
+            echo "  ✨ Created Admin: $adminEmail\n";
+        } else {
+            // Still sync with Firebase in case Firebase user was deleted
+            $this->upsertFirebaseUser($adminEmail, 'admin123', 'Admin Master', ['rol' => 'admin', 'admin' => true]);
+            echo "  ♻️ Admin already exists: $adminEmail\n";
+        }
 
-        // 6. GENERATE SOME ACTIVITIES
+        // 7. GENERATE SOME ACTIVITIES - IDEMPOTENT
         echo "📅 Generating Activities...\n";
         for ($i = 0; $i < 3; $i++) {
+            $activityName = "Actividad Social $i";
+            
+            // Check if activity already exists (by name and organization)
+            $existingAct = $manager->getRepository(Actividad::class)->findOneBy([
+                'nombre' => $activityName,
+                'organizacion' => $orgs[$i % count($orgs)]
+            ]);
+            
+            if ($existingAct) {
+                echo "  ♻️ Actividad already exists: $activityName\n";
+                continue;
+            }
+
             $act = new Actividad();
-            $act->setNombre("Actividad Social $i");
+            $act->setNombre($activityName);
             $act->setDireccion("Centro Comunitario $i");
             $act->setFechaInicio(new \DateTime('+1 month'));
             $act->setFechaFin(new \DateTime('+1 month + 4 hours'));
@@ -159,6 +282,7 @@ class AppFixtures extends Fixture
             $act->setSector($sectores[array_rand($sectores)]);
             $act->setDescripcion("Únete a nuestra causa para mejorar el entorno.");
             $manager->persist($act);
+            echo "  ✨ Created Actividad: $activityName\n";
         }
 
         $manager->flush();

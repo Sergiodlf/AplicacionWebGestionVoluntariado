@@ -108,12 +108,20 @@ Este proyecto utiliza una arquitectura donde el Backend gestiona la lógica crí
 - **Olvido de Contraseña**: Endpoint `/api/auth/forgot-password`.
 
 ### Credenciales de Test
-Puedes cargar un set completo de datos de prueba (10 voluntarios, 5 organizaciones, 1 administrador) sincronizados con Firebase usando:
+Puedes cargar un set completo de datos de prueba sincronizados con Firebase usando:
 ```bash
 php bin/console doctrine:fixtures:load --append
 ```
 *(Usa `--append` si no quieres borrar el resto de tus datos de la base de datos local).*
-Esto generará/actualizará los siguientes usuarios:
+
+Esto generará/actualizará:
+- **3 usuarios específicos de prueba** (documentados abajo para login fácil)
+- 10 voluntarios adicionales con emails como `carlos.lopez0@test.com`
+- 5 organizaciones adicionales con emails como `ecovida0@test.com`
+- Datos maestros (Habilidades, Intereses, ODS, Ciclos)
+- 3 actividades de ejemplo
+
+#### Usuarios específicos para pruebas rápidas
 
 | Rol | Email | Password | Estado |
 | :--- | :--- | :--- | :--- |
