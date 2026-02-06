@@ -31,7 +31,73 @@ class VolunteerService
         $this->notificationService = $notificationService;
     }
 
-    // ... (checkDuplicates and validation methods remain the same) ...
+    // --- VALIDATION METHODS ---
+
+    public function checkDuplicates(string $dni, string $email): ?string
+    {
+        $repo = $this->entityManager->getRepository(Voluntario::class);
+        
+        if ($repo->find($dni)) {
+            return 'El DNI ya está registrado';
+        }
+        
+        if ($repo->findOneBy(['correo' => $email])) {
+            return 'El email ya está registrado';
+        }
+        
+        return null;
+    }
+
+    public function validateDTO(RegistroVoluntarioDTO $dto): ?string
+    {
+        // 1. Validar DNI
+        if (!$this->isValidDni($dto->dni)) {
+            return 'El DNI/NIE no tiene un formato válido';
+        }
+
+        // 2. Validar Edad (Mínimo 16 años)
+        if ($dto->fechaNacimiento) {
+            try {
+                $fechaNac = new \DateTime($dto->fechaNacimiento);
+                $hoy = new \DateTime();
+                $edad = $hoy->diff($fechaNac)->y;
+                
+                if ($edad < 16) {
+                    return 'Debes tener al menos 16 años para registrarte';
+                }
+            } catch (\Exception $e) {
+                return 'Formato de fecha de nacimiento inválido';
+            }
+        }
+
+        return null;
+    }
+
+    private function isValidDni(string $dni): bool
+    {
+        $dni = strtoupper(trim($dni));
+        
+        // Regex para DNI (8 números + letra) o NIE (X/Y/Z + 7 números + letra)
+        if (!preg_match('/^([0-9]{8}|[XYZ][0-9]{7})[TRWAGMYFPDXBNJZSQVHLCKE]$/', $dni)) {
+            return false;
+        }
+
+        $standardDni = $dni;
+        
+        // Si es NIE, reemplazar letra inicial por número
+        if (str_starts_with($dni, 'X')) $standardDni = '0' . substr($dni, 1);
+        elseif (str_starts_with($dni, 'Y')) $standardDni = '1' . substr($dni, 1);
+        elseif (str_starts_with($dni, 'Z')) $standardDni = '2' . substr($dni, 1);
+
+        $numbers = (int)substr($standardDni, 0, -1);
+        $letter = substr($standardDni, -1);
+        
+        $validLetters = 'TRWAGMYFPDXBNJZSQVHLCKE';
+        $calculatedIndex = $numbers % 23;
+        $expectedLetter = $validLetters[$calculatedIndex];
+
+        return $letter === $expectedLetter;
+    }
 
     /**
      * Registers a new volunteer.

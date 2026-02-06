@@ -49,6 +49,7 @@ class ActividadController extends AbstractController
         // 1. Validar Organización (Token o CIF explícito)
         $organizacion = null;
         $user = $this->getUser();
+        $log = ""; // Initialize log variable
         
         $log .= "User Class: " . ($user ? get_class($user) : 'Guest') . "\n";
         $log .= "DTO CIF: " . ($dto->cifOrganizacion ?? 'NULL') . "\n";
@@ -256,7 +257,9 @@ class ActividadController extends AbstractController
         
         // Filtro por Estado de Aprobación (Por defecto: solo ACEPTADAS)
         $estadoAprobacion = $request->query->get('estadoAprobacion');
-        if ($estadoAprobacion) {
+        if ($estadoAprobacion === 'ALL') {
+            // No filter applied - Return ALL (Pending + Accepted + Rejected)
+        } elseif ($estadoAprobacion) {
             $qb->andWhere('a.estadoAprobacion = :estadoAprobacion')
                ->setParameter('estadoAprobacion', $estadoAprobacion);
         } else {
@@ -299,7 +302,18 @@ class ActividadController extends AbstractController
                ->setParameter('now', new \DateTime());
         }
 
+        // --- DEBUG LOGGING ---
+        $sql = $qb->getQuery()->getSQL();
+        $params = $qb->getParameters()->map(fn($p) => $p->getName() . '=' . (is_object($p->getValue()) ? $p->getValue()->format('Y-m-d') : $p->getValue()))->toArray();
+        file_put_contents(__DIR__ . '/../../var/debug_activities.txt', 
+            "--- List Request ---\n" .
+            "Params: " . json_encode($params) . "\n" .
+            "SQL: " . $sql . "\n"
+        , FILE_APPEND);
+
         $actividades = $qb->getQuery()->getResult();
+        
+        file_put_contents(__DIR__ . '/../../var/debug_activities.txt', "Result Count: " . count($actividades) . "\n\n", FILE_APPEND);
         
         // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
         $modificado = false;

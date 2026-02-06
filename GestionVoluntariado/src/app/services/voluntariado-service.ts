@@ -28,11 +28,11 @@ export class VoluntariadoService {
     this.myInscripcionesSubject.next(null);
   }
 
-  getAllVoluntariados(forceReload: boolean = false): Observable<Voluntariado[]> {
-    if (this.actividadesSubject.value && !forceReload) {
+  getAllVoluntariados(forceReload: boolean = false, filter?: { estadoAprobacion: string }): Observable<Voluntariado[]> {
+    if (this.actividadesSubject.value && !forceReload && !filter) {
       return of(this.actividadesSubject.value);
     }
-    return this.loadVoluntariados();
+    return this.loadVoluntariados(filter);
   }
 
   getAllVoluntariadosFiltered(estadoAprobacion?: string): Observable<Voluntariado[]> {
@@ -43,11 +43,21 @@ export class VoluntariadoService {
     return this.http.get<Voluntariado[]>(this.apiUrl, { params });
   }
 
-  loadVoluntariados(): Observable<Voluntariado[]> {
+  loadVoluntariados(filter?: { estadoAprobacion: string }): Observable<Voluntariado[]> {
     // Cache busting
     const timestamp = new Date().getTime();
-    return this.http.get<Voluntariado[]>(`${this.apiUrl}?t=${timestamp}`).pipe(
-      tap(data => this.actividadesSubject.next(data))
+    let params = new HttpParams().set('t', timestamp.toString());
+
+    if (filter?.estadoAprobacion) {
+      params = params.set('estadoAprobacion', filter.estadoAprobacion);
+    }
+
+    return this.http.get<Voluntariado[]>(this.apiUrl, { params }).pipe(
+      tap(data => {
+        if (!filter) { // Only update cache if it's a full standard load
+          this.actividadesSubject.next(data);
+        }
+      })
     );
   }
 

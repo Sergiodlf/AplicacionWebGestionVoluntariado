@@ -72,9 +72,9 @@ export class ActivitiesComponent implements OnInit {
   }
 
   loadActivities() {
-    console.log('ActivitiesComponent: calling getAllVoluntariados(false) [CACHED]...');
+    console.log('ActivitiesComponent: calling getAllVoluntariados(false, ALL)...');
 
-    this.voluntariadoService.getAllVoluntariados(false).subscribe({
+    this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL' }).subscribe({
       next: (allData) => {
         // Helper to safely check status handling property variations
         const checkApproval = (item: any, expected: string) => {
@@ -268,7 +268,7 @@ export class ActivitiesComponent implements OnInit {
       this.voluntariadoService.actualizarEstadoActividad(item.id, 'ACEPTADA').subscribe({
         next: () => {
           this.notificationService.showSuccess('Actividad aceptada con éxito');
-          this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities()); // Reload with force refresh
+          this.voluntariadoService.getAllVoluntariados(true, { estadoAprobacion: 'ALL' }).subscribe(() => this.loadActivities()); // Reload with force refresh
         },
         error: (err) => {
           console.error('Error updating activity status:', err);
