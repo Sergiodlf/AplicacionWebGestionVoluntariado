@@ -125,7 +125,7 @@ Esto generará/actualizará:
 
 | Rol | Email | Password | Estado |
 | :--- | :--- | :--- | :--- |
-| **Administrador** | `admin@curso.com` | `123456` | Verificado |
+| **Administrador** | `admin@curso.com` | `admin123` | Verificado |
 | **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
 | **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
 

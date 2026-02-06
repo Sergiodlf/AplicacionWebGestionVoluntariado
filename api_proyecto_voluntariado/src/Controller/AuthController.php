@@ -293,7 +293,7 @@ class AuthController extends AbstractController
                 }
             } elseif ($localUser instanceof Organizacion) {
                 $estado = strtolower($localUser->getEstado());
-                if ($estado !== 'aprobado') {
+                if ($estado !== 'aprobado' && $estado !== 'aceptada') {
                     if ($estado === 'pendiente') {
                         return $this->json([
                             'error' => 'Organización pendiente de aprobación',
@@ -435,7 +435,7 @@ class AuthController extends AbstractController
                 }
             } elseif ($localUser instanceof Organizacion) {
                 $estado = strtolower($localUser->getEstado());
-                if ($estado !== 'aprobado') {
+                if ($estado !== 'aprobado' && $estado !== 'aceptada') {
                     if ($estado === 'pendiente') {
                         return $this->json([
                             'error' => 'Organización pendiente de aprobación',
