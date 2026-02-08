@@ -55,8 +55,8 @@ class VoluntarioController extends AbstractController
     }
 
 
-    #[Route('/{dni}/estado', name: 'api_voluntarios_update_estado', methods: ['PATCH'])]
-    public function updateEstado(string $dni, Request $request, VoluntarioRepository $voluntarioRepository, \Doctrine\ORM\EntityManagerInterface $em): JsonResponse
+    #[Route('/{dni}', name: 'api_voluntarios_patch', methods: ['PATCH'])]
+    public function updatePartial(string $dni, Request $request, VoluntarioRepository $voluntarioRepository, \Doctrine\ORM\EntityManagerInterface $em): JsonResponse
     {
         $voluntario = $voluntarioRepository->find($dni);
 
@@ -65,32 +65,30 @@ class VoluntarioController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $nuevoEstado = $data['estado'] ?? null;
-
-        if (!$nuevoEstado) {
-            return $this->json(['error' => 'Falta el campo "estado"'], 400);
+        
+        // 1. Actualizar Estado
+        if (isset($data['estado'])) {
+             $nuevoEstado = $data['estado'];
+             $estadosPermitidos = ['PENDIENTE', 'ACEPTADO', 'RECHAZADO'];
+             
+             if (!in_array(strtoupper($nuevoEstado), $estadosPermitidos)) {
+                return $this->json([
+                    'error' => 'Estado inválido',
+                    'permitidos' => $estadosPermitidos
+                ], 400);
+            }
+            $voluntario->setEstadoVoluntario(strtoupper($nuevoEstado));
         }
-
-        // Validación de estados permitidos (mismos que inscripciones u otros si definimos)
-        $estadosPermitidos = ['PENDIENTE', 'ACEPTADO', 'RECHAZADO'];
-        if (!in_array(strtoupper($nuevoEstado), $estadosPermitidos)) {
-            return $this->json([
-                'error' => 'Estado inválido',
-                'permitidos' => $estadosPermitidos
-            ], 400);
-        }
-
-        $voluntario->setEstadoVoluntario(strtoupper($nuevoEstado));
 
         try {
             $em->flush();
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar el estado'], 500);
+            return $this->json(['error' => 'Error al actualizar el voluntario'], 500);
         }
 
         return $this->json([
-            'message' => 'Estado del voluntario actualizado correctamente',
-            'nuevo_estado' => $voluntario->getEstadoVoluntario()
+            'message' => 'Voluntario actualizado correctamente',
+            'estado' => $voluntario->getEstadoVoluntario()
         ]);
     }
     #[Route('/email/{email}', name: 'api_voluntarios_get_by_email', methods: ['GET'])]

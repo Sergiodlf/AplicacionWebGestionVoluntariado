@@ -35,7 +35,7 @@ export class OrganizationService {
   }
 
   updateOrganizationStatus(cif: string, newStatus: string): Observable<any> {
-    const url = `${this.apiUrl}/${cif}/state`;
+    const url = `${this.apiUrl}/${cif}`; // PATCH /api/organizations/{cif}
     return this.http.patch(url, { estado: newStatus });
   }
 
@@ -57,7 +57,7 @@ export class OrganizationService {
    */
   acceptOrganization(cif: string): Observable<any> {
     const updateData = { estado: 'aprobado' };
-    return this.http.patch(`${this.apiUrl}/${cif}/state`, updateData);
+    return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
   }
 
   /**
@@ -67,12 +67,11 @@ export class OrganizationService {
   rejectOrganization(cif: string): Observable<any> {
     // 4. Lógica para llamar a la API (ej: DELETE o PATCH para cambiar estado a Rechazado)
     // Si quieres eliminar la organización:
-    return this.http.delete(`${this.apiUrl}/${cif}`);
+    // return this.http.delete(`${this.apiUrl}/${cif}`);
 
     // O si quieres cambiar el estado a "Rechazado":
-    /* const updateData = { estado: 'Rechazado' };
-      return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
-      */
+     const updateData = { estado: 'rechazado' };
+     return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
   }
 
   /**
@@ -88,7 +87,8 @@ export class OrganizationService {
   }
 
   getOrganizationByEmail(email: string): Observable<Organization> {
-    return this.http.post<Organization>(`${this.apiUrl}/by-email`, { email });
+    // GET /api/organizations/by-email?email=...
+    return this.http.get<Organization>(`${this.apiUrl}/by-email`, { params: { email } });
   }
 
   getProfile(): Observable<Organization> {

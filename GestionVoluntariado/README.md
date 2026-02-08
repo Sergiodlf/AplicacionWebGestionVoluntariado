@@ -42,4 +42,14 @@ La aplicación estará disponible en `http://localhost:4200/`.
 Si `npm install` falla, prueba borrar `node_modules` y `package-lock.json` y reinstalar.
 
 ### Problemas de CORS
-Si la API está en otro puerto, asegúrate de que el backend permite peticiones desde `localhost:4200` o usa el `proxy.conf.json`.
+Actualmente en desarrollo (`ng serve`), las peticiones a la API pueden sufrir bloqueos por CORS (Cross-Origin Resource Sharing) ya que el frontend corre en el puerto `4200` y el backend en el `8000`.
+
+**Solución Actual (Desarrollo):**
+Usamos un proxy interno de Angular configurado en `proxy.conf.json`.
+- Todas las peticiones a `/api` se redirigen automáticamente a `http://127.0.0.1:8000`.
+- Esto "engaña" al navegador haciéndole creer que frontend y backend están en el mismo origen.
+
+**Opciones a Futuro (Producción):**
+El proxy de Angular **NO** funciona en producción. Para el despliegue real, se debe optar por una de estas estrategias:
+1.  **Habilitar CORS en el Backend:** Configurar Symfony (por ejemplo usando `NelmioCorsBundle`) para que acepte explícitamente peticiones desde el dominio del frontend.
+2.  **Servir desde el mismo Origen (Recomendado):** Configurar el servidor web (Nginx/Apache) para que sirva tanto los ficheros estáticos de Angular como la API bajo el mismo dominio (ej: `miweb.com` y `miweb.com/api`). Esto elimina completamente la necesidad de CORS.

@@ -27,6 +27,22 @@ class CategoryController extends AbstractController
         $this->entityManager = $entityManager;
     }
 
+    #[Route('/ciclos', name: 'api_categories_ciclos', methods: ['GET'])]
+    public function getCiclos(\App\Repository\CicloRepository $repository): JsonResponse
+    {
+        $ciclos = $repository->findAll();
+        
+        $data = [];
+        foreach ($ciclos as $ciclo) {
+            $data[] = [
+                'nombre' => $ciclo->getNombre(),
+                'curso' => $ciclo->getCurso(),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('/ods', name: 'api_categories_ods', methods: ['GET'])]
     public function getODS(ODSRepository $repository): JsonResponse
     {

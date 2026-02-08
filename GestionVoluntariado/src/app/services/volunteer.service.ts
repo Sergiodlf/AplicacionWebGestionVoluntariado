@@ -11,7 +11,7 @@ export class VolunteerService {
 
   private apiUrl = '/api/auth/register/voluntario';
   private apiGetUrl = '/api/voluntarios';
-  private apiCiclosUrl = '/api/ciclos';
+  private apiCiclosUrl = '/api/categories/ciclos'; // Updated URL
 
   private volunteersSubject = new BehaviorSubject<Volunteer[] | null>(null);
   volunteers$ = this.volunteersSubject.asObservable();
@@ -59,8 +59,8 @@ export class VolunteerService {
   }
 
   updateStatus(dni: string, status: string): Observable<any> {
-    console.log(`Updating status for DNI ${dni} to ${status}. URL: /api/voluntarios/${dni}/estado`);
-    return this.http.patch(`/api/voluntarios/${dni}/estado`, { estado: status });
+    console.log(`Updating status for DNI ${dni} to ${status}. URL: /api/voluntarios/${dni}`);
+    return this.http.patch(`/api/voluntarios/${dni}`, { estado: status });
   }
 
   updateProfile(dni: string, data: any): Observable<any> {

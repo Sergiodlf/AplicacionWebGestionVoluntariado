@@ -129,6 +129,14 @@ class ActivityService
     }
 
     /**
+     * Retrieves activities based on filters using the Repository.
+     */
+    public function getActivitiesByFilters(array $filters): array
+    {
+        return $this->entityManager->getRepository(Actividad::class)->findByFilters($filters);
+    }
+
+    /**
      * Updates the status of an activity.
      * Handles both 'estado' (execution) and 'estadoAprobacion' (approval).
      * 
@@ -140,70 +148,45 @@ class ActivityService
      */
     public function updateActivityStatus(int $id, string $nuevoEstado, ?string $tipo = null): array
     {
-        file_put_contents('debug_activity.txt', "\n--- UPDATE ACTIVITY STATUS ---\nID: $id, NewState: $nuevoEstado, Type: " . ($tipo ?? 'NULL') . "\n", FILE_APPEND);
-        
         $actividad = $this->entityManager->getRepository(Actividad::class)->find($id);
         if (!$actividad) {
-            file_put_contents('debug_activity.txt', "ERROR: Activity not found.\n", FILE_APPEND);
             throw new \Exception('Actividad no encontrada', 404);
         }
-
-        $nuevoEstadoUpper = strtoupper($nuevoEstado);
         
-        // --- WHITELISTS & MAPPINGS ---
-        $estadosAprobacion = ['ACEPTADA', 'RECHAZADA', 'PENDIENTE'];
+        $campoActualizado = 'estado';
         
-        // Map UPPER -> StoredValue (Sentence Case)
-        $mapaEjecucion = [
-            'SIN COMENZAR' => 'Sin comenzar',
-            'EN CURSO'     => 'En curso',
-            'COMPLETADA'   => 'Completada',
-            'COMPLETADO'   => 'Completada',
-            'FINALIZADO'   => 'Completada',
-            'CANCELADO'    => 'CANCELADO', // Exception: UPPER
-            'ABIERTA'      => 'En curso',
-            'PENDIENTE'    => 'Sin comenzar'
-        ];
-        
-        $campoActualizado = 'estado'; // Default fallback
-
+        // 1. Determine Type and Validate using Enums
         if ($tipo === 'aprobacion') {
-            file_put_contents('debug_activity.txt', "Type is 'aprobacion'. Checking whitelist...\n", FILE_APPEND);
-            if (!in_array($nuevoEstadoUpper, $estadosAprobacion)) {
-                file_put_contents('debug_activity.txt', "ERROR: Invalid approval status: $nuevoEstadoUpper\n", FILE_APPEND);
-                throw new \InvalidArgumentException("Estado de aprobación inválido: $nuevoEstadoUpper");
+            if (!\App\Enum\ActivityApproval::isValid($nuevoEstado)) {
+                throw new \InvalidArgumentException("Estado de aprobación inválido: $nuevoEstado");
             }
-            $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+            $actividad->setEstadoAprobacion(strtoupper($nuevoEstado));
             $campoActualizado = 'estadoAprobacion';
 
         } elseif ($tipo === 'ejecucion') {
-            file_put_contents('debug_activity.txt', "Type is 'ejecucion'. Checking map...\n", FILE_APPEND);
-            if (!array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
-                file_put_contents('debug_activity.txt', "ERROR: Invalid execution status: $nuevoEstadoUpper\n", FILE_APPEND);
-                throw new \InvalidArgumentException("Estado de ejecución inválido: $nuevoEstadoUpper");
+            $enumStatus = \App\Enum\ActivityStatus::fromLegacy($nuevoEstado);
+            if (!$enumStatus) {
+                throw new \InvalidArgumentException("Estado de ejecución inválido: $nuevoEstado");
             }
-            $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
+            $actividad->setEstado($enumStatus->value);
             $campoActualizado = 'estado';
 
         } else {
-            // Auto-detection logic
-            file_put_contents('debug_activity.txt', "No type provided. Auto-detecting...\n", FILE_APPEND);
-            if (in_array($nuevoEstadoUpper, ['ACEPTADA', 'RECHAZADA'])) {
-                $actividad->setEstadoAprobacion($nuevoEstadoUpper);
+            // Auto-detection logic (Legacy support)
+            if (\App\Enum\ActivityApproval::isValid($nuevoEstado)) {
+                $actividad->setEstadoAprobacion(strtoupper($nuevoEstado));
                 $campoActualizado = 'estadoAprobacion';
-                
-            } elseif (array_key_exists($nuevoEstadoUpper, $mapaEjecucion)) {
-                $actividad->setEstado($mapaEjecucion[$nuevoEstadoUpper]);
-                $campoActualizado = 'estado';
-
             } else {
-                 file_put_contents('debug_activity.txt', "ERROR: Unknown status: $nuevoEstadoUpper\n", FILE_APPEND);
-                 throw new \InvalidArgumentException("Estado desconocido o inválido: $nuevoEstadoUpper");
+                $enumStatus = \App\Enum\ActivityStatus::fromLegacy($nuevoEstado);
+                 if ($enumStatus) {
+                    $actividad->setEstado($enumStatus->value);
+                    $campoActualizado = 'estado';
+                } else {
+                     throw new \InvalidArgumentException("Estado desconocido o inválido: $nuevoEstado");
+                }
             }
         }
         
-        file_put_contents('debug_activity.txt', "Field updated: $campoActualizado. Flushing to DB...\n", FILE_APPEND);
-
         $this->entityManager->flush();
 
         return [
@@ -211,6 +194,36 @@ class ActivityService
             'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion(),
             'actividad' => $actividad
         ];
+    }
+
+    /**
+     * Checks and updates activity status based on dates.
+     */
+    public function checkAndUpdateStatus(Actividad $actividad): bool
+    {
+        $now = new \DateTime();
+        $start = $actividad->getFechaInicio();
+        $end = $actividad->getFechaFin();
+        $estadoActual = $actividad->getEstado();
+        $nuevoEstado = null;
+
+        // Reglas de negocio
+        if ($start && $now < $start) {
+            $nuevoEstado = \App\Enum\ActivityStatus::PENDIENTE->value;
+        } elseif ($end && $now > $end) {
+            $nuevoEstado = \App\Enum\ActivityStatus::COMPLETADA->value;
+        } else {
+            // Si ya empezó y no ha terminado (o no tiene fin), está en curso
+            $nuevoEstado = \App\Enum\ActivityStatus::EN_CURSO->value;
+        }
+
+        // Solo actualizamos si cambia
+        if ($nuevoEstado && $estadoActual !== $nuevoEstado) {
+            $actividad->setEstado($nuevoEstado);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -222,11 +235,8 @@ class ActivityService
      */
     public function deleteActivity(int $id): string
     {
-        file_put_contents('debug_activity.txt', "\n--- DELETE ACTIVITY ---\nID: $id\n", FILE_APPEND);
-        
         $actividad = $this->entityManager->getRepository(Actividad::class)->find($id);
         if (!$actividad) {
-            file_put_contents('debug_activity.txt', "ERROR: Activity not found.\n", FILE_APPEND);
             throw new \Exception('Actividad no encontrada', 404);
         }
 
@@ -237,7 +247,6 @@ class ActivityService
         }
         
         // 2. Remove the activity
-        file_put_contents('debug_activity.txt', "Action: Hard Delete (REMOVE with " . $actividad->getInscripciones()->count() . " inscriptions cleaned)\n", FILE_APPEND);
         $this->entityManager->remove($actividad);
         $this->entityManager->flush();
         

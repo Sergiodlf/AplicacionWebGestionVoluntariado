@@ -21,18 +21,7 @@ class InscripcionService
      */
     public function countActiveInscriptions(Actividad $actividad): int
     {
-        $conn = $this->entityManager->getConnection();
-        $sql = "
-            SELECT COUNT(*) as total 
-            FROM INSCRIPCIONES 
-            WHERE CODACTIVIDAD = :actividadId
-            AND ESTADO IN ('PENDIENTE', 'CONFIRMADO', 'CONFIRMADA', 'ACEPTADA', 'EN_CURSO', 'EN CURSO')
-        ";
-        
-        $stmt = $conn->executeQuery($sql, ['actividadId' => $actividad->getCodActividad()]);
-        $result = $stmt->fetchAssociative();
-        
-        return (int) ($result['total'] ?? 0);
+        return $this->entityManager->getRepository(Inscripcion::class)->countActiveByActivity($actividad);
     }
 
     /**
@@ -40,13 +29,7 @@ class InscripcionService
      */
     public function isVolunteerInscribed(Actividad $actividad, Voluntario $voluntario): bool
     {
-        $repo = $this->entityManager->getRepository(Inscripcion::class);
-        $existing = $repo->findOneBy([
-            'actividad' => $actividad,
-            'voluntario' => $voluntario
-        ]);
-        
-        return $existing !== null;
+        return $this->entityManager->getRepository(Inscripcion::class)->findByVolunteerAndActivity($voluntario, $actividad) !== null;
     }
 
     /**
@@ -57,8 +40,7 @@ class InscripcionService
         $inscripcion = new Inscripcion();
         $inscripcion->setActividad($actividad);
         $inscripcion->setVoluntario($voluntario);
-        // $inscripcion->setFechaInscripcion(new \DateTime());
-        $inscripcion->setEstado('PENDIENTE');
+        $inscripcion->setEstado('PENDIENTE'); 
 
         $this->entityManager->persist($inscripcion);
         $this->entityManager->flush();

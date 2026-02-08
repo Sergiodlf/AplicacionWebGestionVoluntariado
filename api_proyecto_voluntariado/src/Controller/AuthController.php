@@ -102,12 +102,10 @@ class AuthController extends AbstractController
 
         // --- PRE-CHECK ADMIN --- 
         $isAdmin = false;
-        $currentUser = $this->getUser();
+        $securityUser = $this->getUser();
+        $currentUser = $securityUser?->getDomainUser();
         
-        if ($currentUser && (
-            in_array('ROLE_ADMIN', $currentUser->getRoles()) || 
-            $currentUser instanceof Administrador
-        )) {
+        if ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles())) {
             $isAdmin = true;
         }
         
@@ -186,12 +184,10 @@ class AuthController extends AbstractController
 
         // --- PRE-CHECK ADMIN ---
         $isAdmin = false;
-        $currentUser = $this->getUser();
+        $securityUser = $this->getUser();
+        $currentUser = $securityUser?->getDomainUser();
         
-        if ($currentUser && (
-            in_array('ROLE_ADMIN', $currentUser->getRoles()) || 
-            $currentUser instanceof Administrador
-        )) {
+        if ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles())) {
             $isAdmin = true;
         }
 
@@ -533,7 +529,8 @@ class AuthController extends AbstractController
     {
         try {
             // El usuario ya viene autenticado por el Token Handler (UnifiedUserProvider)
-            $user = $this->getUser();
+            $securityUser = $this->getUser();
+            $user = $securityUser?->getDomainUser();
 
             if (!$user) {
                 return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
@@ -612,7 +609,9 @@ class AuthController extends AbstractController
         EntityManagerInterface $em
     ): JsonResponse
     {
-        $user = $this->getUser();
+        $securityUser = $this->getUser();
+        $user = $securityUser?->getDomainUser();
+
         if (!$user) {
             return $this->json(['error' => 'Usuario no autenticado'], 401);
         }

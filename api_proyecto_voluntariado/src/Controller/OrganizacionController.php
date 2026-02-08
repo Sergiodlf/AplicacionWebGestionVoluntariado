@@ -94,8 +94,8 @@ class OrganizacionController extends AbstractController
 
         // --- AUTO-APROBACIÓN PARA ADMINS ---
         // Si el que crea la org es un usuario logueado con rol ADMIN
-        $user = $this->getUser();
-        if ($user && method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
+        $securityUser = $this->getUser();
+        if ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles())) {
             $organizacion->setEstado('aprobado');
         }
         // -----------------------------------
@@ -150,7 +150,7 @@ class OrganizacionController extends AbstractController
     }
 
     /**
-     * Actualiza el estado de una organización (PATCH /api/organizations/{cif}/state).
+     * Actualiza el estado de una organización (PATCH /api/organizations/{cif}).
      *
      * @param string $cif
      * @param Request $request
@@ -158,7 +158,7 @@ class OrganizacionController extends AbstractController
      * @param EntityManagerInterface $entityManager
      * @return JsonResponse
      */
-    #[Route('/api/organizations/{cif}/state', name: 'api_organizations_update_state', methods: ['PATCH'])]
+    #[Route('/api/organizations/{cif}', name: 'api_organizations_patch', methods: ['PATCH'])]
     public function updateState(
         string $cif, 
         Request $request, 
@@ -168,47 +168,49 @@ class OrganizacionController extends AbstractController
     {
         $organizacion = $organizacionRepository->find($cif);
         if (!$organizacion) {
-            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+            return $this->json(['error' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
-        $estadosValidos = ['pendiente', 'aprobado', 'rechazado'];
-
-        if (!$nuevoEstado || !in_array($nuevoEstado, $estadosValidos)) {
-            return $this->json(
-                ['message' => 'Estado inválido. Valores permitidos: ' . implode(', ', $estadosValidos)], 
-                Response::HTTP_BAD_REQUEST
-            );
+        
+        // Si no se envía estado, se podría permitir actualizar otros campos parcialmente aquí en el futuro
+        if ($nuevoEstado) {
+            $estadosValidos = ['pendiente', 'aprobado', 'rechazado'];
+            if (!in_array($nuevoEstado, $estadosValidos)) {
+                return $this->json(
+                    ['error' => 'Estado inválido. Valores permitidos: ' . implode(', ', $estadosValidos)], 
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+            $organizacion->setEstado($nuevoEstado);
         }
 
-        $organizacion->setEstado($nuevoEstado);
         $entityManager->flush();
 
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
     }
 
     /**
-     * Obtiene una organización por su email (POST /api/organizations/by-email).
+     * Obtiene una organización por su email (GET /api/organizations/by-email?email=...).
      *
      * @param Request $request
      * @param OrganizacionRepository $organizacionRepository
      * @return JsonResponse
      */
-    #[Route('/api/organizations/by-email', name: 'api_organizations_get_by_email', methods: ['POST'])]
+    #[Route('/api/organizations/by-email', name: 'api_organizations_get_by_email', methods: ['GET'])]
     public function getByEmail(Request $request, OrganizacionRepository $organizacionRepository): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $email = $data['email'] ?? null;
+        $email = $request->query->get('email');
 
         if (!$email) {
-            return $this->json(['message' => 'El campo email es obligatorio.'], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'El parmetro email es obligatorio.'], Response::HTTP_BAD_REQUEST);
         }
 
         $organizacion = $organizacionRepository->findOneBy(['email' => $email]);
 
         if (!$organizacion) {
-            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+            return $this->json(['error' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
         }
 
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);

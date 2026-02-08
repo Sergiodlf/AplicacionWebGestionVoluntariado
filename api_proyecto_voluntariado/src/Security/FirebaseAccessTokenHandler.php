@@ -11,85 +11,36 @@ use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 class FirebaseAccessTokenHandler implements AccessTokenHandlerInterface
 {
     public function __construct(
-        private Auth $firebaseAuth,
+        private \App\Service\Auth\AuthServiceInterface $authService,
         private UnifiedUserProvider $userProvider
     ) {}
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
     {
-        $log = "--- Firewall Token Check ---\n";
         try {
-            $verifiedIdToken = $this->firebaseAuth->verifyIdToken($accessToken);
-            $claims = $verifiedIdToken->claims();
-            
-            $email = $claims->get('email'); // Should be a string
-            $email = (string)$email; // Force string to satisfy type hint if needed
+            // 1. Verify Token via Service
+            $authUser = $this->authService->verifyToken($accessToken);
 
-            $log .= "Email from token: '$email'\n";
-
-            if (!$email) {
-                // Log and throw
-                file_put_contents('debug_firewall.txt', $log . "Error: No email claim.\n", FILE_APPEND);
-                throw new BadCredentialsException('The access token does not contain an email claim.');
+            // 2. Check Email Verification
+            if (!$authUser->emailVerified) {
+                // throw new \Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException('Debes verificar tu correo electrónico antes de iniciar sesión.');
             }
 
-            // --- EMAIL VERIFICATION CHECK ---
-            $emailVerified = $claims->get('email_verified');
-            if ($emailVerified === false) {
-                 file_put_contents('debug_firewall.txt', $log . "Error: Email not verified.\n", FILE_APPEND);
-                 throw new \Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException('Debes verificar tu correo electrónico antes de iniciar sesión via API.');
-            }
-            
-            // 1. INTENTO DE CARGA DESDE DB (Prioridad: Voluntario / Organización Real)
-            try {
-                $dbUser = $this->userProvider->loadUserByIdentifier($email);
-                file_put_contents('debug_firewall.txt', $log . "User found in DB. Returning Badge.\n", FILE_APPEND);
-                return new UserBadge($email, fn() => $dbUser);
-            } catch (\Symfony\Component\Security\Core\Exception\UserNotFoundException $e) {
-                $log .= "User NOT found in DB.\n";
-            }
+            // 3. Load User (Wrapped in SecurityUser) via Provider
+            return new UserBadge($authUser->email, function() use ($authUser) {
+                try {
+                    return $this->userProvider->loadUserByIdentifier($authUser->email);
+                } catch (\Symfony\Component\Security\Core\Exception\UserNotFoundException $e) {
+                     // Auto-Admin Check based on Claims (if not in DB)
+                     if (in_array('admin', $authUser->claims) || ($authUser->claims['rol'] ?? '') === 'admin') {
+                        return new \App\Security\User\SecurityUser($authUser->email, ['ROLE_ADMIN'], null);
+                     }
+                     throw $e;
+                }
+            });
 
-            // --- DETECCION DE ROL PARA SUPERADMIN EN MEMORIA ---
-            $roles = [];
-            
-            // Opción A: Claim 'admin' (boolean)
-            if ($claims->has('admin') && $claims->get('admin') === true) {
-                $roles[] = 'ROLE_ADMIN';
-                $log .= "Claim 'admin' found.\n";
-            }
-            // Opción B: Claim 'rol' o 'role' (string)
-            if ($claims->has('rol') && $claims->get('rol') === 'admin') {
-                $roles[] = 'ROLE_ADMIN';
-                $log .= "Claim 'rol'='admin' found.\n";
-            }
-            // Opción C: Email específico (Backdoor temporal)
-            if ($email === 'admin@admin.com' || $email === 'adminTest5666@gmail.com') {
-                $roles[] = 'ROLE_ADMIN';
-                $log .= "Email whitelist matched.\n";
-            }
-
-            // --- USER LOADER ---
-            // Si es ADMIN y no estaba en DB, cargamos el usuario en memoria
-            if (in_array('ROLE_ADMIN', $roles)) {
-                 file_put_contents('debug_firewall.txt', $log . "User is ADMIN (Memory). Returning Badge.\n", FILE_APPEND);
-                return new UserBadge($email, function() use ($email, $roles) {
-                    return new \App\Security\User\AdminUser($email, $roles);
-                });
-            }
-
-            // Si no es admin y no está en DB, devolvemos un Badge estándar que fallará
-            // cuando Symfony intente cargar el usuario (o lanzamos error aquí)
-            file_put_contents('debug_firewall.txt', $log . "Error: User not in DB and not Admin. Denying.\n", FILE_APPEND);
-            throw new BadCredentialsException('Usuario no registrado en el sistema.');
-
-        } catch (FailedToVerifyToken $e) {
-             $reason = $e->getMessage();
-             file_put_contents('debug_firewall.txt', $log . "❌ Error: Validate Token Failed. Reason: $reason\n", FILE_APPEND);
-            throw new BadCredentialsException('Invalid or expired Firebase token: ' . $reason);
-        } catch (\Throwable $e) {
-             $errorMsg = $e->getMessage();
-             file_put_contents('debug_firewall.txt', $log . "❌ Error: General Exception: $errorMsg\n", FILE_APPEND);
-            throw new BadCredentialsException('An error occurred during token verification: ' . $errorMsg);
+        } catch (\Exception $e) {
+            throw new BadCredentialsException($e->getMessage());
         }
     }
 }

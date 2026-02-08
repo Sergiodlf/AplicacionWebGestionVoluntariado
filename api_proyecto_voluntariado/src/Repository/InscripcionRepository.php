@@ -39,4 +39,21 @@ class InscripcionRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function countActiveByActivity(\App\Entity\Actividad $actividad): int
+    {
+        return $this->createQueryBuilder('i')
+            ->select('count(i.id)')
+            ->where('i.actividad = :actividad')
+            ->andWhere('i.estado IN (:estados)')
+            ->setParameter('actividad', $actividad)
+            ->setParameter('estados', ['PENDIENTE', 'CONFIRMADO', 'CONFIRMADA', 'ACEPTADA', 'EN_CURSO', 'EN CURSO']) // Maintain compatibility with legacy strings for now
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findByVolunteerAndActivity(\App\Entity\Voluntario $voluntario, \App\Entity\Actividad $actividad): ?Inscripcion
+    {
+        return $this->findOneBy(['voluntario' => $voluntario, 'actividad' => $actividad]);
+    }
 }

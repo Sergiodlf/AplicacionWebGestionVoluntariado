@@ -27,22 +27,26 @@ export class LoginComponent {
     }
 
     this.isLoading = true;
-    this.errorMessage = ''; // Clear previous errors
+    this.errorMessage = ''; 
 
     this.authService.login(this.email, this.password)
       .then(() => {
-        console.log('Firebase login successful');
+        console.log('Login successful');
         this.loadUserProfile();
       })
       .catch((error: any) => {
-        console.error('Firebase login error:', error);
+        console.error('Login error:', error);
         this.isLoading = false;
-        if (error.code === 'auth/invalid-email') {
-          this.errorMessage = 'El formato del correo es inválido.';
-        } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          this.errorMessage = 'Credenciales incorrectas.';
+        
+        // Handle API errors
+        if (error.status === 401) {
+             this.errorMessage = 'Credenciales incorrectas (Email o contraseña).';
+        } else if (error.status === 403) {
+             this.errorMessage = error.error?.message || 'Acceso denegado due to status/verification.';
+        } else if (error.status === 429) {
+             this.errorMessage = 'Demasiados intentos. Inténtalo más tarde.';
         } else {
-          this.errorMessage = 'Error al iniciar sesión con Firebase: ' + error.message;
+             this.errorMessage = error.error?.error || 'Error al iniciar sesión.';
         }
       });
   }

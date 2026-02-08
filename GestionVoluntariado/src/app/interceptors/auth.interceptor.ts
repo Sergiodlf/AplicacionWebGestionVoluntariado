@@ -1,30 +1,30 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Auth, idToken } from '@angular/fire/auth';
-import { switchMap, take } from 'rxjs/operators';
+import { AuthService } from '../services/auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const auth = inject(Auth);
+  const authService = inject(AuthService); // Inject AuthService if needed, or just access localStorage directly
+  const token = localStorage.getItem('user_token');
 
-  return idToken(auth).pipe(
-    take(1),
-    switchMap((token) => {
-      // Exclude only public authentication endpoints from sending the token
-      // We must ALLOW /api/auth/profile to send the token as it is protected
-      const publicEndpoints = ['/auth/login', '/auth/register', '/auth/forgot-password', '/categories', '/ciclos'];
-      const isPublic = publicEndpoints.some(endpoint => req.url.includes(endpoint));
+  // Exclude public endpoints if needed, but 'Bearer null' or no header is fine if we just check token existence
+  // The logic below ensures we don't send Authorization if no token.
+  // We explicitly want to send it for profile, but not for public login/register if we want strictness,
+  // though sending a potentially old token to login is usually ignored by backend.
+  
+  // Public endpoints list - simplified
+  const publicEndpoints = ['/auth/login', '/auth/register', '/auth/forgot-password'];
+  const isPublic = publicEndpoints.some(endpoint => req.url.includes(endpoint));
 
-      if (isPublic) {
-        return next(req);
-      }
+  if (isPublic) {
+    return next(req);
+  }
 
-      if (token) {
-        const clonedReq = req.clone({
-          headers: req.headers.set('Authorization', `Bearer ${token}`)
-        });
-        return next(clonedReq);
-      }
-      return next(req);
-    })
-  );
+  if (token) {
+    const clonedReq = req.clone({
+      headers: req.headers.set('Authorization', `Bearer ${token}`)
+    });
+    return next(clonedReq);
+  }
+
+  return next(req);
 };
