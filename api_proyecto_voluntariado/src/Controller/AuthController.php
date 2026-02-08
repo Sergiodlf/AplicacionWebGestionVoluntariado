@@ -109,7 +109,7 @@ class AuthController extends AbstractController
             $isAdmin = true;
         }
         
-        $logMsg .= "RegisterVoluntario: Final isAdmin decision: " . ($isAdmin ? "TRUE" : "FALSE") . "\n";
+        $logMsg = "RegisterVoluntario: Final isAdmin decision: " . ($isAdmin ? "TRUE" : "FALSE") . "\n";
         file_put_contents('debug_auth.txt', $logMsg, FILE_APPEND);
 
         // --- REGISTRO (Vía Service) ---
@@ -212,11 +212,18 @@ class AuthController extends AbstractController
     #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
+        $logFile = __DIR__ . '/../../var/debug_login_401.txt';
+        file_put_contents($logFile, "--- New Login Attempt ---\n", FILE_APPEND);
+
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
         $password = $data['password'] ?? null;
 
+        file_put_contents($logFile, "Email provided: " . ($email ?? 'NULL') . "\n", FILE_APPEND);
+        file_put_contents($logFile, "Password provided: " . ($password ? 'YES' : 'NO') . "\n", FILE_APPEND);
+
         if (!$email || !$password) {
+            file_put_contents($logFile, "Error: Email or password missing\n", FILE_APPEND);
             return $this->json(['error' => 'Email y contraseña requeridos'], 400);
         }
 
@@ -224,6 +231,8 @@ class AuthController extends AbstractController
         // Robust check: $_ENV -> $_SERVER -> getenv
         $apiKey = $_ENV['FIREBASE_API_KEY'] ?? $_SERVER['FIREBASE_API_KEY'] ?? getenv('FIREBASE_API_KEY');
         
+        file_put_contents($logFile, "API Key found: " . ($apiKey ? 'YES' : 'NO') . "\n", FILE_APPEND);
+
         if (!$apiKey) {
             // Debugging: Log available keys to help diagnose why it's missing
             $envKeys = implode(', ', array_keys($_ENV));
@@ -235,6 +244,8 @@ class AuthController extends AbstractController
 
         try {
             // 1. Autenticar contra Firebase (REST API)
+            file_put_contents($logFile, "Requesting signInWithPassword to Firebase...\n", FILE_APPEND);
+            
             $response = $this->httpClient->request('POST', 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' . $apiKey, [
                 'json' => [
                     'email' => $email,
@@ -249,11 +260,15 @@ class AuthController extends AbstractController
 
             // Si falla (4xx), lanzará excepción ClientExceptionInterface
             $firebaseData = $response->toArray();
+            file_put_contents($logFile, "Firebase Response: Success. UID: " . ($firebaseData['localId'] ?? 'N/A') . "\n", FILE_APPEND);
             
             // 2. Verificar existencia en Base de Datos Local
             try {
+                file_put_contents($logFile, "Looking up user in local DB: $email\n", FILE_APPEND);
                 $localUser = $this->unifiedUserProvider->loadUserByIdentifier($email);
+                file_put_contents($logFile, "User found in local DB. Class: " . get_class($localUser) . "\n", FILE_APPEND);
             } catch (UserNotFoundException $e) {
+                 file_put_contents($logFile, "Error: User NOT found in local DB.\n", FILE_APPEND);
                  return $this->json([
                      'error' => 'Inconsistencia de cuenta.',
                      'detalle' => 'El usuario existe en el sistema de autenticación pero no tiene perfil en la base de datos local.'
@@ -263,6 +278,8 @@ class AuthController extends AbstractController
             // 2b. Validar estado del usuario (NO ADMINISTRADORES)
             if ($localUser instanceof Voluntario) {
                 $estado = $localUser->getEstadoVoluntario();
+                file_put_contents($logFile, "Voluntario found. Estado: $estado\n", FILE_APPEND);
+                
                 // Permitimos ACEPTADO y LIBRE (que es el estado de las cuentas de prueba)
                 if ($estado !== 'ACEPTADO' && $estado !== 'LIBRE') {
                     if ($estado === 'PENDIENTE') {
@@ -289,6 +306,8 @@ class AuthController extends AbstractController
                 }
             } elseif ($localUser instanceof Organizacion) {
                 $estado = strtolower($localUser->getEstado());
+                file_put_contents($logFile, "Organizacion found. Estado: $estado\n", FILE_APPEND);
+                
                 if ($estado !== 'aprobado' && $estado !== 'aceptada') {
                     if ($estado === 'pendiente') {
                         return $this->json([
@@ -309,14 +328,20 @@ class AuthController extends AbstractController
                 }
             }
             // Administradores siempre tienen acceso
+            if ($localUser instanceof Administrador) {
+                file_put_contents($logFile, "Administrador found.\n", FILE_APPEND);
+            }
 
             // 2c. Obtener estado de verificación de email desde Firebase Admin SDK
             $emailVerified = false;
             try {
+                file_put_contents($logFile, "Checking email verification via Firebase Admin SDK...\n", FILE_APPEND);
                 $firebaseUser = $this->firebaseAuth->getUser($firebaseData['localId']);
                 $emailVerified = $firebaseUser->emailVerified;
+                file_put_contents($logFile, "Email Verified Status: " . ($emailVerified ? 'TRUE' : 'FALSE') . "\n", FILE_APPEND);
             } catch (\Exception $e) {
                 error_log("Error getting user verification status: " . $e->getMessage());
+                file_put_contents($logFile, "Error checking verification: " . $e->getMessage() . "\n", FILE_APPEND);
             }
 
             // 3. Login Exitoso
@@ -333,6 +358,9 @@ class AuthController extends AbstractController
 
         } catch (\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
             // Manejo de errores de Firebase (400 Bad Request)
+            $responseBody = $e->getResponse()->getContent(false);
+            file_put_contents($logFile, "ClientException from Firebase: " . $responseBody . "\n", FILE_APPEND);
+            
             try {
                 $errorContent = $e->getResponse()->toArray(false);
                 $msg = $errorContent['error']['message'] ?? 'Error de autenticación';
@@ -340,8 +368,11 @@ class AuthController extends AbstractController
                 $msg = 'Error desconocido de autenticación';
             }
             
+            file_put_contents($logFile, "Parsed Error Message: " . $msg . "\n", FILE_APPEND);
+
             if (in_array($msg, ['EMAIL_NOT_FOUND', 'INVALID_PASSWORD', 'INVALID_LOGIN_CREDENTIALS'])) {
-                return $this->json(['error' => 'Credenciales inválidas'], 401);
+                // TEMPORARY DEBUG: Expose specific error
+                return $this->json(['error' => 'Credenciales inválidas (' . $msg . ')'], 401);
             }
             if ($msg === 'USER_DISABLED') {
                 return $this->json(['error' => 'Usuario deshabilitado'], 403);
@@ -353,6 +384,7 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Error de Firebase: ' . $msg], 400);
 
         } catch (\Exception $e) {
+            file_put_contents($logFile, "General Exception: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n", FILE_APPEND);
             return $this->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
         }
     }

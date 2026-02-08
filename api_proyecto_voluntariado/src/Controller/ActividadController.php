@@ -52,19 +52,13 @@ class ActividadController extends AbstractController
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
         
-        $log .= "User Class: " . ($user ? get_class($user) : 'Guest') . "\n";
-        $log .= "DTO CIF: " . ($dto->cifOrganizacion ?? 'NULL') . "\n";
-
         // A. Prioridad: Token de Organización
         if ($user instanceof Organizacion) {
             $organizacion = $user;
-            $log .= "User identified as Organizacion: " . $organizacion->getNombre() . "\n";
         }
         // B. Fallback: CIF en el JSON (para admins o debug)
         elseif (!empty($dto->cifOrganizacion)) {
-             $log .= "Looking up Organizacion by CIF: " . $dto->cifOrganizacion . "\n";
              $organizacion = $em->getRepository(Organizacion::class)->find($dto->cifOrganizacion);
-             $log .= "Found: " . ($organizacion ? $organizacion->getNombre() : 'NO') . "\n";
         }
 
         if (!$organizacion) {
@@ -155,8 +149,6 @@ class ActividadController extends AbstractController
                ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles()))) {
                 $estadoAprobacion = 'ACEPTADA';
             }
-
-            $log .= "Creating Activity via Service... (Estado: $estadoCalculado, Aprobacion: $estadoAprobacion)\n";
 
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
@@ -271,6 +263,8 @@ class ActividadController extends AbstractController
 
         // Get Activities via Service/Repo
         $actividades = $this->activityService->getActivitiesByFilters($filters);
+        
+        file_put_contents(__DIR__ . '/../../var/debug_activities.txt', "Result Count: " . count($actividades) . "\n\n", FILE_APPEND);
         
         // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
         $modificado = false;

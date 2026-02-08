@@ -1,0 +1,348 @@
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+Error: Email not verified.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+❌ Error: General Exception: Debes verificar tu correo electrónico antes de iniciar sesión via API.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'jrenzullis@gmail.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'organizacion_test@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
+--- Firewall Token Check ---
+Email from token: 'admin@curso.com'
+User found in DB. Returning Badge.
