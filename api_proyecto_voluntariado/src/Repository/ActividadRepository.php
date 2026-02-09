@@ -11,6 +11,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ActividadRepository extends ServiceEntityRepository
 {
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Actividad::class);
+    }
     public function findByFilters(array $filters): array
     {
         $qb = $this->createQueryBuilder('a');
