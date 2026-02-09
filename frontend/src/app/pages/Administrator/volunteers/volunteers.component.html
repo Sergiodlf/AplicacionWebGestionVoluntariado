@@ -1,0 +1,220 @@
+<div class="d-flex flex-column min-vh-100 bg-light">
+
+  <div class="d-flex flex-grow-1 overflow-hidden">
+    <app-sidebar></app-sidebar>
+    <div class="flex-grow-1 d-flex flex-column overflow-hidden">
+      <div class="container-fluid p-4 pb-0 flex-shrink-0">
+
+        <!-- Header Section -->
+        <div class="d-flex flex-column align-items-center mb-5">
+          <h2 class="text-custom-blue fw-bold mb-4">Voluntarios</h2>
+          <app-status-toggle leftLabel="Pendientes" rightLabel="Aceptados"
+            [leftCount]="(pendingVolunteers$ | async)?.length || 0"
+            [rightCount]="(approvedVolunteers$ | async)?.length || 0" (optionChanged)="onTabChange($event)">
+          </app-status-toggle>
+
+          <!-- Search Bar (Centered below tabs) -->
+          <!-- Search Bar Removed -->
+        </div>
+
+        <!-- Subheader & Action -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+          <div class="d-flex align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center text-custom-blue">
+              <i class="bi bi-people me-2 fs-4"></i>
+              <h4 class="fw-bold mb-0">Voluntarios {{ activeTab === 'left' ? 'Pendientes' : (activeTab === 'middle' ?
+                'En Curso' : 'Aceptados') }}</h4>
+            </div>
+
+            <!-- Search Bar (Right Aligned) -->
+            <div class="d-flex align-items-center gap-3 ms-auto">
+              <!-- Filter Icon with Badge -->
+              <div class="input-group bg-light rounded-pill px-3 py-2 shadow-sm border-0"
+                style="max-width: 350px; width: 100%;">
+                <span class="input-group-text bg-transparent border-0 text-custom-blue position-relative"
+                  style="cursor: pointer;" (click)="openModal('filter')">
+                  <i class="bi bi-sliders"></i>
+                  <span class="position-absolute constant-badge badge rounded-pill bg-danger"
+                    style="top: 5px; right: 5px; font-size: 0.5rem; padding: 0.25em 0.4em;"
+                    *ngIf="activeFilterCount > 0">
+                    {{ activeFilterCount }}
+                  </span>
+                </span>
+                <input type="text" class="form-control bg-transparent border-0 shadow-none ps-2 text-dark"
+                  placeholder="Buscar Voluntario..." [(ngModel)]="searchTerm" (input)="applyFilters()">
+                <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
+              </div>
+
+
+              <button
+                class="btn btn-custom-blue text-white rounded-pill px-4 py-2 d-flex align-items-center text-nowrap"
+                (click)="openModal('add')">
+                <i class="bi bi-plus-lg me-2"></i> Nuevo Voluntario
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex-grow-1 overflow-auto">
+        <div class="container-fluid px-4 pb-4">
+          @if (isLoading) {
+          <div class="d-flex flex-column align-items-center justify-content-center py-5">
+            <div class="mb-3">
+              <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
+            </div>
+            <h5 class="text-custom-blue fw-light">Cargando voluntarios...</h5>
+          </div>
+          } @else {
+          <div class="row g-4">
+            @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
+            volunteer.email) {
+            <div class="col-12 col-md-6">
+              <app-volunteer-card [name]="volunteer.nombre" [email]="volunteer.email" [skills]="volunteer.habilidades"
+                [availability]="volunteer.disponibilidad" [interests]="volunteer.intereses"
+                [languages]="volunteer.languages || []" [ciclo]="volunteer.ciclo || ''" [status]="volunteer.status"
+                (onAccept)="onAccept(volunteer)" (onReject)="onReject(volunteer)"
+                (onAssign)="openMatchModal(volunteer)">
+              </app-volunteer-card>
+            </div>
+            } @empty {
+            <div class="col-12">
+              <p class="text-center text-muted p-5">No hay voluntarios pendientes o aprobados para mostrar.</p>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Modal -->
+@if (showFilterModal) {
+
+<!-- Backdrop -->
+<div class="custom-backdrop" (click)="closeModal('filter')"></div>
+
+<!-- Modal -->
+<div class="modal fade show d-block" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h3 class="modal-title fw-bold text-custom-blue">Filtrar Voluntarios</h3>
+        <button class="btn-close" (click)="closeModal('filter')"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <!-- Zone Filter -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark mb-2">Zona</label>
+            <select class="form-select border-light-gray" [(ngModel)]="tempFilters.zona">
+              <option value="">Todas las zonas</option>
+              <option *ngFor="let zone of availableZones" [value]="zone">{{ zone }}</option>
+            </select>
+          </div>
+
+          <!-- Availability Filter -->
+          <div class="col-md-6">
+            <label class="form-label fw-bold text-dark mb-2">Disponibilidad</label>
+            <div class="dropdown">
+              <button
+                class="btn btn-outline-secondary w-100 text-start d-flex justify-content-between align-items-center"
+                type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Seleccionar Disponibilidad
+                <span class="badge bg-secondary ms-2" *ngIf="tempFilters.disponibilidad.length > 0">{{
+                  tempFilters.disponibilidad.length }}</span>
+              </button>
+              <ul class="dropdown-menu w-100 p-2 shadow border-0" style="max-height: 250px; overflow-y: auto;">
+                <li *ngFor="let item of availableAvailability">
+                  <div class="form-check m-2">
+                    <input class="form-check-input" type="checkbox" [value]="item"
+                      [checked]="isFilterSelected('disponibilidad', item)"
+                      (change)="toggleFilterItem('disponibilidad', item)">
+                    <label class="form-check-label">{{ item }}</label>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Skills Filter -->
+          <div class="col-12">
+            <label class="form-label fw-bold text-dark mb-2">Habilidades</label>
+            <div class="d-flex flex-wrap gap-2">
+              <span *ngFor="let item of availableSkills"
+                class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
+                [ngClass]="{'bg-custom-blue text-white': isFilterSelected('habilidades', item), 'bg-white text-dark': !isFilterSelected('habilidades', item)}"
+                style="cursor: pointer;" (click)="toggleFilterItem('habilidades', item)">
+                {{ item.nombre || item }}
+                <i class="bi"
+                  [ngClass]="{'bi-check-lg': isFilterSelected('habilidades', item), 'bi-plus-lg': !isFilterSelected('habilidades', item)}"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Interests Filter -->
+          <div class="col-12">
+            <label class="form-label fw-bold text-dark mb-2">Intereses</label>
+            <div class="d-flex flex-wrap gap-2">
+              <span *ngFor="let item of availableInterests"
+                class="badge border px-3 py-2 rounded-pill fw-normal d-flex align-items-center gap-2 cursor-pointer"
+                [ngClass]="{'bg-warning text-dark': isFilterSelected('intereses', item), 'bg-white text-dark': !isFilterSelected('intereses', item)}"
+                style="cursor: pointer;" (click)="toggleFilterItem('intereses', item)">
+                {{ item.nombre || item }}
+                <i class="bi"
+                  [ngClass]="{'bi-check-lg': isFilterSelected('intereses', item), 'bi-plus-lg': !isFilterSelected('intereses', item)}"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 justify-content-between px-4 pb-4">
+        <button type="button" class="btn btn-outline-danger px-4 rounded-pill" (click)="resetFilters()">
+          <i class="bi bi-trash me-2"></i> Limpiar Filtros
+        </button>
+        <button type="button" class="btn btn-custom-blue text-white px-4 rounded-pill" (click)="applyFilters()">
+          Aplicar Filtros
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Add Volunteer Modal -->
+@if (showModal) {
+
+<!-- Backdrop -->
+<div class="custom-backdrop" (click)="closeModal('add')"></div>
+
+<!-- Modal -->
+<div class="modal fade show d-block" role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+
+      <div class="modal-header border-0">
+        <button class="btn-close" (click)="closeModal('add')"></button>
+      </div>
+
+      <div class="modal-body px-5 pb-5">
+        <div class="text-center mb-4">
+          <h2 class="fw-bold text-custom-blue">Añadir Voluntario</h2>
+        </div>
+
+        <app-volunteer-form submitLabel="Añadir" (onSubmit)="handleCreateVolunteer($event)">
+        </app-volunteer-form>
+
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+
+<!-- Match Creation Modal -->
+<app-create-match-modal *ngIf="showCreateMatchModal" [preselectedVolunteer]="selectedVolunteerForMatch"
+  (close)="showCreateMatchModal = false" (matchCreated)="onMatchCreated()">
+</app-create-match-modal>

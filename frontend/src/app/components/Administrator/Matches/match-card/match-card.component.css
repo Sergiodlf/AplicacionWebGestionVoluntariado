@@ -1,0 +1,53 @@
+.match-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .08) !important;
+}
+
+.avatar-circle {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-soft-blue {
+    background-color: #e3f2fd;
+}
+
+.bg-soft-orange {
+    background-color: #fff3e0;
+}
+
+.bg-soft-gray {
+    background-color: #f8f9fa;
+}
+
+.text-orange {
+    color: #fd7e14;
+}
+
+@media (min-width: 768px) {
+    .border-start-md {
+        border-left: 1px solid #dee2e6 !important;
+    }
+
+    .border-top-md-0 {
+        border-top: 0 !important;
+    }
+}
+
+.hover-blue {
+    transition: color 0.2s ease;
+}
+
+.hover-blue:hover {
+    color: #1a237e !important;
+    text-decoration: underline !important;
+    cursor: pointer;
+}

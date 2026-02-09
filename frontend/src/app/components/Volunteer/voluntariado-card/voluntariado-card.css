@@ -1,0 +1,58 @@
+.bg-light-blue {
+  background-color: #e8f0fe;
+  /* Adjust based on your theme */
+}
+
+.text-custom-blue {
+  color: #1e3a8a;
+  /* Adjust based on your theme, assuming dark blue */
+}
+
+.btn-custom-blue {
+  background-color: #1e3a8a;
+  border-color: #1e3a8a;
+}
+
+.btn-custom-blue:hover {
+  background-color: #172e6e;
+  border-color: #172e6e;
+}
+
+/* --- Estilo base: EN CURSO --- */
+/* --- Estilo base: EN CURSO --- */
+.status-pill {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  z-index: 10;
+
+  /* En Curso por defecto */
+  background-color: #DCFCE7;
+  color: #34A853;
+}
+
+/* Sin Comenzar */
+.status-pill.sin-comenzar {
+  background-color: #E6E6E6;
+  color: #555555;
+}
+
+/* En Curso */
+.status-pill.en-curso {
+  background-color: #DCFCE7;
+  color: #34A853;
+}
+
+/* Pendiente - Dashboard Style (Warning/Yellow) */
+.status-pill.pendiente {
+  background-color: #FFF4E5;
+  color: #B76E00;
+  border: 1px solid #FFD599;
+}
+
+/* Completado */
+.status-pill.completado {
+  background-color: #E0E7FF;
+  color: #4F46E5;
+}

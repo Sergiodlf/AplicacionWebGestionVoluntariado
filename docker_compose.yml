@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # 1. Base de Datos (SQL Server)
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=123456
+    ports:
+      - "1433:1433"
+
+  # 2. Backend (Symfony)
+  backend:
+    build: ./GestionVoluntariado/backend  # Ruta al Dockerfile del back
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "sqlsrv://sa:123456@127.0.0.1:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=yes"
+    ports:
+      - "8000:80"
+
+  # 3. Frontend (Angular)
+  frontend:
+    build: ./GestionVoluntariado/frontend # Ruta al Dockerfile del front
+    ports:
+      - "80:80"
+    depends_on:
+      - backend

@@ -1,0 +1,19 @@
+.custom-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+
+  z-index: 9998;
+  pointer-events: all;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.modal-dialog {
+  pointer-events: auto;
+}
