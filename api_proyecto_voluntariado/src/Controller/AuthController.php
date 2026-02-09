@@ -275,6 +275,11 @@ class AuthController extends AbstractController
                  ], 404);
             }
 
+            // --- FIX: Desempaquetar SecurityUser ---
+            if ($localUser instanceof \App\Security\User\SecurityUser) {
+                $localUser = $localUser->getDomainUser();
+            }
+
             // 2b. Validar estado del usuario (NO ADMINISTRADORES)
             if ($localUser instanceof Voluntario) {
                 $estado = $localUser->getEstadoVoluntario();
@@ -432,6 +437,11 @@ class AuthController extends AbstractController
                      'email' => $email, 
                      'uid' => $uid
                  ], 404);
+            }
+
+            // --- FIX: Desempaquetar SecurityUser ---
+            if ($localUser instanceof \App\Security\User\SecurityUser) {
+                $localUser = $localUser->getDomainUser();
             }
 
             // 2b. Validar estado del usuario (NO ADMINISTRADORES)
