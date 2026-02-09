@@ -1,4 +1,0 @@
-Total Activities: 3
-ID: 1 | Nombre: Actividad Social 0 | Aprobacion: ACEPTADO | Estado: ABIERTA | Fin: 2026-03-06
-ID: 2 | Nombre: Actividad Social 1 | Aprobacion: ACEPTADO | Estado: ABIERTA | Fin: 2026-03-06
-ID: 3 | Nombre: Actividad Social 2 | Aprobacion: ACEPTADO | Estado: ABIERTA | Fin: 2026-03-06
