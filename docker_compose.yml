@@ -12,7 +12,7 @@ services:
 
   # 2. Backend (Symfony)
   backend:
-    build: ./GestionVoluntariado/backend  # Ruta al Dockerfile del back
+    build: ./api_proyecto_voluntariado  # Ruta al Dockerfile del back
     depends_on:
       - db
     environment:
@@ -22,7 +22,7 @@ services:
 
   # 3. Frontend (Angular)
   frontend:
-    build: ./GestionVoluntariado/frontend # Ruta al Dockerfile del front
+    build: ./frontend # Ruta al Dockerfile del front
     ports:
       - "80:80"
     depends_on:
