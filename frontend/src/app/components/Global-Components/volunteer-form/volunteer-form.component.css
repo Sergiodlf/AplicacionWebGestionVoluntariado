@@ -1,0 +1,55 @@
+.summary-badge {
+    border: 1px solid transparent;
+}
+
+.lang-badge {
+    background-color: #f0f7ff;
+    color: #003a8c;
+    border-color: #bae7ff;
+}
+
+.skill-badge-added {
+    background-color: #1a237e;
+    color: white;
+}
+
+.interest-badge-added {
+    background-color: #fbbf24;
+    color: black;
+}
+
+.availability-badge-added {
+    background-color: #059669;
+    color: white;
+}
+
+.submit-btn {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3);
+}
+
+.review-card {
+    border: 2px solid rgba(0, 43, 91, 0.1);
+}
+
+.sticky-action-bar {
+    position: sticky;
+    bottom: -1.5rem;
+    /* Matches card padding to stay at the very edge */
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-bottom: -3rem;
+    /* Compensates pb-5 of form */
+    z-index: 10;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.pointer-cursor {
+    cursor: pointer;
+}

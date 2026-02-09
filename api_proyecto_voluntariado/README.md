@@ -26,8 +26,22 @@ Este proyecto usa librerías de encriptación que requieren la extensión `sodiu
 
 Clona el repositorio y entra en la carpeta de la API (`api_proyecto_voluntariado`):
 
+### 2.1. Instalar Dependencias
+
+Asegúrate de tener `composer` instalado. Si no lo tienes en el PATH de Windows, puedes descargarlo localmente:
+
+```bash
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+```
+
+Luego instala las dependencias (si descargaste `composer.phar` usa `php composer.phar install`):
+
 ```bash
 composer install
+# O si usas el .phar local:
+php composer.phar install
 ```
 
 Si da error de extensiones, asegúrate de haber completado el paso 1.
@@ -71,11 +85,18 @@ MAILER_DSN=gmail://notificaciones4v@gmail.com:LA_CONTRASEÑA_DEL_GRUPO@default
 
 ## 5. Base de Datos
 
-1. Asegúrate de que MySQL está corriendo (XAMPP).
+1. Asegúrate de que tu servidor de base de datos (MySQL o SQL Server) esté corriendo.
 2. Ten configurada tu `DATABASE_URL` en el `.env.local` (ver paso anterior).
+   - **Nota para SQL Server**: Asegúrate de usar el driver `sqlsrv://` y que la extensión esté habilitada en `php.ini`.
 3. Crea la base de datos y las tablas:
    ```bash
-   php bin/console doctrine:database:create
+   # Crear la BBDD (si no existe)
+   php bin/console doctrine:database:create --if-not-exists
+
+   # Generar migración inicial (si la carpeta `migrations` está vacía o da error de version "latest")
+   php bin/console make:migration
+
+   # Ejecutar migraciones
    php bin/console doctrine:migrations:migrate
    ```
 4. Cargar datos de prueba (opcional)

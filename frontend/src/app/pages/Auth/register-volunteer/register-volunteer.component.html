@@ -1,0 +1,18 @@
+<div class="container-fluid min-vh-100 bg-light d-flex align-items-center justify-content-center py-5">
+  <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="max-width: 800px; width: 100%;">
+    <div class="p-4 p-md-5">
+      <div class="text-center mb-5">
+        <h3 class="fw-bold text-custom-blue">Registro de Voluntario</h3>
+      </div>
+
+      <app-volunteer-form submitLabel="Registrarme" [isModal]="false" (onSubmit)="handleRegister($event)"></app-volunteer-form>
+
+      <div class="text-center mt-5 pt-3 border-top">
+        <p class="text-muted mb-0">
+          ¿Ya tienes cuenta?
+          <a routerLink="/login" class="text-custom-blue fw-bold text-decoration-none">Iniciar Sesión</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
