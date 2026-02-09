@@ -15,9 +15,10 @@ Aplicación Web (Cliente) desarrollada en **Angular** para la gestión de volunt
     ```
 2.  Instala las dependencias:
     ```bash
+    ```bash
     npm install --legacy-peer-deps
     ```
-    > Nota: Usamos `--legacy-peer-deps` para evitar conflictos de versiones con algunas librerías de UI.
+    > **Importante**: Usamos `--legacy-peer-deps` debido a conflictos de versiones en las dependencias.
 
 ## Desarrollo Local
 
@@ -39,7 +40,15 @@ La aplicación estará disponible en `http://localhost:4200/`.
 ## Troubleshooting
 
 ### Error de dependencias
-Si `npm install` falla, prueba borrar `node_modules` y `package-lock.json` y reinstalar.
+Si `npm install` falla, prueba una limpieza completa y reinstalación:
+
+```bash
+# Windows
+rmdir /s /q node_modules
+del package-lock.json
+
+npm install --legacy-peer-deps
+```
 
 ### Problemas de CORS
 Actualmente en desarrollo (`ng serve`), las peticiones a la API pueden sufrir bloqueos por CORS (Cross-Origin Resource Sharing) ya que el frontend corre en el puerto `4200` y el backend en el `8000`.
