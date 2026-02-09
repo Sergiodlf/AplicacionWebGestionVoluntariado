@@ -2,23 +2,38 @@ version: '3.8'
 
 services:
   # 1. Base de Datos (SQL Server)
+  # 1. Base de Datos (SQL Server)
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build: ./database
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=123456
     ports:
       - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql/data
 
-  # 2. Backend (Symfony)
+  # 2. Backend (Symfony - PHP-FPM)
   backend:
-    build: ./api_proyecto_voluntariado  # Ruta al Dockerfile del back
+    build: ./api_proyecto_voluntariado
     depends_on:
       - db
     environment:
-      DATABASE_URL: "sqlsrv://sa:123456@127.0.0.1:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=yes"
+      DATABASE_URL: "sqlsrv://sa:123456@db:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=yes"
+    # PHP-FPM escucha en el 9000, no exponemos puerto al host, solo internamente a Nginx
+
+    # 2.1 Backend Web Server (Nginx)
+  backend-web:
+    build: ./api_proyecto_voluntariado/nginx
     ports:
       - "8000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./api_proyecto_voluntariado:/var/www/html # Compartir código para que Nginx sirva estáticos si fuera necesario
+
+volumes:
+  sql_data:
 
   # 3. Frontend (Angular)
   frontend:
