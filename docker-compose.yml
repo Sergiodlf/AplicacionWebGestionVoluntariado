@@ -13,14 +13,20 @@ services:
     # Volumen comentado temporalmente para diagnosticar problema de permisos
     # volumes:
     #   - sql_data:/var/opt/mssql/data
-
-    # 2. Backend (Symfony - PHP-FPM)
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Volunt@ri0DB2024!' -C -Q 'SELECT 1' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      # 2. Backend (Symfony - PHP-FPM)
   backend:
     build: ./api_proyecto_voluntariado
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      DATABASE_URL: "sqlsrv://sa:Volunt@ri0DB2024!@db:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=yes"
+      DATABASE_URL: "sqlsrv://sa:Volunt@ri0DB2024!@db:1433/PROYECTOINTER?serverVersion=2019&Encrypt=no"
     # PHP-FPM escucha en el 9000, no exponemos puerto al host, solo internamente a Nginx
 
     # 2.1 Backend Web Server (Nginx)
