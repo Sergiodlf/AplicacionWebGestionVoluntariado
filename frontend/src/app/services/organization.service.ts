@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { Organization, OrganizationCreateData } from '../models/organizationModel';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrganizationService {
-  private apiUrl = '/api/organizations';
+  private apiUrl = `${environment.apiUrl}/organizations`;
 
   // 1. Subject para notificar cambios en la lista de organizaciones
   private organizationUpdatedSource = new Subject<void>();
@@ -44,7 +45,7 @@ export class OrganizationService {
   }
 
   createOrganization(organization: any): Observable<any> {
-    return this.http.post('/api/auth/register/organizacion', organization);
+    return this.http.post(`${environment.apiUrl}/auth/register/organizacion`, organization);
   }
 
   removeOrganization(cif: string): Observable<any> {
@@ -70,8 +71,8 @@ export class OrganizationService {
     // return this.http.delete(`${this.apiUrl}/${cif}`);
 
     // O si quieres cambiar el estado a "Rechazado":
-     const updateData = { estado: 'rechazado' };
-     return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
+    const updateData = { estado: 'rechazado' };
+    return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
   }
 
   /**
@@ -92,7 +93,7 @@ export class OrganizationService {
   }
 
   getProfile(): Observable<Organization> {
-    return this.http.get<any>('/api/auth/profile').pipe(
+    return this.http.get<any>(`${environment.apiUrl}/auth/profile`).pipe(
       tap(response => console.log('Organization Profile:', response)),
       map(response => response.datos as Organization)
     );

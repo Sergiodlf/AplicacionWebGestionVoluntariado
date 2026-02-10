@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Actividad } from '../models/actividad';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ActividadService {
 
-  private apiUrl = '/api/actividades';  // Corrected for proxy
+  private apiUrl = `${environment.apiUrl}/actividades`;  // Corrected for proxy
 
   constructor(private http: HttpClient) { }
 

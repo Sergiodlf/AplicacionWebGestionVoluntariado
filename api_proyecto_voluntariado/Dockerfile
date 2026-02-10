@@ -28,8 +28,8 @@ WORKDIR /var/www/html
 # Copiar archivos del proyecto
 COPY . .
 
-# Instalar dependencias PHP
-RUN composer install --no-scripts --no-interaction
+# Instalar dependencias PHP (update para generar composer.lock con nelmio/cors-bundle)
+RUN composer update --no-scripts --no-interaction
 
 # Copiar y dar permisos al entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

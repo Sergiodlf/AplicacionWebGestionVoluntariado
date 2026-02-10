@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';4
+import { tap } from 'rxjs/operators'; 4
 import { Category } from '../models/Category';
 import { ODS } from '../models/ODS';
+import { environment } from '../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class CategoryService {
-    private apiUrl = '/api/categories';
+    private apiUrl = `${environment.apiUrl}/categories`;
     private odsSubject = new BehaviorSubject<ODS[] | null>(null);
     private habilidadesSubject = new BehaviorSubject<Category[] | null>(null);
     private interesesSubject = new BehaviorSubject<Category[] | null>(null);
