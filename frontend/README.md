@@ -11,7 +11,7 @@ Aplicación Web (Cliente) desarrollada en **Angular** para la gestión de volunt
 
 1.  Entra en la carpeta del frontend:
     ```bash
-    cd GestionVoluntariado
+    cd frontend
     ```
 2.  Instala las dependencias:
     ```bash
@@ -51,14 +51,52 @@ npm install --legacy-peer-deps
 ```
 
 ### Problemas de CORS
-Actualmente en desarrollo (`ng serve`), las peticiones a la API pueden sufrir bloqueos por CORS (Cross-Origin Resource Sharing) ya que el frontend corre en el puerto `4200` y el backend en el `8000`.
 
-**Solución Actual (Desarrollo):**
-Usamos un proxy interno de Angular configurado en `proxy.conf.json`.
-- Todas las peticiones a `/api` se redirigen automáticamente a `http://127.0.0.1:8000`.
-- Esto "engaña" al navegador haciéndole creer que frontend y backend están en el mismo origen.
+Durante el desarrollo local (`ng serve`), el frontend corre en `http://localhost:4200` y el backend en `http://localhost:8000`, lo que genera bloqueos por CORS (Cross-Origin Resource Sharing).
 
-**Opciones a Futuro (Producción):**
-El proxy de Angular **NO** funciona en producción. Para el despliegue real, se debe optar por una de estas estrategias:
-1.  **Habilitar CORS en el Backend:** Configurar Symfony (por ejemplo usando `NelmioCorsBundle`) para que acepte explícitamente peticiones desde el dominio del frontend.
-2.  **Servir desde el mismo Origen (Recomendado):** Configurar el servidor web (Nginx/Apache) para que sirva tanto los ficheros estáticos de Angular como la API bajo el mismo dominio (ej: `miweb.com` y `miweb.com/api`). Esto elimina completamente la necesidad de CORS.
+---
+
+#### ✅ Solución Actual (Solo Desarrollo)
+
+Usamos un **proxy interno de Angular** configurado en `proxy.conf.json`:
+- Todas las peticiones a `/api` se redirigen a `http://127.0.0.1:8000`
+- El navegador cree que frontend y backend están en el mismo origen
+
+> ⚠️ **IMPORTANTE**: Esta solución **SOLO funciona con `ng serve`** y **NO está disponible en producción**.
+
+---
+
+#### 🚀 Soluciones para Producción
+
+El proxy de Angular NO funciona en builds de producción. Hay dos opciones viables:
+
+**Opción 1: Mismo Origen con Nginx (Recomendado)**
+- Usar Nginx como reverse proxy para servir frontend y backend bajo el mismo dominio
+- Configuración:
+  - Frontend: `https://miweb.com/`
+  - Backend API: `https://miweb.com/api`
+- **Ventaja**: Elimina completamente los problemas de CORS
+- **Estado actual**: Implementado en `docker-compose.yml` con servicio `backend-web`
+
+**Opción 2: Habilitar CORS en Backend (No Recomendado)**
+- Configurar Symfony con `NelmioCorsBundle` para aceptar peticiones del dominio del frontend
+- **Desventaja**: Requiere configuración adicional de seguridad y puede tener problemas de rendimiento
+- **Uso**: Solo si no se puede usar Nginx/Apache
+
+---
+
+#### 📋 Configuración Actual
+
+**Desarrollo Local:**
+```bash
+ng serve  # Usa proxy.conf.json automáticamente
+```
+
+**Producción (Docker):**
+```bash
+docker compose up -d  # Nginx maneja CORS automáticamente
+```
+
+El frontend compilado se sirve desde Nginx, y las peticiones a `/api` se redirigen al backend PHP-FPM.
+
+

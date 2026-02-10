@@ -24,6 +24,11 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 *   **Contenido**: Interfaz de usuario para Voluntarios y Organizaciones.
 *   **[Ver Guía de Instalación Frontend](GestionVoluntariado/README.md)**
 
+### [Docker Deployment](DOCKER_DEPLOYMENT.md)
+*   **Tecnología**: Docker Compose, SQL Server 2022, Nginx.
+*   **Contenido**: Despliegue completo con contenedores (Backend + Frontend + BD).
+*   **[Ver Guía de Despliegue Docker](DOCKER_DEPLOYMENT.md)**
+
 ### [Mobile App (Android)](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
 *   **Repositorio Externo**: [Gari885/AplicacionMovilGestionVoluntariado](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
 *   **Tecnología**: Android Nativo.
@@ -57,18 +62,26 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 
 
 ### Generación Automática
-Puedes generar estos usuarios (verificados y listos para usar) ejecutando en el backend:
+Puedes generar estos usuarios de dos formas:
+
+**Opción 1: Comando Symfony (Backend local)**
 ```bash
 php bin/console app:create-test-users
+```
+
+**Opción 2: Docker Fixtures (Recomendado)**
+```powershell
+docker compose up -d
+.\init-database.ps1
 ```
 
 | Rol | Email | Contraseña | Estado |
 | :--- | :--- | :--- | :--- |
 | **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
 | **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
-| **Admin** | `admin@admin.com` | `123456` | (Legacy) |
+| **Admin** | `admin@curso.com` | `admin123` | Verificado |
 
-> **Nota:** Estos usuarios tienen el email verificado para poder hacer login inmediatamente sin necesidad de enviar correos reales.
+> **Nota:** Los fixtures de Docker generan 10 voluntarios adicionales, 5 organizaciones y 3 actividades de prueba. Ver [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) para más detalles.
 
 ---
 
