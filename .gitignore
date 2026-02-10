@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules/
+vendor/
+
+# Environment variables (local configurations)
+# NEVER commit files with real credentials
+.env.local
+.env.docker
+.env.*.local
+*.env.local
+
+# Firebase secrets
+config/secrets/*.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

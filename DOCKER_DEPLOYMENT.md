@@ -17,13 +17,38 @@ cd AplicacionWebGestionVoluntariado
 
 ### 2. Configurar Variables de Entorno
 
-**Importante:** Asegúrate de que la contraseña de la base de datos cumpla con los requisitos de SQL Server:
-- Mínimo 8 caracteres
-- Mayúsculas, minúsculas, números y caracteres especiales
+> [!IMPORTANT]
+> **Configura tus secrets antes de levantar Docker.**
 
-La contraseña actual configurada es: `Volunt@ri0DB2024!`
+**Opción A: Uso Rápido (Testing/Desarrollo)**
+
+Docker usará valores por defecto si no configuras `.env.docker`:
+
+- **Contraseña BD**: `Volunt@ri0DB2024!`
+- **APP_SECRET**: Secret generado automáticamente
+- **Firebase**: Sin configurar (puedes añadirlo después)
+
+**Opción B: Configuración Personalizada (Recomendado)**
+
+1. Copia el archivo de ejemplo:
+   ```bash
+   cp .env.docker.example .env.docker
+   ```
+
+2. Edita `.env.docker` con tus valores:
+   ```env
+   MSSQL_SA_PASSWORD=TuPasswordSegura123!
+   APP_SECRET=GENERA_SECRET_ALEATORIO_AQUI
+   FIREBASE_API_KEY=tu_firebase_api_key
+   ```
+
+   > **Generar APP_SECRET**: Ver [Seguridad.md](Seguridad.md) para instrucciones.
+
+3. **Asegúrate de que `.env.docker` está en `.gitignore`** (ya configurado).
+
 
 ### 3. Construir y Desplegar
+
 
 ```bash
 # Construir todas las imágenes y levantar los servicios

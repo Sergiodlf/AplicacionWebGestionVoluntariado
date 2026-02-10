@@ -19,20 +19,36 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 *   **Contenido**: API REST, gestión de base de datos, autenticación con Firebase, lógica de negocio.
 *   **[Ver Guía de Instalación Backend](api_proyecto_voluntariado/README.md)**
 
-### [Frontend (Angular App)](GestionVoluntariado/README.md)
+### [Frontend (Angular App)](frontend/README.md)
 *   **Tecnología**: Angular 17+, TypeScript.
 *   **Contenido**: Interfaz de usuario para Voluntarios y Organizaciones.
-*   **[Ver Guía de Instalación Frontend](GestionVoluntariado/README.md)**
+*   **[Ver Guía de Instalación Frontend](frontend/README.md)**
 
 ### [Docker Deployment](DOCKER_DEPLOYMENT.md)
 *   **Tecnología**: Docker Compose, SQL Server 2022, Nginx.
 *   **Contenido**: Despliegue completo con contenedores (Backend + Frontend + BD).
-*   **[Ver Guía de Despliegue Docker](DOCKER_DEPLOYMENT.md)**
+*   **Levantamiento rápido**:
+    ```bash
+    # 1. Levantar todos los servicios (Frontend, Backend, BD)
+    docker compose up -d --build
+    
+    # 2. Inicializar la base de datos con datos de prueba
+    # Windows PowerShell:
+    .\init-database.ps1
+    # Linux/Mac:
+    ./init-database.sh
+    ```
+*   **[Ver Guía Completa de Despliegue Docker](DOCKER_DEPLOYMENT.md)**
 
 ### [Mobile App (Android)](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
 *   **Repositorio Externo**: [Gari885/AplicacionMovilGestionVoluntariado](https://github.com/Gari885/AplicacionMovilGestionVoluntariado)
 *   **Tecnología**: Android Nativo.
 *   **Contenido**: Cliente móvil para Voluntarios.
+
+### [Seguridad y Configuración de Secrets](Seguridad.md)
+*   **Documentación**: Guía completa de configuración de variables de entorno y secrets.
+*   **Contenido**: Configuración local, Docker, GitHub Actions, y buenas prácticas de seguridad.
+*   **[Ver Guía de Seguridad](Seguridad.md)**
 
 ---
 
