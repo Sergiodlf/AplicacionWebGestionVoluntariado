@@ -116,7 +116,56 @@ FIREBASE_API_KEY=tu_firebase_web_api_key
 
 ---
 
-## 5. Base de Datos
+## 5. Configuración de CORS
+
+El proyecto usa **NelmioCorsBundle** para manejar CORS (Cross-Origin Resource Sharing), permitiendo que el frontend Angular haga peticiones a la API desde diferentes orígenes.
+
+### ¿Qué es CORS?
+
+CORS permite que el navegador haga peticiones desde `http://localhost:4200` (frontend) a `http://localhost:8000/api/` (backend). Sin CORS configurado, el navegador bloquea estas peticiones por seguridad.
+
+### Configuración Actual
+
+La variable `CORS_ALLOW_ORIGIN` en `.env` controla qué orígenes pueden acceder a la API:
+
+**Desarrollo local** (`.env.local`):
+```env
+# Permite localhost y 127.0.0.1 con cualquier puerto
+CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
+```
+
+**Docker**:
+```env
+# Permite desde el servicio frontend de Docker
+CORS_ALLOW_ORIGIN='^https?://(localhost|frontend)(:[0-9]+)?$'
+```
+
+**Producción**:
+```env
+# Solo permite tu dominio específico
+CORS_ALLOW_ORIGIN='^https://tudominio\.com$'
+```
+
+> [!WARNING]
+> **NUNCA uses `allow_origin: ['*']` en producción**. Siempre especifica el dominio exacto de tu aplicación.
+
+### Verificar Configuración CORS
+
+```bash
+# Ver configuración actual de CORS
+php bin/console debug:config nelmio_cors
+
+# Probar CORS con curl
+curl -H "Origin: http://localhost:4200" \
+     -H "Access-Control-Request-Method: GET" \
+     -H "Access-Control-Request-Headers: Content-Type" \
+     -X OPTIONS \
+     http://localhost:8000/api/actividades --verbose
+```
+
+---
+
+## 6. Base de Datos
 
 1. Asegúrate de que tu servidor de base de datos (MySQL o SQL Server) esté corriendo.
 2. Ten configurada tu `DATABASE_URL` en el `.env.local` (ver paso anterior).

@@ -52,36 +52,46 @@ npm install --legacy-peer-deps
 
 ### Problemas de CORS
 
-Durante el desarrollo local (`ng serve`), el frontend corre en `http://localhost:4200` y el backend en `http://localhost:8000`, lo que genera bloqueos por CORS (Cross-Origin Resource Sharing).
+Durante el desarrollo local (`ng serve`), el frontend corre en `http://localhost:4200` y el backend en `http://localhost:8000`, lo que podría generar bloqueos por CORS (Cross-Origin Resource Sharing).
 
 ---
 
-#### ✅ Solución Actual (Solo Desarrollo)
+#### ✅ Solución Actual: NelmioCorsBundle (Backend)
 
-Usamos un **proxy interno de Angular** configurado en `proxy.conf.json`:
-- Todas las peticiones a `/api` se redirigen a `http://127.0.0.1:8000`
-- El navegador cree que frontend y backend están en el mismo origen
+El backend ahora usa **NelmioCorsBundle** para manejar CORS directamente:
+- CORS se configura en el servidor (donde debe estar)
+- Funciona en desarrollo Y producción
+- No requiere proxy de Angular
+- Configuración centralizada en el backend
 
-> ⚠️ **IMPORTANTE**: Esta solución **SOLO funciona con `ng serve`** y **NO está disponible en producción**.
+**Configuración del backend:**
+```env
+# api_proyecto_voluntariado/.env
+CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
+```
+
+Esto permite peticiones desde:
+- `http://localhost:4200` (Angular dev)
+- `http://127.0.0.1:4200`
+- Cualquier puerto en localhost
 
 ---
 
-#### 🚀 Soluciones para Producción
+#### 🔧 Proxy de Angular (Opcional)
 
-El proxy de Angular NO funciona en builds de producción. Hay dos opciones viables:
+El archivo `proxy.conf.json` sigue disponible como alternativa para desarrollo local, pero **ya no es necesario**.
 
-**Opción 1: Mismo Origen con Nginx (Recomendado)**
-- Usar Nginx como reverse proxy para servir frontend y backend bajo el mismo dominio
-- Configuración:
-  - Frontend: `https://miweb.com/`
-  - Backend API: `https://miweb.com/api`
-- **Ventaja**: Elimina completamente los problemas de CORS
-- **Estado actual**: Implementado en `docker-compose.yml` con servicio `backend-web`
+**Para usar el proxy** (opcional):
+```bash
+ng serve --proxy-config proxy.conf.json
+```
 
-**Opción 2: Habilitar CORS en Backend (No Recomendado)**
-- Configurar Symfony con `NelmioCorsBundle` para aceptar peticiones del dominio del frontend
-- **Desventaja**: Requiere configuración adicional de seguridad y puede tener problemas de rendimiento
-- **Uso**: Solo si no se puede usar Nginx/Apache
+**Sin proxy** (recomendado):
+```bash
+ng serve
+```
+
+El backend maneja CORS automáticamente con NelmioCorsBundle.
 
 ---
 
