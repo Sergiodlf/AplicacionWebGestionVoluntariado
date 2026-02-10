@@ -29,8 +29,9 @@ openssl rand -base64 32
 
 APP_SECRET=tu_secret_generado_aqui
 
-# Base de datos local
-DATABASE_URL="sqlsrv://sa:TuPassword@127.0.0.1:1433/PROYECTOINTER?"
+# Base de datos local o RDS
+# IMPORTANTE: Si la contraseña tiene caracteres especiales (#, ?, $, <, etc.), deben estar URL-Encoded.
+DATABASE_URL="sqlsrv://admin:PASSWORD_URL_ENCODED@tu-host-rds:1433/DB?serverVersion=2019&Encrypt=yes&TrustServerCertificate=true"
 
 # Firebase
 FIREBASE_API_KEY=tu_firebase_api_key

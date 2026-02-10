@@ -7,7 +7,7 @@ Guía completa para poner en marcha el Backend (API Symfony).
 ### Entorno
 - **PHP**: Versión 8.2 o superior.
 - **Composer**: Gestor de dependencias de PHP.
-- **XAMPP/MySQL**: Para la base de datos local.
+- **SQL Server**: Para la base de datos (Local o Amazon RDS).
 
 ### Configuración PHP (Sodium)
 Este proyecto usa librerías de encriptación que requieren la extensión `sodium`.
@@ -97,12 +97,10 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 # APP_SECRET generado en el paso anterior
 APP_SECRET=tu_secret_aleatorio_aqui
 
-# Configuración de Base de Datos
-# Para desarrollo local (XAMPP/MySQL):
-DATABASE_URL="mysql://root:tu_password@127.0.0.1:3306/PROYECTOINTER?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
-
-# Para SQL Server local:
-DATABASE_URL="sqlsrv://sa:TuPassword@127.0.0.1:1433/PROYECTOINTER?serverVersion=2019&Encrypt=no"
+# Configuración de Base de Datos (Amazon RDS)
+# IMPORTANTE: Si la contraseña tiene caracteres especiales (#, ?, $, <, etc.), deben estar URL-Encoded.
+# Ejemplo: # -> %23, < -> %3C, ( -> %28
+DATABASE_URL="sqlsrv://admin:PASSWORD_URL_ENCODED@db-voluntariado.cduh5qs6fkly.us-east-1.rds.amazonaws.com:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=true"
 
 # Configuración de Correo (Cuenta del Proyecto)
 MAILER_DSN=gmail://notificaciones4v@gmail.com:PASSWORD_DEL_GRUPO@default
@@ -167,10 +165,10 @@ curl -H "Origin: http://localhost:4200" \
 
 ## 6. Base de Datos
 
-1. Asegúrate de que tu servidor de base de datos (MySQL o SQL Server) esté corriendo.
+1. Asegúrate de tener acceso a la instancia de SQL Server (RDS o Local).
 2. Ten configurada tu `DATABASE_URL` en el `.env.local` (ver paso anterior).
-   - **Nota para SQL Server**: Asegúrate de usar el driver `sqlsrv://` y que la extensión esté habilitada en `php.ini`.
-3. Crea la base de datos y las tablas:
+   - **Nota**: Asegúrate de usar el driver `sqlsrv://`.
+3. Crea la estructura:
    ```bash
    # Crear la BBDD (si no existe)
    php bin/console doctrine:database:create --if-not-exists

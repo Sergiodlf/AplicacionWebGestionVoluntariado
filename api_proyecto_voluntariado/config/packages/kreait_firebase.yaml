@@ -2,4 +2,4 @@ kreait_firebase:
     projects:
         default:
             # Point to the service account JSON file
-            credentials: "%kernel.project_dir%/%env(resolve:GOOGLE_APPLICATION_CREDENTIALS)%"
+            credentials: "%kernel.project_dir%/%env(GOOGLE_APPLICATION_CREDENTIALS)%"

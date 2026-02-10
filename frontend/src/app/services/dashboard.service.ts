@@ -54,7 +54,7 @@ export class DashboardService {
         const volunteersPending = result.volunteers.filter((v: any) => v.status === 'PENDIENTE').length;
 
         // 2. Organizations
-        const organizationsTotal = result.organizations.filter((o: any) => (o.estado?.trim().toLowerCase() || '') === 'aprobado').length;
+        const organizationsTotal = result.organizations.filter((o: any) => ['aprobado', 'aceptada', 'aceptado'].includes(o.estado?.trim().toLowerCase())).length;
         const organizationsPending = result.organizations.filter((o: any) => (o.estado?.trim().toLowerCase() || '') === 'pendiente').length;
 
         // 3. Matches

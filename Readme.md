@@ -15,7 +15,7 @@ El objetivo central es desarrollar una aplicación web para la gestión del volu
 Este repositorio contiene tanto el Backend como el Frontend de la aplicación. Para ver las guías de instalación y configuración detalladas de cada parte, por favor consulta sus respectivos READMEs:
 
 ### [Backend (API Symfony)](api_proyecto_voluntariado/README.md)
-*   **Tecnología**: Symfony 7, PHP 8.2, MySQL.
+*   **Tecnología**: Symfony 7, PHP 8.2, SQL Server (Amazon RDS).
 *   **Contenido**: API REST, gestión de base de datos, autenticación con Firebase, lógica de negocio.
 *   **[Ver Guía de Instalación Backend](api_proyecto_voluntariado/README.md)**
 
@@ -25,18 +25,14 @@ Este repositorio contiene tanto el Backend como el Frontend de la aplicación. P
 *   **[Ver Guía de Instalación Frontend](frontend/README.md)**
 
 ### [Docker Deployment](DOCKER_DEPLOYMENT.md)
-*   **Tecnología**: Docker Compose, SQL Server 2022, Nginx.
-*   **Contenido**: Despliegue completo con contenedores (Backend + Frontend + BD).
+*   **Tecnología**: Docker Compose, Amazon RDS (SQL Server), Nginx.
+*   **Contenido**: Despliegue optimizado con base de datos en la nube.
 *   **Levantamiento rápido**:
     ```bash
-    # 1. Levantar todos los servicios (Frontend, Backend, BD)
+    # 1. Levantar servicios (Backend + Frontend)
     docker compose up -d --build
     
-    # 2. Inicializar la base de datos con datos de prueba
-    # Windows PowerShell:
-    .\init-database.ps1
-    # Linux/Mac:
-    ./init-database.sh
+    # 2. La base de datos está en Amazon RDS (configurada en docker-compose.yml)
     ```
 *   **[Ver Guía Completa de Despliegue Docker](DOCKER_DEPLOYMENT.md)**
 

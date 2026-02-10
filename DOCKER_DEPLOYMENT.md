@@ -4,7 +4,8 @@
 
 - Docker Desktop instalado y corriendo
 - Git (para clonar el repositorio)
-- Puertos disponibles: `80`, `8000`, `1433`
+- Puertos disponibles: `80`, `8000`
+- Base de datos: Amazon RDS (configurado por defecto) o SQL Server local.
 
 ## Configuración Rápida
 
@@ -51,14 +52,14 @@ Docker usará valores por defecto si no configuras `.env.docker`:
 
 
 ```bash
-# Construir todas las imágenes y levantar los servicios
+# Construir todas las imágenes y levantar los servicios (Frontend + Backend)
 docker compose up -d --build
 
 # Ver el estado de los contenedores
 docker compose ps
 
 # Ver logs de un servicio específico
-docker compose logs db
+# Nota: El servicio 'db' está comentado por defecto en favor de RDS
 docker compose logs backend
 docker compose logs frontend
 ```
@@ -67,10 +68,10 @@ docker compose logs frontend
 
 | Servicio | Tecnología | Puerto | Descripción |
 |----------|-----------|--------|-------------|
-| `db` | SQL Server 2022 | 1433 | Base de datos |
 | `backend` | PHP 8.2-FPM + Symfony | Internal (9000) | API Backend |
 | `backend-web` | Nginx | 8000 | Servidor web para API |
 | `frontend` | Angular 17 + Nginx | 80 | Aplicación web |
+| `db` (Opcional) | SQL Server 2022 | (Local) | Comentado en `docker-compose.yml` |
 
 ## Estructura de Dockerfiles
 

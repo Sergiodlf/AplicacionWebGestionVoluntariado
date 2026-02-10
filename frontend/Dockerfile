@@ -14,6 +14,9 @@ RUN npm run build -- --configuration production
 # Etapa 2: Servidor Nginx
 FROM nginx:alpine
 
+# Copiar configuracion de Nginx para SPA
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Copiar el build de Angular al directorio de Nginx
 COPY --from=build-step /app/dist/gestion-voluntariado/browser /usr/share/nginx/html
 

@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Ciclo;
 use App\Entity\Organizacion;
+use App\Entity\Inscripcion;
 use App\Entity\Voluntario;
 use App\Entity\Administrador;
 use App\Entity\ODS;
@@ -30,6 +31,10 @@ class AppFixtures extends Fixture
         $habilidadesData = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Idiomas'];
         $interesesData = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Tecnología', 'Derechos Humanos'];
         $ciudades = ['Pamplona', 'Madrid', 'Barcelona', 'Sevilla', 'Valencia'];
+
+        // Track entities for relationships
+        $allVolunteers = [];
+        $allActivities = [];
 
         // 2. SEED BASIC ENTITIES (Habilidades, Intereses, ODS, Ciclos) - IDEMPOTENT
         echo "🌱 Seeding basic entities...\n";
@@ -132,6 +137,7 @@ class AppFixtures extends Fixture
             $this->upsertFirebaseUser($testVolEmail, '123456', 'Voluntario Test', ['rol' => 'voluntario']);
             echo "  ♻️ TEST Voluntario already exists: $testVolEmail\n";
         }
+        $allVolunteers[] = $testVol;
         
         // 3B. TEST ORGANIZATION: organizacion_test@curso.com
         $testOrgEmail = 'organizacion_test@curso.com';
@@ -173,6 +179,7 @@ class AppFixtures extends Fixture
             $vol = $manager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
             if ($vol) {
                 echo "  ♻️ Voluntario already exists: $email\n";
+                $allVolunteers[] = $vol;
                 continue;
             }
 
@@ -194,6 +201,7 @@ class AppFixtures extends Fixture
             $vol->addInterese($intereses[array_rand($intereses)]);
 
             $manager->persist($vol);
+            $allVolunteers[] = $vol;
             echo "  ✨ Created Voluntario: $email\n";
         }
 
@@ -224,7 +232,7 @@ class AppFixtures extends Fixture
             $org->setLocalidad("Pamplona");
             $org->setCp("31000");
             $org->setSector($sectores[$i % count($sectores)]);
-            $org->setEstado('aprobado');
+            $org->setEstado('ACEPTADA');
             $org->setDescripcion("Labor social enfocada en " . $org->getSector());
             $org->setContacto("600" . str_pad((string)$i, 6, '0', STR_PAD_LEFT));
 
@@ -266,6 +274,7 @@ class AppFixtures extends Fixture
             
             if ($existingAct) {
                 echo "  ♻️ Actividad already exists: $activityName\n";
+                $allActivities[] = $existingAct;
                 continue;
             }
 
@@ -276,13 +285,86 @@ class AppFixtures extends Fixture
             $act->setFechaFin(new \DateTime('+1 month + 4 hours'));
             $act->setMaxParticipantes(10);
             $act->setEstado('ABIERTA');
-            $act->setEstadoAprobacion('ACEPTADO');
+            $act->setEstadoAprobacion('ACEPTADA');
             $act->setOrganizacion($orgs[$i % count($orgs)]);
             $act->addOd($odsEntities[array_rand($odsEntities)]);
             $act->setSector($sectores[array_rand($sectores)]);
             $act->setDescripcion("Únete a nuestra causa para mejorar el entorno.");
             $manager->persist($act);
+            $allActivities[] = $act;
             echo "  ✨ Created Actividad: $activityName\n";
+        }
+
+        $manager->flush();
+
+        // 8. GENERATE INSCRIPTIONS (MATCHES)
+        echo "🔗 Generating Inscriptions (Matches)...\n";
+        $estadosInscripcion = ['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'COMPLETADA'];
+
+        // Use tracked entities directly
+        $countVol = count($allVolunteers);
+        $countAct = count($allActivities);
+        echo "   -> Tracking $countVol Volunteers and $countAct Activities.\n";
+
+        if ($countVol > 0 && $countAct > 0) {
+            $count = 0;
+            
+            // 8a. Ensure Test Volunteer has a match
+            // Find test vol in array
+            $testVolObj = null;
+            foreach ($allVolunteers as $v) {
+                if ($v->getCorreo() === 'voluntario_test@curso.com') {
+                    $testVolObj = $v;
+                    break;
+                }
+            }
+
+            if ($testVolObj) {
+                $act = $allActivities[0]; 
+                
+                // Check if already exists (for idempotency)
+                $existing = $manager->getRepository(Inscripcion::class)->findOneBy([
+                    'voluntario' => $testVolObj,
+                    'actividad' => $act
+                ]);
+
+                if (!$existing) {
+                    $insc = new Inscripcion();
+                    $insc->setVoluntario($testVolObj);
+                    $insc->setActividad($act);
+                    $insc->setEstado('CONFIRMADO');
+                    $manager->persist($insc);
+                    $count++;
+                    echo "   -> Created Match for Test Volunteer\n";
+                }
+            }
+
+            // 8b. Random matches for others
+            foreach ($allVolunteers as $vol) {
+                if ($vol->getCorreo() === 'voluntario_test@curso.com') continue;
+
+                // Create match for 70% of users
+                if (rand(0, 10) > 3) {
+                    $randomAct = $allActivities[array_rand($allActivities)];
+                    
+                    $existing = $manager->getRepository(Inscripcion::class)->findOneBy([
+                        'voluntario' => $vol,
+                        'actividad' => $randomAct
+                    ]);
+                    
+                    if (!$existing) {
+                        $insc = new Inscripcion();
+                        $insc->setVoluntario($vol);
+                        $insc->setActividad($randomAct);
+                        $insc->setEstado($estadosInscripcion[array_rand($estadosInscripcion)]);
+                        $manager->persist($insc);
+                        $count++;
+                    }
+                }
+            }
+            echo "  ✨ Created $count Inscriptions\n";
+        } else {
+            echo "  ⚠️ No Volunteers or Activities mapped to match.\n";
         }
 
         $manager->flush();

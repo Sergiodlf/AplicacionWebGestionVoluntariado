@@ -6,23 +6,25 @@ Write-Host " Database Initialization Script" -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 # Esperar a que SQL Server esté listo
-Write-Host "⏳ Waiting for SQL Server..." -ForegroundColor Yellow
+Write-Host "Waiting for SQL Server..." -ForegroundColor Yellow
 Start-Sleep -Seconds 10
 
 # Crear la base de datos si no existe
-Write-Host "📦 Creating database..." -ForegroundColor Green
-docker compose exec -T backend php bin/console dbal:run-sql "IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'PROYECTOINTER') CREATE DATABASE PROYECTOINTER"
+Write-Host "Creating database..." -ForegroundColor Green
+$password = 'Volunt@ri0DB2024!'
+# Usamos el operador --% para detener el parsing de PowerShell y pasar los argumentos tal cual
+docker compose exec -T db --% /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Volunt@ri0DB2024! -C -Q "IF NOT EXISTS(SELECT * FROM sys.databases WHERE name = 'PROYECTOINTER') CREATE DATABASE PROYECTOINTER"
 
 # Ejecutar migraciones
-Write-Host "📦 Running migrations..." -ForegroundColor Green
+Write-Host "Running migrations..." -ForegroundColor Green
 docker compose exec -T backend php bin/console doctrine:migrations:migrate --no-interaction
 
 # Cargar fixtures
-Write-Host "🌱 Loading fixtures..." -ForegroundColor Green
+Write-Host "Loading fixtures..." -ForegroundColor Green
 docker compose exec -T backend php bin/console doctrine:fixtures:load --no-interaction --append
 
 Write-Host "==========================================" -ForegroundColor Cyan
-Write-Host " ✅ Database initialized successfully!" -ForegroundColor Green
+Write-Host " Database initialized successfully!" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Test users created:"

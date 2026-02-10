@@ -4,38 +4,41 @@ services:
   # 1. Base de Datos (SQL Server)
   # Contraseña antigua sa:Volunt@ri0DB2024!
   #-Cuatrovientos2026
-  # db:
-  #   build: ./database
-  #   environment:
-  #     - ACCEPT_EULA=Y
-  #     - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Volunt@ri0DB2024!}
-  #     - MSSQL_PID=Developer
-  #   ports:
-  #     - "1433:1433"
-  #   # Volumen comentado temporalmente para diagnosticar problema de permisos
-  #   # volumes:
-  #   #   - sql_data:/var/opt/mssql/data
-  #   healthcheck:
-  #     test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-Cuatrovientos2026}' -C -Q 'SELECT 1' || exit 1" ]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #     start_period: 30s
+  # 1. Base de Datos (SQL Server)
+  # Contraseña antigua sa:Volunt@ri0DB2024!
+  #-Cuatrovientos2026
+  #  db:
+  #    build: ./database
+  #    environment:
+  #      - ACCEPT_EULA=Y
+  #      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Volunt@ri0DB2024!}
+  #      - MSSQL_PID=Developer
+  #    ports:
+  #      - "1433:1433"
+  #    healthcheck:
+  #      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${MSSQL_SA_PASSWORD:-Volunt@ri0DB2024!}' -C -Q 'SELECT 1' || exit 1" ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
+  #      start_period: 30s
   # 2. Backend (Symfony - PHP-FPM)
   backend:
     build: ./api_proyecto_voluntariado
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
+    #    depends_on:
+    #      db:
+    #        condition: service_healthy
     environment:
-      DATABASE_URL: "sqlsrv://sa:${MSSQL_SA_PASSWORD:-Cuatrovientos2026}@host.docker.internal:1433/PROYECTOINTER?serverVersion=2019&Encrypt=no"
+      # Usar 'db' como host ya que ahora está dentro de la red de Docker
+      # DATABASE_URL: "sqlsrv://sa:${MSSQL_SA_PASSWORD:-Volunt@ri0DB2024!}@db:1433/PROYECTOINTER?serverVersion=2019&Encrypt=no"
+      DATABASE_URL: "sqlsrv://admin:Y%23zzH%28D%3FEP3%24%3Cr3A8%24Yo1yBQV.n_@db-voluntariado.cduh5qs6fkly.us-east-1.rds.amazonaws.com:1433/PROYECTOINTER?serverVersion=2019&Encrypt=yes&TrustServerCertificate=true"
       APP_SECRET: ${APP_SECRET:-7f3c2e8a9b1d4f6e5a8c3b2d1e9f4a6c7b5d8e1a2f3c4b5d6e7a8b9c0d1e2f3}
       # FIREBASE_API_KEY se carga desde .env interno si no se pasa aquí
       # CORS Config: Permite localhost (frontend fuera de Docker) y cualquier origen para desarrollo
       CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
       APP_ENV: dev
+    volumes:
+      - ./api_proyecto_voluntariado:/var/www/html
     # PHP-FPM escucha en el 9000, no exponemos puerto al host, solo internamente a Nginx
-
     # 2.1 Backend Web Server (Nginx)
   backend-web:
     build: ./api_proyecto_voluntariado/nginx
