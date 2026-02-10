@@ -9,9 +9,9 @@
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^2.18.2",
         "doctrine/doctrine-migrations-bundle": ">=3.7",
-        "doctrine/orm": "^3.6.1",
-        "kreait/firebase-bundle": "^5.6",
-        "nelmio/cors-bundle": "^2.5",
+        "doctrine/orm": "^3.6.2",
+        "kreait/firebase-bundle": "^5.7",
+        "nelmio/cors-bundle": "^2.6.1",
         "paragonie/sodium_compat": "^2.5",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
@@ -28,7 +28,7 @@
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.3.1",
-        "symfony/maker-bundle": "^1.65.1"
+        "symfony/maker-bundle": "^1.66.0"
     },
     "config": {
         "allow-plugins": {

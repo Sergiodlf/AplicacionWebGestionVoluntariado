@@ -15,7 +15,6 @@ Aplicación Web (Cliente) desarrollada en **Angular** para la gestión de volunt
     ```
 2.  Instala las dependencias:
     ```bash
-    ```bash
     npm install --legacy-peer-deps
     ```
     > **Importante**: Usamos `--legacy-peer-deps` debido a conflictos de versiones en las dependencias.

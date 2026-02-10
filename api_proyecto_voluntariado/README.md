@@ -39,7 +39,7 @@ php -r "unlink('composer-setup.php');"
 Luego instala las dependencias (si descargaste `composer.phar` usa `php composer.phar install`):
 
 ```bash
-composer install
+composer update
 # O si usas el .phar local:
 php composer.phar install
 ```
