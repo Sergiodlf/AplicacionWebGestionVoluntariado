@@ -3,15 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Volunteer } from '../models/Volunteer';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VolunteerService {
 
-  private apiUrl = '/api/auth/register/voluntario';
-  private apiGetUrl = '/api/voluntarios';
-  private apiCiclosUrl = '/api/categories/ciclos'; // Updated URL
+  private apiUrl = `${environment.apiUrl}/auth/register/voluntario`;
+  private apiGetUrl = `${environment.apiUrl}/voluntarios`;
+  private apiCiclosUrl = `${environment.apiUrl}/categories/ciclos`; // Updated URL
 
   private volunteersSubject = new BehaviorSubject<Volunteer[] | null>(null);
   volunteers$ = this.volunteersSubject.asObservable();
@@ -59,16 +60,16 @@ export class VolunteerService {
   }
 
   updateStatus(dni: string, status: string): Observable<any> {
-    console.log(`Updating status for DNI ${dni} to ${status}. URL: /api/voluntarios/${dni}`);
-    return this.http.patch(`/api/voluntarios/${dni}`, { estado: status });
+    console.log(`Updating status for DNI ${dni} to ${status}. URL: ${environment.apiUrl}/voluntarios/${dni}`);
+    return this.http.patch(`${environment.apiUrl}/voluntarios/${dni}`, { estado: status });
   }
 
   updateProfile(dni: string, data: any): Observable<any> {
-    return this.http.put(`/api/voluntarios/${dni}`, data);
+    return this.http.put(`${environment.apiUrl}/voluntarios/${dni}`, data);
   }
 
   getVolunteerByEmail(email: string): Observable<Volunteer> {
-    return this.http.get<any>(`/api/voluntarios/email/${email}`).pipe(
+    return this.http.get<any>(`${environment.apiUrl}/voluntarios/email/${email}`).pipe(
       map(v => ({
         nombre: v.nombre,
         apellido1: v.apellido1,
@@ -89,7 +90,7 @@ export class VolunteerService {
   }
 
   getProfile(): Observable<Volunteer> {
-    return this.http.get<any>('/api/auth/profile').pipe(
+    return this.http.get<any>(`${environment.apiUrl}/auth/profile`).pipe(
       map(response => {
         const v = response.datos;
         return {
