@@ -11,7 +11,7 @@ Aplicación Web (Cliente) desarrollada en **Angular** para la gestión de volunt
 
 1.  Entra en la carpeta del frontend:
     ```bash
-    cd GestionVoluntariado
+    cd frontend
     ```
 2.  Instala las dependencias:
     ```bash
