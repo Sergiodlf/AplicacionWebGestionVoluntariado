@@ -65,21 +65,54 @@ Para que funcione la autenticación con Firebase (Login, Registros, Notificacion
 
 ## 4. Configuración del Entorno (.env)
 
-El archivo `.env` incluido en el repositorio tiene valores por defecto seguros. Para configurar tu entorno local (base de datos, correo, etc.) **NO edites el archivo `.env` directamente**.
+### 🔐 Seguridad de Secrets
 
-1. Crea un archivo llamado `.env.local` en la raíz de `api_proyecto_voluntariado/`.
-2. Sobrescribe las variables que necesites. Este archivo es ignorado por Git, así que puedes poner tus contraseñas reales.
+> [!IMPORTANT]
+> **NUNCA commitees credenciales reales al repositorio.**
+> 
+> El archivo `.env` contiene valores por defecto seguros y placeholders. Para tu entorno local, usa `.env.local` que está en `.gitignore`.
 
-Ejemplo de contenido para `.env.local`:
+### Configurar Variables de Entorno
 
-```bash
-# Configuración Real de Base de Datos
-DATABASE_URL="mysql://root:tu_password@127.0.0.1:3306/nombre_bbdd?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
+1. **Copia el archivo de ejemplo**:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-# Configuración de Correo (Cuenta Compartida)
-# Usar el correo del proyecto. ¡Pedir contraseña por el grupo de WhatsApp/Discord!
-MAILER_DSN=gmail://notificaciones4v@gmail.com:LA_CONTRASEÑA_DEL_GRUPO@default
+2. **Genera un APP_SECRET seguro**:
+   ```bash
+   # Opción 1: Symfony CLI (recomendado)
+   php bin/console secrets:generate-keys
+   
+   # Opción 2: PowerShell (Windows)
+   [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
+   
+   # Opción 3: Online (solo desarrollo)
+   # https://www.random.org/strings/?num=1&len=32&digits=on&upperalpha=on&loweralpha=on
+   ```
+
+3. **Edita `.env.local` con tus valores**:
+
+```env
+# APP_SECRET generado en el paso anterior
+APP_SECRET=tu_secret_aleatorio_aqui
+
+# Configuración de Base de Datos
+# Para desarrollo local (XAMPP/MySQL):
+DATABASE_URL="mysql://root:tu_password@127.0.0.1:3306/PROYECTOINTER?serverVersion=10.4.32-MariaDB&charset=utf8mb4"
+
+# Para SQL Server local:
+DATABASE_URL="sqlsrv://sa:TuPassword@127.0.0.1:1433/PROYECTOINTER?serverVersion=2019&Encrypt=no"
+
+# Configuración de Correo (Cuenta del Proyecto)
+MAILER_DSN=gmail://notificaciones4v@gmail.com:PASSWORD_DEL_GRUPO@default
+
+# Firebase (obtener de Firebase Console)
+FIREBASE_API_KEY=tu_firebase_web_api_key
 ```
+
+> [!TIP]
+> Lee la [Guía de Seguridad completa](../Seguridad.md) para más detalles sobre gestión de secrets.
 
 ---
 
