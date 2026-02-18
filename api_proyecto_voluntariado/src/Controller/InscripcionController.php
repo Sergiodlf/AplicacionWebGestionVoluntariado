@@ -73,7 +73,7 @@ class InscripcionController extends AbstractController
                     'necesidades_actividad' => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
                     'maxParticipantes' => $actividad->getMaxParticipantes(),
                     'fecha_fin_actividad' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d') : null,
-                    'estado' => $inscripcion->getEstado()
+                    'estado' => $inscripcion->getEstado()?->value 
                 ];
             }
 
@@ -111,7 +111,11 @@ class InscripcionController extends AbstractController
         $existing = $this->inscripcionService->isVolunteerInscribed($actividad, $voluntario);
 
         // Estados que permiten re-inscripción
-        $estadosReInscripcion = ['RECHAZADO', 'CANCELADO', 'FINALIZADO'];
+        $estadosReInscripcion = [
+            \App\Enum\InscriptionStatus::RECHAZADO, 
+            \App\Enum\InscriptionStatus::CANCELADA, 
+            \App\Enum\InscriptionStatus::FINALIZADO
+        ];
 
         if ($existing) {
             // Si está en un estado que permite reintentar, lo reactivamos (lógica abajo)
@@ -120,7 +124,7 @@ class InscripcionController extends AbstractController
                     'error' => 'El voluntario ya está inscrito en esta actividad',
                     'code' => 'DUPLICATE_INSCRIPTION',
                     'id_inscripcion' => $existing->getId(),
-                    'estado' => $existing->getEstado()
+                    'estado' => $existing->getEstado()?->value
                 ], 409);
             }
         } else {
@@ -159,7 +163,7 @@ class InscripcionController extends AbstractController
 
         return $this->json([
             'message' => $existing ? 'Re-inscripción realizada correctamente' : 'Inscripción creada correctamente', 
-            'estado' => $inscripcion->getEstado(),
+            'estado' => $inscripcion->getEstado()?->value,
             'id_inscripcion' => $inscripcion->getId()
         ], $existing ? 200 : 201);
     }
@@ -183,23 +187,23 @@ class InscripcionController extends AbstractController
         }
 
         // Validación de estados permitidos
-        $estadosPermitidos = ['PENDIENTE', 'CONFIRMADO', 'RECHAZADO', 'EN_CURSO', 'FINALIZADO', 'COMPLETADA'];
-        if (!in_array(strtoupper($nuevoEstado), $estadosPermitidos)) {
+        $enumStatus = \App\Enum\InscriptionStatus::tryFrom(strtoupper($nuevoEstado));
+        if (!$enumStatus) {
             return $this->json([
                 'error' => 'Estado inválido',
-                'permitidos' => $estadosPermitidos
+                'permitidos' => array_column(\App\Enum\InscriptionStatus::cases(), 'value')
             ], 400);
         }
 
         try {
-            $this->inscripcionService->updateStatus($inscripcion, $nuevoEstado);
+            $this->inscripcionService->updateStatus($inscripcion, $enumStatus);
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error al actualizar el estado'], 500);
         }
 
         return $this->json([
             'message' => 'Estado actualizado correctamente',
-            'nuevo_estado' => $inscripcion->getEstado()
+            'nuevo_estado' => $inscripcion->getEstado()?->value
         ]);
     }
 
@@ -263,7 +267,7 @@ class InscripcionController extends AbstractController
             if ($actividad) {
                 $data[] = [
                     'id_inscripcion' => $inscripcion->getId(),
-                    'estado_inscripcion' => $inscripcion->getEstado(),
+                    'estado_inscripcion' => $inscripcion->getEstado()?->value,
                     
                     // Datos Actividad
                     'codActividad' => $actividad->getCodActividad(),
@@ -272,7 +276,7 @@ class InscripcionController extends AbstractController
                     'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i') : null,
                     'fechaFin' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i') : null,
                     'organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getNombre() : 'Desconocida',
-                    'estado_actividad' => $actividad->getEstado(),
+                    'estado_actividad' => $actividad->getEstado(), // ActivityStatus
                     'ods' => $actividad->getOds(),
                     'habilidades' => $actividad->getHabilidades(),
                     'necesidades' => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
@@ -323,7 +327,7 @@ class InscripcionController extends AbstractController
     
                 $data[] = [
                     'id_inscripcion' => $inscripcion->getId(),
-                    'estado' => $inscripcion->getEstado(),
+                    'estado' => $inscripcion->getEstado()?->value,
                     // 'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
                     'voluntario' => [
                         'dni' => $voluntario->getDni(),

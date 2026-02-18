@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use App\Enum\VolunteerStatus;
 
 #[ORM\Entity(repositoryClass: VoluntarioRepository::class)]
 #[ORM\Table(name: 'VOLUNTARIOS')]
@@ -66,8 +67,8 @@ class Voluntario implements UserInterface
     #[ORM\Column(name: 'IDIOMAS', type: Types::TEXT, nullable: true)]
     private ?string $idiomas = null;
 
-    #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20)]
-    private ?string $estadoVoluntario = 'PENDIENTE';
+    #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20, enumType: VolunteerStatus::class)]
+    private ?VolunteerStatus $estadoVoluntario = VolunteerStatus::PENDIENTE;
 
     #[ORM\Column(name: 'FCM_TOKEN', length: 255, nullable: true)]
     private ?string $fcmToken = null;
@@ -209,8 +210,8 @@ class Voluntario implements UserInterface
         return $this->inscripciones;
     }
 
-    public function getEstadoVoluntario(): ?string { return $this->estadoVoluntario; }
-    public function setEstadoVoluntario(string $estado): static { $this->estadoVoluntario = $estado; return $this; }
+    public function getEstadoVoluntario(): ?VolunteerStatus { return $this->estadoVoluntario; }
+    public function setEstadoVoluntario(VolunteerStatus $estado): static { $this->estadoVoluntario = $estado; return $this; }
     
     public function getFcmToken(): ?string { return $this->fcmToken; }
     public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }

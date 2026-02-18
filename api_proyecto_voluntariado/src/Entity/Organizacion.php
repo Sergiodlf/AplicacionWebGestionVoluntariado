@@ -10,6 +10,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Enum\OrganizationStatus;
 
 #[ORM\Entity(repositoryClass: OrganizacionRepository::class)]
 #[ORM\Table(name: 'ORGANIZACIONES')]
@@ -69,9 +70,9 @@ class Organizacion implements UserInterface
     #[Assert\NotBlank]
     private ?string $contacto = null;
 
-    #[ORM\Column(name: 'ESTADO', length: 20)]
+    #[ORM\Column(name: 'ESTADO', length: 20, enumType: OrganizationStatus::class)]
     #[Groups(['org:read'])]
-    private ?string $estado = 'pendiente';
+    private ?OrganizationStatus $estado = OrganizationStatus::PENDIENTE;
 
     #[ORM\Column(name: 'FCM_TOKEN', length: 255, nullable: true)]
     #[Groups(['org:read', 'org:write'])]
@@ -194,8 +195,8 @@ class Organizacion implements UserInterface
     public function getContacto(): ?string { return $this->contacto; }
     public function setContacto(string $contacto): static { $this->contacto = $contacto; return $this; }
 
-    public function getEstado(): ?string { return $this->estado; }
-    public function setEstado(string $estado): static { $this->estado = $estado; return $this; }
+    public function getEstado(): ?OrganizationStatus { return $this->estado; }
+    public function setEstado(OrganizationStatus $estado): static { $this->estado = $estado; return $this; }
 
     public function getFcmToken(): ?string { return $this->fcmToken; }
     public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }

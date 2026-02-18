@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Voluntario;
 use App\Model\RegistroVoluntarioDTO;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Enum\VolunteerStatus;
 
 
 class VolunteerService
@@ -217,7 +218,7 @@ class VolunteerService
         $voluntario->setDisponibilidad($dto->disponibilidad ?? []);
         
         // AUTO-ACCEPTANCE LOGIC
-        $estadoInicial = $isAdmin ? 'ACEPTADO' : 'PENDIENTE';
+        $estadoInicial = $isAdmin ? VolunteerStatus::ACEPTADO : VolunteerStatus::PENDIENTE;
         $voluntario->setEstadoVoluntario($estadoInicial);
 
         $this->entityManager->getConnection()->executeStatement("SET DATEFORMAT ymd");
@@ -324,14 +325,20 @@ class VolunteerService
         return $this->entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
     }
 
-    public function countByStatus(string $status): int
+    public function countByStatus(string|VolunteerStatus $status): int
     {
+        if (is_string($status)) {
+            $status = VolunteerStatus::tryFrom(strtoupper($status)) ?? VolunteerStatus::PENDIENTE;
+        }
         return $this->entityManager->getRepository(Voluntario::class)->count(['estadoVoluntario' => $status]);
     }
 
-    public function updateStatus(Voluntario $voluntario, string $status): void
+    public function updateStatus(Voluntario $voluntario, string|VolunteerStatus $status): void
     {
-        $voluntario->setEstadoVoluntario(strtoupper($status));
+        if (is_string($status)) {
+            $status = VolunteerStatus::tryFrom(strtoupper($status)) ?? VolunteerStatus::PENDIENTE;
+        }
+        $voluntario->setEstadoVoluntario($status);
         $this->entityManager->flush();
     }
 }

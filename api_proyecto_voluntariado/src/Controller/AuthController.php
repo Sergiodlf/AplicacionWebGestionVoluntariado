@@ -21,6 +21,8 @@ use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 use App\Service\VolunteerService;
 use Kreait\Firebase\Contract\Auth;
 use App\Service\OrganizationService;
+use App\Enum\VolunteerStatus;
+use App\Enum\OrganizationStatus;
 
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
@@ -245,26 +247,29 @@ class AuthController extends AbstractController
             }
 
             // 2b. Validar estado del usuario (NO ADMINISTRADORES)
+            // 2b. Validar estado del usuario (NO ADMINISTRADORES)
             if ($localUser instanceof Voluntario) {
                 $estado = $localUser->getEstadoVoluntario();
-                if ($estado !== 'ACEPTADO' && $estado !== 'LIBRE') {
-                    if ($estado === 'PENDIENTE') {
+                if ($estado !== VolunteerStatus::ACEPTADO && $estado !== VolunteerStatus::LIBRE) {
+                    if ($estado === VolunteerStatus::PENDIENTE) {
                         return $this->json(['error' => 'Cuenta pendiente de aprobación', 'message' => 'Tu cuenta está pendiente de aprobación.'], 403);
-                    } elseif ($estado === 'RECHAZADO') {
-                        return $this->json(['error' => 'Cuenta rechazada', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
+                    } elseif ($estado === VolunteerStatus::RECHAZADO) {
+                        return $this->json(['error' => 'Cuenta rechazado', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $estado], 403);
+                        // Safe fallback for value
+                        $val = $estado ? $estado->value : 'NULL';
+                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $val], 403);
                     }
                 }
             } elseif ($localUser instanceof Organizacion) {
-                $estado = strtolower($localUser->getEstado());
-                if ($estado !== 'aprobado' && $estado !== 'aceptada') {
-                    if ($estado === 'pendiente') {
+                $estado = $localUser->getEstado();
+                if ($estado !== OrganizationStatus::APROBADO) {
+                    if ($estado === OrganizationStatus::PENDIENTE) {
                         return $this->json(['error' => 'Organización pendiente de aprobación', 'message' => 'Tu organización está pendiente de aprobación.'], 403);
-                    } elseif ($estado === 'rechazada' || $estado === 'rechazado') {
+                    } elseif ($estado === OrganizationStatus::RECHAZADO) {
                         return $this->json(['error' => 'Organización rechazada', 'message' => 'Tu organización ha sido rechazada.'], 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . $estado], 403);
+                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL')], 403);
                     }
                 }
             }
@@ -349,26 +354,28 @@ class AuthController extends AbstractController
             }
 
              // 2b. Validar estado del usuario (NO ADMINISTRADORES)
+             // 2b. Validar estado del usuario (NO ADMINISTRADORES)
             if ($localUser instanceof Voluntario) {
                 $estado = $localUser->getEstadoVoluntario();
-                if ($estado !== 'ACEPTADO' && $estado !== 'LIBRE') {
-                    if ($estado === 'PENDIENTE') {
+                if ($estado !== VolunteerStatus::ACEPTADO && $estado !== VolunteerStatus::LIBRE) {
+                    if ($estado === VolunteerStatus::PENDIENTE) {
                         return $this->json(['error' => 'Cuenta pendiente de aprobación', 'message' => 'Tu cuenta está pendiente de aprobación.'], 403);
-                    } elseif ($estado === 'RECHAZADO') {
-                        return $this->json(['error' => 'Cuenta rechazada', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
+                    } elseif ($estado === VolunteerStatus::RECHAZADO) {
+                        return $this->json(['error' => 'Cuenta rechazado', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $estado], 403);
+                        $val = $estado ? $estado->value : 'NULL';
+                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $val], 403);
                     }
                 }
             } elseif ($localUser instanceof Organizacion) {
-                $estado = strtolower($localUser->getEstado());
-                if ($estado !== 'aprobado' && $estado !== 'aceptada') {
-                    if ($estado === 'pendiente') {
+                $estado = $localUser->getEstado();
+                if ($estado !== OrganizationStatus::APROBADO) {
+                    if ($estado === OrganizationStatus::PENDIENTE) {
                         return $this->json(['error' => 'Organización pendiente de aprobación', 'message' => 'Tu organización está pendiente de aprobación.'], 403);
-                    } elseif ($estado === 'rechazada' || $estado === 'rechazado') {
-                        return $this->json(['error' => 'Organización rechazada', 'message' => 'Tu organización ha sido rechazada.'], 403);
+                    } elseif ($estado === OrganizationStatus::RECHAZADO) {
+                         return $this->json(['error' => 'Organización rechazada', 'message' => 'Tu organización ha sido rechazada.'], 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . $estado], 403);
+                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL')], 403);
                     }
                 }
             }
@@ -461,7 +468,7 @@ class AuthController extends AbstractController
                         'habilidades' => $user->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
                         'intereses' => $user->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
                         'idiomas' => $user->getIdiomas(),
-                        'estado_voluntario' => $user->getEstadoVoluntario(),
+                        'estado_voluntario' => $user->getEstadoVoluntario()?->value,
                         'disponibilidad' => $user->getDisponibilidad(),
                         'ciclo' => $user->getCiclo() ? (string)$user->getCiclo() : null,
                     ]

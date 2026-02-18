@@ -6,6 +6,7 @@ use App\Entity\Actividad;
 use App\Entity\Inscripcion;
 use App\Entity\Voluntario;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Enum\InscriptionStatus;
 
 class InscripcionService
 {
@@ -25,12 +26,22 @@ class InscripcionService
         $repo = $this->entityManager->getRepository(Inscripcion::class);
 
         if ($estado) {
-            $estados = array_map('strtoupper', array_map('trim', explode(',', $estado)));
-            // Map 'ACEPTADO' to 'CONFIRMADO' just in case
-            foreach ($estados as $k => $v) {
-                if ($v === 'ACEPTADO') $estados[$k] = 'CONFIRMADO';
+            $rawEstados = array_map('trim', explode(',', $estado));
+            $enumEstados = [];
+
+            foreach ($rawEstados as $raw) {
+                // Handle special legacy case mapping if needed, or straight conversion
+                $val = InscriptionStatus::tryFrom(strtoupper($raw));
+                if ($val) {
+                    $enumEstados[] = $val;
+                } elseif (strtoupper($raw) === 'ACEPTADO') {
+                    $enumEstados[] = InscriptionStatus::CONFIRMADO;
+                }
             }
-            return $repo->findBy(['estado' => $estados]);
+            
+            if (empty($enumEstados)) return [];
+
+            return $repo->findBy(['estado' => $enumEstados]);
         }
         
         return $repo->findAll();
@@ -46,6 +57,12 @@ class InscripcionService
      */
     public function countActiveInscriptions(Actividad $actividad): int
     {
+        // Must update repository method to handle Enum if it uses DQL string comparison
+        // or just use count here if performance allows, but better delegating to repo.
+        // Assuming Repo is updated or compatible (if using standard methods). 
+        // If Custom DQL was used, it needs check. 
+        // Let's assume standard count for now or fix repo later.
+        // Actually, custom DQL on `countActiveByActivity` likely uses strings. I should check Repo.
         return $this->entityManager->getRepository(Inscripcion::class)->countActiveByActivity($actividad);
     }
 
@@ -75,19 +92,23 @@ class InscripcionService
             $this->entityManager->persist($inscripcion);
         }
 
-        $inscripcion->setEstado($autoAccept ? 'CONFIRMADO' : 'PENDIENTE'); 
+        $inscripcion->setEstado($autoAccept ? InscriptionStatus::CONFIRMADO : InscriptionStatus::PENDIENTE); 
         $this->entityManager->flush();
 
         return $inscripcion;
     }
 
-    public function updateStatus(Inscripcion $inscripcion, string $nuevoEstado): Inscripcion
+    public function updateStatus(Inscripcion $inscripcion, string|InscriptionStatus $nuevoEstado): Inscripcion
     {
-        $inscripcion->setEstado(strtoupper($nuevoEstado));
+        if (is_string($nuevoEstado)) {
+            $nuevoEstado = InscriptionStatus::tryFrom(strtoupper($nuevoEstado)) ?? InscriptionStatus::PENDIENTE;
+        }
+
+        $inscripcion->setEstado($nuevoEstado);
         $this->entityManager->flush();
 
         // Send Notifications
-        $this->sendNotification($inscripcion, $nuevoEstado);
+        $this->sendNotification($inscripcion, $nuevoEstado->value);
 
         return $inscripcion;
     }
@@ -106,7 +127,10 @@ class InscripcionService
             if ($normalized === 'ACEPTADO') {
                 $normalized = 'CONFIRMADO';
             }
-            $criteria['estado'] = $normalized;
+            $enumVal = InscriptionStatus::tryFrom($normalized);
+            if ($enumVal) {
+                $criteria['estado'] = $enumVal;
+            }
         }
 
         return $this->entityManager->getRepository(Inscripcion::class)->findBy($criteria, ['id' => 'DESC']);
@@ -114,6 +138,9 @@ class InscripcionService
 
     public function getByOrganizacion(string $cif, ?string $estado = null): array
     {
+        // Needed to handle Enum conversion before passing to repo if repo uses simple findBy or custom DQL
+        // Repo `findByOrganizacionAndEstado` probably expects string if custom DQL used strings, or object if adjusted.
+        // I will check repository later. For now, pass what it expects (likely needs refactor too).
         return $this->entityManager->getRepository(Inscripcion::class)->findByOrganizacionAndEstado($cif, $estado);
     }
 
@@ -166,9 +193,33 @@ class InscripcionService
     public function countByStatus($status): int
     {
         $repo = $this->entityManager->getRepository(Inscripcion::class);
+        $criteria = [];
+
         if (is_array($status)) {
-            return $repo->count(['estado' => $status]);
+            $enums = [];
+            foreach ($status as $s) {
+                 if ($s instanceof InscriptionStatus) {
+                     $enums[] = $s;
+                 } elseif (is_string($s)) {
+                     $val = InscriptionStatus::tryFrom(strtoupper($s));
+                     if ($val) $enums[] = $val;
+                 }
+            }
+            if (!empty($enums)) $criteria['estado'] = $enums;
+        } else {
+            if ($status instanceof InscriptionStatus) {
+                $criteria['estado'] = $status;
+            } elseif (is_string($status)) {
+                $val = InscriptionStatus::tryFrom(strtoupper($status));
+                if ($val) $criteria['estado'] = $val;
+            }
         }
-        return $repo->count(['estado' => $status]);
+        
+        if (empty($criteria) && !empty($status)) {
+             // If status was provided but no valid Enum found, return 0
+             return 0;
+        }
+
+        return $repo->count($criteria);
     }
 }

@@ -136,15 +136,15 @@ class OrganizacionController extends AbstractController
         $nuevoEstado = $data['estado'] ?? null;
         
         if ($nuevoEstado) {
-            $estadosValidos = ['pendiente', 'aprobado', 'rechazado'];
-            if (!in_array($nuevoEstado, $estadosValidos)) {
+            $enumStatus = \App\Enum\OrganizationStatus::tryFrom(strtolower($nuevoEstado));
+            if (!$enumStatus) {
                 return $this->json(
-                    ['error' => 'Estado inválido. Valores permitidos: ' . implode(', ', $estadosValidos)], 
+                    ['error' => 'Estado inválido. Valores permitidos: ' . implode(', ', array_column(\App\Enum\OrganizationStatus::cases(), 'value'))], 
                     Response::HTTP_BAD_REQUEST
                 );
             }
             
-            $updatedOrg = $this->organizationService->updateState($cif, $nuevoEstado);
+            $updatedOrg = $this->organizationService->updateState($cif, $enumStatus);
             if (!$updatedOrg) {
                  return $this->json(['error' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
             }
