@@ -1,6 +1,0 @@
-
-=== SPY: EDIT ACTIVITY [2026-02-06 12:20:00] ===
-ID: 4
-Raw Payload: {"nombre":"Actividad de prueba editada","cifOrganizacion":"B99999999","descripcion":"","fechaInicio":"2026-02-22","fechaFin":"2026-03-24","direccion":"Pamplona","maxParticipantes":10,"estado":"Pendiente","sector":"Educación","habilidades":[8],"ods":[1]}
-DTO Desc: 
-Parsed Sector: Educación

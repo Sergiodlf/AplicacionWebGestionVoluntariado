@@ -167,7 +167,6 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
       ods: this.form.ods.map(o => o.id)
     };
 
-    console.log('Enviando actividad:', payload);
 
     if (this.activityToEdit) {
       this.voluntariadoService.updateActivity(this.activityToEdit.codActividad, payload).subscribe({
@@ -185,7 +184,6 @@ export class CrearVoluntariadoModal implements OnInit, OnDestroy {
     } else {
       this.voluntariadoService.crearActividad(payload).subscribe({
         next: (res) => {
-          console.log('Actividad creada:', res);
           this.notificationService.showSuccess('Actividad creada con éxito');
           this.created.emit(res);
           this.onClose();

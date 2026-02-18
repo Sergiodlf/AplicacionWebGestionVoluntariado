@@ -52,9 +52,8 @@ class AuthController extends AbstractController
         $this->httpClient = $httpClient;
         $this->unifiedUserProvider = $unifiedUserProvider;
     }
-    // =========================================================================
-    // 1. REGISTRO DE VOLUNTARIOS (SOLUCIÓN SQL PURO)
-    // =========================================================================
+
+    // --- Registro de voluntarios ---
     #[Route('/register/voluntario', name: 'register_voluntario', methods: ['POST'])]
     public function registerVoluntario(
         Request $request,
@@ -110,23 +109,17 @@ class AuthController extends AbstractController
         try {
             $this->volunteerService->registerVolunteer($dto, $isAdmin);
         } catch (\Throwable $e) {
-            // Logueamos el error completo para debug
-            file_put_contents('last_error.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
-            
-            // Si es un mensaje conocido (validación o duplicado), devolvemos 400/409
             if (str_contains($e->getMessage(), 'ya está registrado')) {
                 return $this->errorResponse($e->getMessage(), 409);
             }
-            
             return $this->errorResponse('Error al registrar voluntario', 500, $e->getMessage());
         }
 
         return $this->json(['message' => 'Voluntario registrado correctamente' . ($isAdmin ? ' (Auto-Aceptado)' : '')], 201);
     }
 
-    // =========================================================================
-    // 2. REGISTRO DE ORGANIZACIONES
-    // =========================================================================
+
+    // --- Registro de organizaciones ---
     #[Route('/register/organizacion', name: 'register_organizacion', methods: ['POST'])]
     public function registerOrganizacion(
         Request $request,
@@ -185,7 +178,6 @@ class AuthController extends AbstractController
         try {
             $this->organizationService->registerOrganization($dto, $isAdmin);
         } catch (\Throwable $e) {
-            file_put_contents('last_error_org.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
             
             if (str_contains($e->getMessage(), 'ya está registrado')) {
                 return $this->errorResponse($e->getMessage(), 409);
@@ -196,14 +188,11 @@ class AuthController extends AbstractController
         return $this->json(['message' => 'Organización creada correctamente'], 201);
     }
 
-    // =========================================================================
-    // 3. LOGIN UNIFICADO (PROXY FIREBASE + VERIFICACIÓN DB LOCAL)
-    // =========================================================================
+    // --- Login unificado ---
     #[Route('/login', name: 'login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        // ... (Keep existing login logic intact as it is complex and mostly Auth Provider related)
-        // For brevity in write_to_file, I will copy the login logic exactly as it was.
+
         
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
@@ -243,8 +232,7 @@ class AuthController extends AbstractController
                 $localUser = $localUser->getDomainUser();
             }
 
-            // 2b. Validar estado del usuario (NO ADMINISTRADORES)
-            // 2b. Validar estado del usuario (NO ADMINISTRADORES)
+            // Validar estado del usuario (excepto administradores)
             if ($localUser instanceof Voluntario) {
                 $estado = $localUser->getEstadoVoluntario();
                 if ($estado !== VolunteerStatus::ACEPTADO && $estado !== VolunteerStatus::LIBRE) {
@@ -276,7 +264,7 @@ class AuthController extends AbstractController
                 $firebaseUser = $this->firebaseAuth->getUser($firebaseData['localId']);
                 $emailVerified = $firebaseUser->emailVerified;
             } catch (\Exception $e) {
-                error_log("Error getting user verification status: " . $e->getMessage());
+                // No interrumpir login si falla la consulta de verificación
             }
 
             return $this->json([

@@ -12,3 +12,9 @@
 
 # Firebase Secrets
 /config/secrets/*.json
+
+# Debug / error dump files
+public/debug_*.txt
+public/last_error*.txt
+last_error*.txt
+*.log

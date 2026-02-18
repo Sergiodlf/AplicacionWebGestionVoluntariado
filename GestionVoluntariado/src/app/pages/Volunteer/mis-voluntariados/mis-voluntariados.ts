@@ -204,6 +204,5 @@ export class MisVoluntariados implements OnInit {
   }
 
   onAction(item: any) {
-    console.log('Action in Mis Voluntariados:', item.title);
   }
 }

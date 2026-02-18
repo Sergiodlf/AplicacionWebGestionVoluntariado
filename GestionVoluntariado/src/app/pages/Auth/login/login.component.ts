@@ -31,7 +31,6 @@ export class LoginComponent {
 
     this.authService.login(this.email, this.password)
       .then(() => {
-        console.log('Login successful');
         this.loadUserProfile();
       })
       .catch((error: any) => {
@@ -54,7 +53,6 @@ export class LoginComponent {
   loadUserProfile() {
     this.authService.loadProfile().subscribe({
       next: (profile) => {
-        console.log('Perfil cargado:', profile);
         const user = this.authService.getCurrentUser();
 
         // Redirect based on role from profile

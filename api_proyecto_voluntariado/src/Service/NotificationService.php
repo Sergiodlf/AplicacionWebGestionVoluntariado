@@ -75,7 +75,6 @@ class NotificationService
 
         // 2. Send Push Notification (FCM - Existing)
         if (!method_exists($user, 'getFcmToken')) {
-             // ... logic continues ...
             $this->logger->warning('NotificationService: User object does not have getFcmToken method.');
             return;
         }
@@ -84,8 +83,7 @@ class NotificationService
 
         if (!$token) {
             $this->logger->info('NotificationService: User has no FCM token. Skipping push.');
-            $userId = method_exists($user, 'getDni') ? $user->getDni() : (method_exists($user, 'getId') ? $user->getId() : 'UNKNOWN');
-            file_put_contents('debug_notification.txt', "WARNING: User $userId has NO FCM TOKEN.\n", FILE_APPEND);
+
             return;
         }
 
@@ -96,13 +94,13 @@ class NotificationService
         try {
             $this->messaging->send($message);
             $this->logger->info('NotificationService: Push sent to user.', ['token' => $token]);
-            file_put_contents('debug_notification.txt', "SUCCESS: Push sent to token: " . substr($token, 0, 10) . "...\n", FILE_APPEND);
+
         } catch (\Throwable $e) {
             $this->logger->error('NotificationService: Error sending push to user.', [
                 'error' => $e->getMessage(),
                 'token' => $token
             ]);
-            file_put_contents('debug_notification.txt', "ERROR: Firebase Exception: " . $e->getMessage() . "\n", FILE_APPEND);
+
         }
     }
 

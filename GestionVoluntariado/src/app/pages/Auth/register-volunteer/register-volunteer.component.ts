@@ -39,7 +39,6 @@ export class RegisterVolunteerComponent {
       disponibilidad: volunteerData.disponibilidad || []
     };
 
-    console.log('Registering volunteer (Backend Direct):', mappedVolunteer);
 
     this.authService.isRegistrationInProgress = true;
 

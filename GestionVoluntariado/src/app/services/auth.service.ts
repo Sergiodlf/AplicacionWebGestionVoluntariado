@@ -55,7 +55,6 @@ export class AuthService {
       this.http.post<LoginResponse>('/api/auth/login', { email, password: pass })
         .pipe(
           tap(response => {
-            console.log('API Login successful:', response);
             this.setSession(response);
           }),
           catchError(err => {
@@ -149,7 +148,6 @@ export class AuthService {
 
     this.profileRequest$ = this.getProfile().pipe(
       tap(profile => {
-        console.log('Profile loaded:', profile);
         this.userProfileSubject.next(profile);
 
         // Persist essential session data

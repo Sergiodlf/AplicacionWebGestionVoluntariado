@@ -57,7 +57,6 @@ export class MatchesComponent implements OnInit {
   loadMatches(forceReload: boolean = false) {
     this.voluntariadoService.getAllInscripciones(forceReload).subscribe({
       next: (data) => {
-        console.log('Matches API Response:', data);
         this.matches = data.map(item => ({
           id: item.id_inscripcion,
           volunteer: {
@@ -142,7 +141,6 @@ export class MatchesComponent implements OnInit {
   }
 
   onAccept(match: any) {
-    console.log('Accepting match', match);
     this.voluntariadoService.updateInscripcionStatus(match.id, 'CONFIRMADO').subscribe({
       next: () => {
         this.notificationService.showSuccess('Match aceptado correctamente');
@@ -156,7 +154,6 @@ export class MatchesComponent implements OnInit {
   }
 
   onReject(match: any) {
-    console.log('Rejecting match', match);
     this.notificationService.showConfirmation('¿Estás seguro?', 'Vas a rechazar este match. esta acción no se puede deshacer.')
       .then((confirmed) => {
         if (confirmed) {
@@ -175,7 +172,6 @@ export class MatchesComponent implements OnInit {
   }
 
   onComplete(match: any) {
-    console.log('Completing match', match);
     this.voluntariadoService.updateInscripcionStatus(match.id, 'COMPLETADA').subscribe({
       next: () => {
         this.notificationService.showSuccess('Match completado correctamente');
