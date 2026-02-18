@@ -9,9 +9,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Security\UnifiedUserProvider;
 use App\Service\Auth\AuthServiceInterface;
-use App\Service\NotificationService;
+use App\Service\EmailServiceInterface;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
-use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 /**
  * S-1 + D-2: Controller dedicado exclusivamente a login y recuperación de contraseña.
@@ -131,8 +131,8 @@ class LoginController extends AbstractController
                 'rol' => $this->getUserRole($localUser)
             ]);
 
-        } catch (FailedToVerifyToken $e) {
-            return $this->errorResponse('Token inválido o expirado: ' . $e->getMessage(), 401);
+        } catch (CustomUserMessageAuthenticationException $e) {
+            return $this->errorResponse($e->getMessage(), 401);
         } catch (\Throwable $e) {
             return $this->errorResponse('Error interno al verificar Google Login: ' . $e->getMessage(), 500);
         }
@@ -163,8 +163,6 @@ class LoginController extends AbstractController
 
             return $this->json(['message' => 'Si el correo existe, se ha enviado un enlace de recuperación.']);
 
-        } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
-            return $this->json(['message' => 'Si el correo existe, se ha enviado un enlace de recuperación.']);
         } catch (\Exception $e) {
             return $this->errorResponse('Error al procesar la solicitud: ' . $e->getMessage(), 500);
         }

@@ -14,14 +14,17 @@ class VolunteerService implements VolunteerServiceInterface
 
     private $habilidadRepository;
     private $interesRepository;
+    private $cicloRepository;
     private EmailServiceInterface $emailService;
+    private FirebaseServiceInterface $firebaseService;
+    private NotificationManagerInterface $notificationManager;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         \App\Repository\HabilidadRepository $habilidadRepository,
         \App\Repository\InteresRepository $interesRepository,
         \App\Repository\CicloRepository $cicloRepository,
-        \Kreait\Firebase\Contract\Auth $firebaseAuth,
+        FirebaseServiceInterface $firebaseService,
         EmailServiceInterface $emailService,
         NotificationManagerInterface $notificationManager
     ) {
@@ -29,7 +32,7 @@ class VolunteerService implements VolunteerServiceInterface
         $this->habilidadRepository = $habilidadRepository;
         $this->interesRepository = $interesRepository;
         $this->cicloRepository = $cicloRepository;
-        $this->firebaseAuth = $firebaseAuth;
+        $this->firebaseService = $firebaseService;
         $this->emailService = $emailService;
         $this->notificationManager = $notificationManager;
     }
@@ -108,37 +111,23 @@ class VolunteerService implements VolunteerServiceInterface
     public function registerVolunteer(RegistroVoluntarioDTO $dto, bool $isAdmin = false): Voluntario
     {
 
-        // 1. Create User in Firebase (If not exists)
+        // 1. Create User in Firebase (Centralizado via FirebaseService)
         try {
-            $userProperties = [
-                'email' => $dto->email,
-                'emailVerified' => false,
-                'password' => $dto->password,
-                'displayName' => $dto->nombre,
-                'disabled' => false,
-            ];
-            
+            $uid = $this->firebaseService->createUser($dto->email, $dto->password, $dto->nombre);
+            $this->firebaseService->setUserRole($uid, 'voluntario');
+
             try {
-                $createdUser = $this->firebaseAuth->createUser($userProperties);
-                $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'voluntario']);
-
-                try {
-                    $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
-                    $this->emailService->sendEmail(
-                        $dto->email,
-                        'Verifica tu correo - Gestión Voluntariado',
-                        sprintf('<p>Hola %s,</p><p>Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
-                    );
-                } catch (\Throwable $e) {
-                    // El email de verificación no es crítico
-                }
-
-            } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
-                $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
-                $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'voluntario']);
+                $link = $this->firebaseService->getEmailVerificationLink($dto->email);
+                $this->emailService->sendEmail(
+                    $dto->email,
+                    'Verifica tu correo - Gestión Voluntariado',
+                    sprintf('<p>Hola %s,</p><p>Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
+                );
+            } catch (\Throwable $e) {
+                // El email de verificación no es crítico
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
 
