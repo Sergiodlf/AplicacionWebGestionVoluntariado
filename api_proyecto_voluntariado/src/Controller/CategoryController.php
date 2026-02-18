@@ -2,35 +2,29 @@
 
 namespace App\Controller;
 
-use App\Repository\ODSRepository;
-use App\Repository\HabilidadRepository;
-use App\Repository\InteresRepository;
-use App\Repository\NecesidadRepository;
+use App\Service\CategoryService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Habilidad;
-use App\Entity\Interes;
 
 #[Route('/api/categories')]
 class CategoryController extends AbstractController
 {
     private SerializerInterface $serializer;
-    private EntityManagerInterface $entityManager;
+    private CategoryService $categoryService;
 
-    public function __construct(SerializerInterface $serializer, EntityManagerInterface $entityManager)
+    public function __construct(SerializerInterface $serializer, CategoryService $categoryService)
     {
         $this->serializer = $serializer;
-        $this->entityManager = $entityManager;
+        $this->categoryService = $categoryService;
     }
 
     #[Route('/ciclos', name: 'api_categories_ciclos', methods: ['GET'])]
-    public function getCiclos(\App\Repository\CicloRepository $repository): JsonResponse
+    public function getCiclos(): JsonResponse
     {
-        $ciclos = $repository->findAll();
+        $ciclos = $this->categoryService->getAllCiclos();
         
         $data = [];
         foreach ($ciclos as $ciclo) {
@@ -44,9 +38,9 @@ class CategoryController extends AbstractController
     }
 
     #[Route('/ods', name: 'api_categories_ods', methods: ['GET'])]
-    public function getODS(ODSRepository $repository): JsonResponse
+    public function getODS(): JsonResponse
     {
-        $data = $repository->findAll();
+        $data = $this->categoryService->getAllODS();
         return new JsonResponse(
             $this->serializer->serialize($data, 'json', ['groups' => 'ods:read']),
             200,
@@ -56,9 +50,9 @@ class CategoryController extends AbstractController
     }
 
     #[Route('/habilidades', name: 'api_categories_habilidades', methods: ['GET'])]
-    public function getHabilidades(HabilidadRepository $repository): JsonResponse
+    public function getHabilidades(): JsonResponse
     {
-        $data = $repository->findAll();
+        $data = $this->categoryService->getAllHabilidades();
         return new JsonResponse(
             $this->serializer->serialize($data, 'json', ['groups' => 'habilidad:read']),
             200,
@@ -68,9 +62,9 @@ class CategoryController extends AbstractController
     }
 
     #[Route('/intereses', name: 'api_categories_intereses', methods: ['GET'])]
-    public function getIntereses(InteresRepository $repository): JsonResponse
+    public function getIntereses(): JsonResponse
     {
-        $data = $repository->findAll();
+        $data = $this->categoryService->getAllIntereses();
         return new JsonResponse(
             $this->serializer->serialize($data, 'json', ['groups' => 'interes:read']),
             200,
@@ -80,9 +74,9 @@ class CategoryController extends AbstractController
     }
 
     #[Route('/necesidades', name: 'api_categories_necesidades', methods: ['GET'])]
-    public function getNecesidades(NecesidadRepository $repository): JsonResponse
+    public function getNecesidades(): JsonResponse
     {
-        $data = $repository->findAll();
+        $data = $this->categoryService->getAllNecesidades();
         return new JsonResponse(
             $this->serializer->serialize($data, 'json', ['groups' => 'necesidad:read']),
             200,
@@ -99,30 +93,18 @@ class CategoryController extends AbstractController
             return new JsonResponse(['error' => 'Nombre es requerido y no puede estar vacío'], 400);
         }
 
-        $h = new Habilidad();
-        $h->setNombre($data['nombre']);
-        $this->entityManager->persist($h);
-        $this->entityManager->flush();
+        $id = $this->categoryService->createHabilidad($data['nombre']);
 
-        return new JsonResponse(['status' => 'Habilidad creada', 'id' => $h->getId()], 201);
+        return new JsonResponse(['status' => 'Habilidad creada', 'id' => $id], 201);
     }
 
     #[Route('/habilidades/{id}', name: 'api_categories_habilidades_delete', methods: ['DELETE'])]
-    public function deleteHabilidad(int $id, HabilidadRepository $repository): JsonResponse
+    public function deleteHabilidad(int $id): JsonResponse
     {
-        $h = $repository->find($id);
-        if (!$h) return new JsonResponse(['error' => 'No encontrada'], 404);
-
-        // Manually remove relationship from Voluntarios to avoid FK constraint violation
-        // Since Voluntario is the owning side, we must do it from there or execute raw SQL.
-        // Doing it via DQL/ORM is cleaner but heavier if many volunteers.
-        // Given the expected scale, a raw SQL query to the join table is most efficient and safest for a quick fix.
-        
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement('DELETE FROM VOLUNTARIOS_HABILIDADES WHERE HABILIDAD_ID = :id', ['id' => $id]);
-
-        $this->entityManager->remove($h);
-        $this->entityManager->flush();
+        $success = $this->categoryService->deleteHabilidad($id);
+        if (!$success) {
+            return new JsonResponse(['error' => 'No encontrada'], 404);
+        }
 
         return new JsonResponse(['status' => 'Habilidad eliminada'], 200);
     }
@@ -135,26 +117,18 @@ class CategoryController extends AbstractController
             return new JsonResponse(['error' => 'Nombre es requerido y no puede estar vacío'], 400);
         }
 
-        $i = new Interes();
-        $i->setNombre($data['nombre']);
-        $this->entityManager->persist($i);
-        $this->entityManager->flush();
+        $id = $this->categoryService->createInteres($data['nombre']);
 
-        return new JsonResponse(['status' => 'Interes creado', 'id' => $i->getId()], 201);
+        return new JsonResponse(['status' => 'Interes creado', 'id' => $id], 201);
     }
 
     #[Route('/intereses/{id}', name: 'api_categories_intereses_delete', methods: ['DELETE'])]
-    public function deleteInteres(int $id, InteresRepository $repository): JsonResponse
+    public function deleteInteres(int $id): JsonResponse
     {
-        $i = $repository->find($id);
-        if (!$i) return new JsonResponse(['error' => 'No encontrada'], 404);
-
-        // Same for Intereses
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement('DELETE FROM VOLUNTARIOS_INTERESES WHERE INTERES_ID = :id', ['id' => $id]);
-
-        $this->entityManager->remove($i);
-        $this->entityManager->flush();
+        $success = $this->categoryService->deleteInteres($id);
+        if (!$success) {
+            return new JsonResponse(['error' => 'No encontrada'], 404);
+        }
 
         return new JsonResponse(['status' => 'Interes eliminado'], 200);
     }

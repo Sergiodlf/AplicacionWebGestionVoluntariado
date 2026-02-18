@@ -2,12 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\Inscripcion;
-use App\Entity\Voluntario;
 use App\Entity\Actividad;
 use App\Entity\Organizacion;
-use App\Repository\InscripcionRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Voluntario;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,43 +12,39 @@ use Symfony\Component\Routing\Annotation\Route;
 
 use App\Service\InscripcionService;
 use App\Service\NotificationService;
+use App\Service\ActivityService;
+use App\Service\VolunteerService;
+use App\Service\OrganizationService;
 
 #[Route('/api/inscripciones', name: 'api_inscripciones_')]
 class InscripcionController extends AbstractController
 {
     private $inscripcionService;
     private $notificationService;
+    private $activityService;
+    private $volunteerService;
+    private $organizationService;
 
-    public function __construct(InscripcionService $inscripcionService, NotificationService $notificationService)
-    {
+    public function __construct(
+        InscripcionService $inscripcionService, 
+        NotificationService $notificationService,
+        ActivityService $activityService,
+        VolunteerService $volunteerService,
+        OrganizationService $organizationService
+    ) {
         $this->inscripcionService = $inscripcionService;
         $this->notificationService = $notificationService;
+        $this->activityService = $activityService;
+        $this->volunteerService = $volunteerService;
+        $this->organizationService = $organizationService;
     }
 
-
-    // ...
-
     #[Route('', name: 'get_all', methods: ['GET'])]
-    // Force cache update
-    public function getAll(Request $request, EntityManagerInterface $em): JsonResponse
+    public function getAll(Request $request): JsonResponse
     {
         try {
             $estado = $request->query->get('estado');
-            $repo = $em->getRepository(Inscripcion::class);
-
-            if ($estado) {
-                // Support multiple statuses separated by comma (e.g., "PENDIENTE,CONFIRMADO")
-                $estados = array_map('strtoupper', array_map('trim', explode(',', $estado)));
-                // Map 'ACEPTADO' to 'CONFIRMADO' just in case
-                foreach ($estados as $k => $v) {
-                    if ($v === 'ACEPTADO') $estados[$k] = 'CONFIRMADO';
-                }
-
-                $inscripciones = $repo->findBy(['estado' => $estados]);
-            } else {
-                // Default: get all
-                $inscripciones = $repo->findAll();
-            }
+            $inscripciones = $this->inscripcionService->getAll($estado);
 
             $data = [];
             foreach ($inscripciones as $inscripcion) {
@@ -88,16 +81,13 @@ class InscripcionController extends AbstractController
         } catch (\Throwable $e) {
             return $this->json([
                 'error' => 'Error interno en el servidor',
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'message' => $e->getMessage()
             ], 500);
         }
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em): JsonResponse
+    public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $dni = $data['dniVoluntario'] ?? null;
@@ -107,21 +97,18 @@ class InscripcionController extends AbstractController
             return $this->json(['error' => 'Faltan datos (dniVoluntario, codActividad)'], 400);
         }
 
-        $voluntario = $em->getRepository(Voluntario::class)->find($dni);
+        $voluntario = $this->volunteerService->getById($dni);
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
         }
 
-        $actividad = $em->getRepository(Actividad::class)->find($codActividad);
+        $actividad = $this->activityService->getActivityById($codActividad);
         if (!$actividad) {
             return $this->json(['error' => 'Actividad no encontrada'], 404);
         }
 
         // Verificar si ya existe la inscripción
-        $existing = $em->getRepository(Inscripcion::class)->findOneBy([
-            'voluntario' => $voluntario,
-            'actividad' => $actividad
-        ]);
+        $existing = $this->inscripcionService->isVolunteerInscribed($actividad, $voluntario);
 
         // Estados que permiten re-inscripción
         $estadosReInscripcion = ['RECHAZADO', 'CANCELADO', 'FINALIZADO'];
@@ -136,81 +123,53 @@ class InscripcionController extends AbstractController
                     'estado' => $existing->getEstado()
                 ], 409);
             }
-            // Si permitimos re-inscribir, usamos la instancia existente
-            $inscripcion = $existing;
         } else {
             // VALIDACIÓN DE CUPO MÁXIMO (Solo si es nueva inscripción)
              $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
              if ($ocupadas >= $actividad->getMaxParticipantes()) {
                  return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
              }
-
-            $inscripcion = new Inscripcion();
-            $inscripcion->setVoluntario($voluntario);
-            $inscripcion->setActividad($actividad);
-             $em->persist($inscripcion); // Solo persistimos si es nueva
         }
 
         
         // Auto-aceptar si es Admin o la Organización dueña
         $user = $this->getUser();
-        $estadoInicial = 'PENDIENTE';
+        $autoAccept = false;
 
         // Check if user is Admin using the custom AdminUser class or role check if simple user
-        $isAdmin = false;
         if ($user instanceof \App\Security\User\AdminUser) {
-            $isAdmin = true;
+            $autoAccept = true;
         } elseif (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
-            $isAdmin = true;
+            $autoAccept = true;
         }
 
         // Check if user is the organization owner
-        // FIX: Usar getCif() en lugar de getId(), y manejar posible null en getOrganizacion()
-        $isOwnerOrg = false;
         if ($user instanceof Organizacion) {
             $orgActividad = $actividad->getOrganizacion();
             if ($orgActividad && $user->getCif() === $orgActividad->getCif()) {
-                $isOwnerOrg = true;
+                $autoAccept = true;
             }
         }
 
-        if ($isAdmin || $isOwnerOrg) {
-            $estadoInicial = 'CONFIRMADO';
+        try {
+            $inscripcion = $this->inscripcionService->createInscription($actividad, $voluntario, $existing, $autoAccept);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al crear la inscripción: ' . $e->getMessage()], 500);
         }
-
-        $inscripcion->setEstado($estadoInicial);
-
-        // $em->persist($inscripcion); // Moved to ELSE block above for NEW entities only.
-        // But wait, if modifying existing, persist is not needed but harmless. 
-        // Best practice: persist is only for new entities. 
-        // But to be safe cleanly:
-        if (!$existing) {
-             // Already persisted above
-        }
-
-        $em->flush();
 
         return $this->json([
             'message' => $existing ? 'Re-inscripción realizada correctamente' : 'Inscripción creada correctamente', 
             'estado' => $inscripcion->getEstado(),
-            'id_inscripcion' => $inscripcion->getId(),
-            'debug' => [
-                'user_class' => get_class($user),
-                'roles' => $user->getRoles(),
-                'is_admin' => $isAdmin,
-                'is_owner_org' => $isOwnerOrg,
-                'cif_org_actividad' => ($actividad->getOrganizacion() ? $actividad->getOrganizacion()->getCif() : 'null'),
-                'user_id' => ($user instanceof Organizacion ? $user->getCif() : $user->getUserIdentifier()) // Assuming Voluntario doesn't have getCif or getId for this context easily accessible as string without casting
-            ]
+            'id_inscripcion' => $inscripcion->getId()
         ], $existing ? 200 : 201);
     }
 
 
 
     #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
-    public function updateEstado(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    public function updateEstado(int $id, Request $request): JsonResponse
     {
-        $inscripcion = $em->getRepository(Inscripcion::class)->find($id);
+        $inscripcion = $this->inscripcionService->getById($id);
 
         if (!$inscripcion) {
             return $this->json(['error' => 'Inscripción no encontrada'], 404);
@@ -232,80 +191,9 @@ class InscripcionController extends AbstractController
             ], 400);
         }
 
-        $inscripcion->setEstado(strtoupper($nuevoEstado));
-
         try {
-            file_put_contents('debug_notification.txt', "--- START TRANSACTION: Update Status to $nuevoEstado ---\n", FILE_APPEND);
-            $em->flush();
-            file_put_contents('debug_notification.txt', "Flush success.\n", FILE_APPEND);
-            
-            // --- NOTIFICACIONES ---
-            try {
-                $voluntario = $inscripcion->getVoluntario();
-                $actividad = $inscripcion->getActividad();
-                $actividadNombre = $actividad ? $actividad->getNombre() : 'Actividad';
-                $estadoUpper = strtoupper(trim($nuevoEstado));
-                $titulo = null;
-                $cuerpo = null;
-
-                // DEBUG LOGGING (DETAILED)
-                $debugMsg = "--- UPDATE ESTADO: '$estadoUpper' (Len: " . strlen($estadoUpper) . ") ---\n";
-                $debugMsg .= "Match CONFIRMADO? " . ($estadoUpper === 'CONFIRMADO' ? 'YES' : 'NO') . "\n";
-                $debugMsg .= "Match ACEPTADO? " . ($estadoUpper === 'ACEPTADO' ? 'YES' : 'NO') . "\n";
-                file_put_contents('debug_notification.txt', $debugMsg, FILE_APPEND);
-                
-                if ($estadoUpper === 'CONFIRMADO' || $estadoUpper === 'ACEPTADO') {
-                     try {
-                        file_put_contents('debug_notification.txt', "Entered IF block.\n", FILE_APPEND);
-                        
-                        $volId = $voluntario ? $voluntario->getDni() : 'NULL';
-                        file_put_contents('debug_notification.txt', "Voluntario DNI resolved: $volId\n", FILE_APPEND);
-
-                        $titulo = "¡Solicitud Aceptada!";
-                        $cuerpo = "Un administrador ha aceptado tu solicitud de voluntariado. Toca para ver más detalles.";
-                        
-                        if ($voluntario) {
-                            $this->notificationService->sendToUser(
-                                $voluntario, 
-                                $titulo, 
-                                $cuerpo, 
-                                [
-                                    'title' => $titulo,
-                                    'body' => $cuerpo,
-                                    'type' => 'MATCH_ACCEPTED',
-                                    'matchId' => (string)$id,
-                                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
-                                ]
-                            );
-                            file_put_contents('debug_notification.txt', "NotificationService called successfully.\n", FILE_APPEND);
-                        } else {
-                            file_put_contents('debug_notification.txt', "WARNING: No volunteer associated.\n", FILE_APPEND);
-                        }
-                        // Prevent generic sending block below
-                        $titulo = null; 
-                    } catch (\Throwable $e) {
-                        file_put_contents('debug_notification.txt', "CRITICAL ERROR inside notification block: " . $e->getMessage() . "\n", FILE_APPEND);
-                    }
-                } elseif ($estadoUpper === 'RECHAZADO') {
-                    $titulo = "Solicitud Actualizada";
-                    $cuerpo = "El estado de tu solicitud para " . $actividadNombre . " ha cambiado a " . $estadoUpper;
-                }
-
-                if ($titulo && $voluntario) {
-                    $this->notificationService->sendToUser(
-                        $voluntario, 
-                        $titulo, 
-                        $cuerpo, 
-                        ['click_action' => 'FLUTTER_NOTIFICATION_CLICK', 'id_inscripcion' => (string)$id]
-                    );
-                }
-            } catch (\Exception $e) {
-                // Ignoramos errores de notificación para no fallar la respuesta HTTP
-                // (Idealmente loguear esto)
-            }
-
+            $this->inscripcionService->updateStatus($inscripcion, $nuevoEstado);
         } catch (\Exception $e) {
-            file_put_contents('debug_notification.txt', "ERROR IN TRANSACTION: " . $e->getMessage() . "\n", FILE_APPEND);
             return $this->json(['error' => 'Error al actualizar el estado'], 500);
         }
 
@@ -317,9 +205,9 @@ class InscripcionController extends AbstractController
 
     // CANCELAR INSCRIPCIÓN (ELIMINAR)
     #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
-    public function delete(int $id, EntityManagerInterface $em): JsonResponse
+    public function delete(int $id): JsonResponse
     {
-        $inscripcion = $em->getRepository(Inscripcion::class)->find($id);
+        $inscripcion = $this->inscripcionService->getById($id);
 
         if (!$inscripcion) {
             return $this->json(['error' => 'Inscripción no encontrada'], 404);
@@ -337,14 +225,8 @@ class InscripcionController extends AbstractController
             return $this->json(['error' => 'Las organizaciones no pueden eliminar inscripciones directamente'], 403);
         }
 
-        // Regla de Negocio: No permitir eliminar si ya está FINALIZADO o COMPLETADA (opcional)
-        // if (in_array($inscripcion->getEstado(), ['FINALIZADO', 'COMPLETADA'])) {
-        //    return $this->json(['error' => 'No se puede cancelar una actividad ya finalizada'], 409);
-        // }
-
         try {
-            $em->remove($inscripcion);
-            $em->flush();
+            $this->inscripcionService->delete($inscripcion);
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error al eliminar la inscripción'], 500);
         }
@@ -355,36 +237,24 @@ class InscripcionController extends AbstractController
 
 
     #[Route('/voluntario/{dni}/inscripciones/estado', name: 'get_inscripciones_voluntario_estado_legacy', methods: ['GET'])]
-    public function getInscripcionesVoluntarioByEstadoLegacy(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
+    public function getInscripcionesVoluntarioByEstadoLegacy(string $dni, Request $request): JsonResponse
     {
-        // This endpoint supports the legacy/requested format where filtered status is passed via query param ?estado=
-        // essentially identical to getInscripcionesVoluntario but explicit path.
-        return $this->getInscripcionesVoluntario($dni, $request, $em);
+        return $this->getInscripcionesVoluntario($dni, $request);
     }
 
     #[Route('/voluntario/{dni}/inscripciones', name: 'get_inscripciones_voluntario', methods: ['GET'])]
-    public function getInscripcionesVoluntario(string $dni, Request $request, EntityManagerInterface $em): JsonResponse
+    public function getInscripcionesVoluntario(string $dni, Request $request): JsonResponse
     {
-        $voluntario = $em->getRepository(Voluntario::class)->find($dni);
+        $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
         }
 
-        // Recuperar parámetro 'estado' (puede ser 'PENDIENTE', 'CONFIRMADO', 'EN_CURSO', 'FINALIZADO', etc.)
+        // Recuperar parámetro 'estado'
         $estadoInscripcion = $request->query->get('estado'); 
 
-        $criteria = ['voluntario' => $voluntario];
-        if ($estadoInscripcion) {
-            $normalized = strtoupper($estadoInscripcion);
-            // ALIAS: Map 'ACEPTADO' (App term) to 'CONFIRMADO' (DB term)
-            if ($normalized === 'ACEPTADO') {
-                $normalized = 'CONFIRMADO';
-            }
-            $criteria['estado'] = $normalized;
-        }
-
-        $inscripciones = $em->getRepository(Inscripcion::class)->findBy($criteria, ['id' => 'DESC']);
+        $inscripciones = $this->inscripcionService->getByVoluntario($voluntario, $estadoInscripcion);
 
         $data = [];
         foreach ($inscripciones as $inscripcion) {
@@ -416,7 +286,7 @@ class InscripcionController extends AbstractController
 
     // NUEVO ENDPOINT SMART: Mis Inscripciones (Usa Token)
     #[Route('/me', name: 'get_my_inscriptions', methods: ['GET'])]
-    public function getMyInscriptions(Request $request, EntityManagerInterface $em): JsonResponse
+    public function getMyInscriptions(Request $request): JsonResponse
     {
         $user = $this->getUser();
 
@@ -424,25 +294,23 @@ class InscripcionController extends AbstractController
             return $this->json(['error' => 'Acceso denegado. Debes ser un voluntario.'], 403);
         }
 
-        return $this->getInscripcionesVoluntario($user->getDni(), $request, $em);
+        return $this->getInscripcionesVoluntario($user->getDni(), $request);
     }
 
     #[Route('/organizacion/{cif}', name: 'get_inscripciones_by_organizacion', methods: ['GET'])]
-    public function getInscripcionesByOrganizacion(string $cif, Request $request, EntityManagerInterface $em): JsonResponse
+    public function getInscripcionesByOrganizacion(string $cif, Request $request): JsonResponse
     {
         try {
             // 1. Check Organizacion
-            $organizacion = $em->getRepository(Organizacion::class)->find($cif);
+            $organizacion = $this->organizationService->getByCif($cif);
             if (!$organizacion) {
                 return $this->json(['error' => 'Organización no encontrada'], 404);
             }
             
             // 2. Query Repository
-            /** @var InscripcionRepository $inscripcionRepository */
-            $inscripcionRepository = $em->getRepository(Inscripcion::class);
             $estado = $request->query->get('estado');
             
-            $inscripciones = $inscripcionRepository->findByOrganizacionAndEstado($cif, $estado);
+            $inscripciones = $this->inscripcionService->getByOrganizacion($cif, $estado);
             
             $data = [];
             foreach ($inscripciones as $inscripcion) {

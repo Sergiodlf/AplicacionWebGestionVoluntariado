@@ -2,32 +2,37 @@
 
 namespace App\Controller;
 
-use App\Repository\NotificacionRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use App\Service\NotificationService;
 use App\Entity\Voluntario;
 use App\Entity\Organizacion;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/notificaciones', name: 'api_notificaciones_')]
 class NotificationController extends AbstractController
 {
+    private $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     #[Route('', name: 'get_all', methods: ['GET'])]
-    public function getAll(NotificacionRepository $repo): JsonResponse
+    public function getAll(): JsonResponse
     {
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['error' => 'Usuario no autenticado'], 401);
         }
 
-        $notificaciones = [];
-        if ($user instanceof Voluntario) {
-            $notificaciones = $repo->findByVoluntario($user->getDni());
-        } elseif ($user instanceof Organizacion) {
-            $notificaciones = $repo->findByOrganizacion($user->getCif());
+        // Ensure we have the domain user entity
+        if (method_exists($user, 'getDomainUser')) {
+            $user = $user->getDomainUser();
         }
+
+        $notificaciones = $this->notificationService->getNotificationsForUser($user);
 
         $data = [];
         foreach ($notificaciones as $n) {
@@ -45,19 +50,23 @@ class NotificationController extends AbstractController
     }
 
     #[Route('/{id}/read', name: 'mark_read', methods: ['PATCH'])]
-    public function markRead(int $id, NotificacionRepository $repo, EntityManagerInterface $em): JsonResponse
+    public function markRead(int $id): JsonResponse
     {
-        $notificacion = $repo->find($id);
+        $notificacion = $this->notificationService->getNotificationById($id);
         if (!$notificacion) {
             return $this->json(['error' => 'Notificación no encontrada'], 404);
         }
 
         // Security Check: Ensure user owns this notification
         $user = $this->getUser();
+        if (method_exists($user, 'getDomainUser')) {
+            $user = $user->getDomainUser();
+        }
+
         $isOwner = false;
-        if ($user instanceof Voluntario && $notificacion->getVoluntario()->getDni() === $user->getDni()) {
+        if ($user instanceof Voluntario && $notificacion->getVoluntario() && $notificacion->getVoluntario()->getDni() === $user->getDni()) {
             $isOwner = true;
-        } elseif ($user instanceof Organizacion && $notificacion->getOrganizacion()->getCif() === $user->getCif()) {
+        } elseif ($user instanceof Organizacion && $notificacion->getOrganizacion() && $notificacion->getOrganizacion()->getCif() === $user->getCif()) {
             $isOwner = true;
         }
 
@@ -65,8 +74,11 @@ class NotificationController extends AbstractController
             return $this->json(['error' => 'No tienes permiso para marcar esta notificación'], 403);
         }
 
-        $notificacion->setLeido(true);
-        $em->flush();
+        try {
+            $this->notificationService->markAsRead($notificacion);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al marcar como leída'], 500);
+        }
 
         return $this->json(['message' => 'Notificación marcada como leída']);
     }

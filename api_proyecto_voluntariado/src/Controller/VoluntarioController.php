@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Repository\VoluntarioRepository;
+use App\Service\VolunteerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,15 +11,22 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/voluntarios')]
 class VoluntarioController extends AbstractController
 {
+    private $volunteerService;
+
+    public function __construct(VolunteerService $volunteerService)
+    {
+        $this->volunteerService = $volunteerService;
+    }
+
     #[Route('', name: 'api_voluntarios_list', methods: ['GET'])]
-    public function getAllVoluntarios(Request $request, VoluntarioRepository $voluntarioRepository): JsonResponse
+    public function getAllVoluntarios(Request $request): JsonResponse
     {
         $criteria = [];
         if ($estado = $request->query->get('estado')) {
             $criteria['estadoVoluntario'] = $estado;
         }
 
-        $voluntarios = $voluntarioRepository->findBy($criteria);
+        $voluntarios = $this->volunteerService->getAll($criteria);
 
         $data = [];
         foreach ($voluntarios as $voluntario) {
@@ -56,9 +63,9 @@ class VoluntarioController extends AbstractController
 
 
     #[Route('/{dni}', name: 'api_voluntarios_patch', methods: ['PATCH'])]
-    public function updatePartial(string $dni, Request $request, VoluntarioRepository $voluntarioRepository, \Doctrine\ORM\EntityManagerInterface $em): JsonResponse
+    public function updatePartial(string $dni, Request $request): JsonResponse
     {
-        $voluntario = $voluntarioRepository->find($dni);
+        $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
@@ -77,13 +84,7 @@ class VoluntarioController extends AbstractController
                     'permitidos' => $estadosPermitidos
                 ], 400);
             }
-            $voluntario->setEstadoVoluntario(strtoupper($nuevoEstado));
-        }
-
-        try {
-            $em->flush();
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar el voluntario'], 500);
+            $this->volunteerService->updateStatus($voluntario, $nuevoEstado);
         }
 
         return $this->json([
@@ -91,10 +92,11 @@ class VoluntarioController extends AbstractController
             'estado' => $voluntario->getEstadoVoluntario()
         ]);
     }
+
     #[Route('/email/{email}', name: 'api_voluntarios_get_by_email', methods: ['GET'])]
-    public function getByEmail(string $email, VoluntarioRepository $voluntarioRepository): JsonResponse
+    public function getByEmail(string $email): JsonResponse
     {
-        $voluntario = $voluntarioRepository->findOneBy(['correo' => $email]);
+        $voluntario = $this->volunteerService->getByEmail($email);
 
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
@@ -120,10 +122,11 @@ class VoluntarioController extends AbstractController
 
         return $this->json($data);
     }
+
     #[Route('/{dni}', name: 'api_voluntarios_update', methods: ['PUT'])]
-    public function update(string $dni, Request $request, VoluntarioRepository $voluntarioRepository, \Doctrine\ORM\EntityManagerInterface $em): JsonResponse
+    public function update(string $dni, Request $request): JsonResponse
     {
-        $voluntario = $voluntarioRepository->find($dni);
+        $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
             return $this->json(['error' => 'Voluntario no encontrado'], 404);
@@ -131,23 +134,8 @@ class VoluntarioController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        // Actualización de campos básicos
-        if (isset($data['nombre'])) $voluntario->setNombre($data['nombre']);
-        if (isset($data['apellido1'])) $voluntario->setApellido1($data['apellido1']);
-        if (isset($data['apellido2'])) $voluntario->setApellido2($data['apellido2']);
-        if (isset($data['correo'])) $voluntario->setCorreo($data['correo']);
-        if (isset($data['zona'])) $voluntario->setZona($data['zona']);
-        if (isset($data['experiencia'])) $voluntario->setExperiencia($data['experiencia']);
-        if (isset($data['coche'])) $voluntario->setCoche($data['coche']);
-
-        // Actualización de campos JSON (Arrays)
-        if (isset($data['habilidades'])) $voluntario->setHabilidades($data['habilidades']);
-        if (isset($data['intereses'])) $voluntario->setIntereses($data['intereses']);
-        if (isset($data['idiomas'])) $voluntario->setIdiomas($data['idiomas']);
-        if (isset($data['disponibilidad'])) $voluntario->setDisponibilidad($data['disponibilidad']);
-
         try {
-            $em->flush();
+            $this->volunteerService->updateProfile($voluntario, $data);
         } catch (\Exception $e) {
             return $this->json(['error' => 'Error al actualizar el perfil: ' . $e->getMessage()], 500);
         }

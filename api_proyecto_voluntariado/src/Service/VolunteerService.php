@@ -226,4 +226,112 @@ class VolunteerService
 
         return $voluntario;
     }
+    public function getById(string $dni): ?Voluntario
+    {
+        return $this->entityManager->getRepository(Voluntario::class)->find($dni);
+    }
+
+    public function updateProfile(Voluntario $voluntario, array $data): Voluntario
+    {
+        if (isset($data['nombre'])) $voluntario->setNombre($data['nombre']);
+        if (isset($data['apellido1'])) $voluntario->setApellido1($data['apellido1']);
+        if (isset($data['apellido2'])) $voluntario->setApellido2($data['apellido2']);
+        if (isset($data['zona'])) $voluntario->setZona($data['zona']);
+        if (isset($data['experiencia'])) $voluntario->setExperiencia($data['experiencia']);
+        if (isset($data['coche'])) $voluntario->setCoche($data['coche']);
+        if (isset($data['disponibilidad']) && is_array($data['disponibilidad'])) $voluntario->setDisponibilidad(array_values($data['disponibilidad']));
+        if (isset($data['idiomas']) && is_array($data['idiomas'])) $voluntario->setIdiomas(array_values($data['idiomas']));
+
+        // Relaciones ManyToMany (Habilidades)
+        if (isset($data['habilidades']) && is_array($data['habilidades'])) {
+            $voluntario->getHabilidades()->clear();
+            foreach ($data['habilidades'] as $item) {
+                $habilidad = null;
+                if (is_array($item) && isset($item['id'])) {
+                    $habilidad = $this->habilidadRepository->find($item['id']);
+                } elseif (is_numeric($item)) {
+                    $habilidad = $this->habilidadRepository->find($item);
+                } elseif (is_string($item)) {
+                    $habilidad = $this->habilidadRepository->findOneBy(['nombre' => $item]);
+                }
+
+                if ($habilidad) {
+                    $voluntario->addHabilidad($habilidad);
+                }
+            }
+        }
+
+        // Relaciones ManyToMany (Intereses)
+        if (isset($data['intereses']) && is_array($data['intereses'])) {
+            $voluntario->getIntereses()->clear();
+            foreach ($data['intereses'] as $item) {
+                $interes = null;
+                if (is_array($item) && isset($item['id'])) {
+                    $interes = $this->interesRepository->find($item['id']);
+                } elseif (is_numeric($item)) {
+                    $interes = $this->interesRepository->find($item);
+                } elseif (is_string($item)) {
+                    $interes = $this->interesRepository->findOneBy(['nombre' => $item]);
+                }
+
+                if ($interes) {
+                    $voluntario->addInterese($interes);
+                }
+            }
+        }
+        
+        // Ciclo
+        if (isset($data['ciclo'])) {
+            $cicloData = $data['ciclo'];
+            $cicloObj = null;
+
+            if (is_array($cicloData) && isset($cicloData['nombre']) && isset($cicloData['curso'])) {
+                $cicloObj = $this->cicloRepository->findOneBy([
+                    'nombre' => $cicloData['nombre'], 
+                    'curso' => $cicloData['curso']
+                ]);
+            } elseif (is_string($cicloData)) {
+                $parts = [];
+                if (preg_match('/^(.*)\s\((\d+)º\)$/', $cicloData, $parts)) {
+                    $nombre = trim($parts[1]);
+                    $curso = (int)$parts[2];
+                    $cicloObj = $this->cicloRepository->findOneBy(['nombre' => $nombre, 'curso' => $curso]);
+                } else {
+                    $cicloObj = $this->cicloRepository->findOneBy(['nombre' => $cicloData]);
+                }
+            }
+
+            if ($cicloObj) {
+                $voluntario->setCiclo($cicloObj);
+            }
+        }
+
+        // FCM Token
+        if (isset($data['fcmToken'])) {
+            $voluntario->setFcmToken($data['fcmToken']);
+        }
+
+        $this->entityManager->flush();
+        return $voluntario;
+    }
+    public function getAll(array $criteria = []): array
+    {
+        return $this->entityManager->getRepository(Voluntario::class)->findBy($criteria);
+    }
+
+    public function getByEmail(string $email): ?Voluntario
+    {
+        return $this->entityManager->getRepository(Voluntario::class)->findOneBy(['correo' => $email]);
+    }
+
+    public function countByStatus(string $status): int
+    {
+        return $this->entityManager->getRepository(Voluntario::class)->count(['estadoVoluntario' => $status]);
+    }
+
+    public function updateStatus(Voluntario $voluntario, string $status): void
+    {
+        $voluntario->setEstadoVoluntario(strtoupper($status));
+        $this->entityManager->flush();
+    }
 }
