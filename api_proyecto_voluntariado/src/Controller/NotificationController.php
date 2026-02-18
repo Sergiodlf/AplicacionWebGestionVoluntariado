@@ -15,11 +15,11 @@ class NotificationController extends AbstractController
 {
     use ApiErrorTrait;
 
-    private $notificationService;
+    private NotificationManagerInterface $notificationManager;
 
-    public function __construct(NotificationService $notificationService)
+    public function __construct(NotificationManagerInterface $notificationManager)
     {
-        $this->notificationService = $notificationService;
+        $this->notificationManager = $notificationManager;
     }
 
     #[Route('', name: 'get_all', methods: ['GET'])]
@@ -35,7 +35,7 @@ class NotificationController extends AbstractController
             $user = $user->getDomainUser();
         }
 
-        $notificaciones = $this->notificationService->getNotificationsForUser($user);
+        $notificaciones = $this->notificationManager->getNotificationsForUser($user);
 
         $data = [];
         foreach ($notificaciones as $n) {
@@ -55,7 +55,7 @@ class NotificationController extends AbstractController
     #[Route('/{id}', name: 'patch', methods: ['PATCH'])]
     public function update(int $id, Request $request): JsonResponse
     {
-        $notificacion = $this->notificationService->getNotificationById($id);
+        $notificacion = $this->notificationManager->getNotificationById($id);
         if (!$notificacion) {
             return $this->errorResponse('Notificación no encontrada', 404);
         }
@@ -81,7 +81,7 @@ class NotificationController extends AbstractController
 
         if (isset($data['leido']) && $data['leido'] === true) {
             try {
-                $this->notificationService->markAsRead($notificacion);
+                $this->notificationManager->markAsRead($notificacion);
             } catch (\Exception $e) {
                 return $this->errorResponse('Error al marcar como leída', 500);
             }

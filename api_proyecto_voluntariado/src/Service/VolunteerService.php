@@ -8,13 +8,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Enum\VolunteerStatus;
 
 
-class VolunteerService
+class VolunteerService implements VolunteerServiceInterface
 {
     private $entityManager;
 
     private $habilidadRepository;
     private $interesRepository;
-    private $notificationService; // NEW
+    private EmailServiceInterface $emailService;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
@@ -22,14 +22,16 @@ class VolunteerService
         \App\Repository\InteresRepository $interesRepository,
         \App\Repository\CicloRepository $cicloRepository,
         \Kreait\Firebase\Contract\Auth $firebaseAuth,
-        NotificationService $notificationService // INJECTED
+        EmailServiceInterface $emailService,
+        NotificationManagerInterface $notificationManager
     ) {
         $this->entityManager = $entityManager;
         $this->habilidadRepository = $habilidadRepository;
         $this->interesRepository = $interesRepository;
         $this->cicloRepository = $cicloRepository;
         $this->firebaseAuth = $firebaseAuth;
-        $this->notificationService = $notificationService;
+        $this->emailService = $emailService;
+        $this->notificationManager = $notificationManager;
     }
 
     // --- VALIDATION METHODS ---
@@ -122,13 +124,13 @@ class VolunteerService
 
                 try {
                     $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
-                    $this->notificationService->sendEmail(
+                    $this->emailService->sendEmail(
                         $dto->email,
                         'Verifica tu correo - Gestión Voluntariado',
                         sprintf('<p>Hola %s,</p><p>Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
                     );
                 } catch (\Throwable $e) {
-                    // El email de verificación no es crítico, no interrumpir el flujo
+                    // El email de verificación no es crítico
                 }
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
@@ -327,7 +329,16 @@ class VolunteerService
         if (is_string($status)) {
             $status = VolunteerStatus::tryFrom(strtoupper($status)) ?? VolunteerStatus::PENDIENTE;
         }
+        $oldStatus = $voluntario->getEstadoVoluntario();
         $voluntario->setEstadoVoluntario($status);
         $this->entityManager->flush();
+
+        if ($oldStatus !== VolunteerStatus::ACEPTADO && $status === VolunteerStatus::ACEPTADO) {
+            $this->notificationManager->notifyUser(
+                $voluntario,
+                "¡Cuenta Aceptada!",
+                "Tu cuenta de voluntario ha sido aceptada por un administrador. ¡Ya puedes inscribirte en actividades!"
+            );
+        }
     }
 }

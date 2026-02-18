@@ -39,7 +39,6 @@ class ActividadController extends AbstractController
         SerializerInterface $serializer
     ): JsonResponse
     {
-
         $json = $request->getContent();
 
         try {
@@ -50,13 +49,11 @@ class ActividadController extends AbstractController
         }
 
         // 1. Validar Organización
-        $organizacion = null;
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
         
-        if ($user instanceof Organizacion) {
-            $organizacion = $user;
-        } elseif (!empty($dto->cifOrganizacion)) {
+        $organizacion = ($user instanceof Organizacion) ? $user : null;
+        if (!$organizacion && !empty($dto->cifOrganizacion)) {
              $organizacion = $this->organizationService->getByCif($dto->cifOrganizacion);
         }
 
@@ -69,95 +66,31 @@ class ActividadController extends AbstractController
             return $this->errorResponse('Ya existe una actividad con este nombre en tu organización', 409);
         }
 
-        // 2. Preparar Fechas
-        $fechaInicioSql = null;
-        $fechaFinSql = null;
-
         try {
-            if ($dto->fechaInicio) {
-                $fInicio = new \DateTime($dto->fechaInicio);
-                $fechaInicioSql = $fInicio->format('Ymd');
-
-                // Validar que no sea anterior a hoy
-                $hoy = new \DateTime();
-                $hoy->setTime(0, 0, 0);
-
-                $fInicioCheck = clone $fInicio;
-                $fInicioCheck->setTime(0, 0, 0);
-
-                if ($fInicioCheck < $hoy) {
-                    return $this->errorResponse('La fecha de inicio no puede ser anterior a la actual', 400);
-                }
-            } else {
-                $fInicio = new \DateTime();
-                $fechaInicioSql = $fInicio->format('Ymd');
-            }
-
-
-
-            if (!empty($dto->fechaFin)) {
-                $fFin = new \DateTime($dto->fechaFin);
-                $fechaFinSql = $fFin->format('Ymd');
-            } else {
-                $fFin = (new \DateTime())->modify('+30 days');
-                $fechaFinSql = $fFin->format('Ymd');
-            }
-
-            // Validación extra de lógica (Fin > Inicio)
-            if ($fFin < $fInicio) {
-                return $this->errorResponse('La fecha de fin no puede ser anterior a la de inicio', 400);
-            }
-
-        } catch (\Throwable $e) {
-            return $this->errorResponse('Formato de fecha inválido. Usa AAAA-MM-DD', 400);
-        }
-
-        $maxParticipantes = $dto->maxParticipantes ?? 10;
-
-        if ($maxParticipantes <= 0) {
-            return $this->errorResponse('El cupo máximo de participantes debe ser mayor que cero', 400);
-        }
-
-        $direccion = $dto->direccion ?? 'Sede Principal';
-        
-        // Estado inicial
-        $now = new \DateTime();
-        $estadoCalculado = 'En curso';
-        if ($fInicio > $now) {
-            $estadoCalculado = 'Sin comenzar';
-        }
-
-
-        try {
-            // Auto-aprobación para Admins
-            $estadoAprobacion = 'PENDIENTE';
-            
-            if (($user instanceof \App\Entity\Administrador) || 
-               ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles()))) {
-                $estadoAprobacion = 'ACEPTADA';
-            }
+            // S-3: Delegate creation to service (L-2 Enums handled internally)
+            $estadoAprobacion = (($user instanceof \App\Entity\Administrador) || 
+                                ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles()))) 
+                                ? \App\Enum\ActivityApproval::ACEPTADA 
+                                : \App\Enum\ActivityApproval::PENDIENTE;
 
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
                 'descripcion'      => $dto->descripcion, 
-                'estado'           => $estadoCalculado, 
                 'estadoAprobacion' => $estadoAprobacion, 
-                'fechaInicio'      => $fechaInicioSql,   
-                'fechaFin'         => $fechaFinSql,      
-
-                'maxParticipantes' => $maxParticipantes,
-                'direccion'        => $direccion,
+                'fechaInicio'      => $dto->fechaInicio,   
+                'fechaFin'         => $dto->fechaFin,      
+                'maxParticipantes' => $dto->maxParticipantes,
+                'direccion'        => $dto->direccion,
                 'sector'           => $dto->sector,
                 'odsIds'           => $dto->ods, 
                 'habilidadIds'    => $dto->habilidades,
-                'necesidadIds'    => [] 
             ], $organizacion);
 
             if (!$created) {
                 return $this->errorResponse('No se pudo crear la actividad', 500);
             }
         } catch (\Exception $e) {
-            return $this->errorResponse('Error de base de datos: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error al crear la actividad: ' . $e->getMessage(), 400);
         }
 
         return $this->json(['message' => 'Actividad creada con éxito'], 201);
@@ -181,10 +114,8 @@ class ActividadController extends AbstractController
             return $this->errorResponse('No autorizado', 401);
         }
         
-        if ($user instanceof Organizacion) {
-            if ($actividad->getOrganizacion() !== $user) {
-                return $this->errorResponse('No tienes permiso para editar esta actividad', 403);
-            }
+        if ($user instanceof Organizacion && $actividad->getOrganizacion() !== $user) {
+            return $this->errorResponse('No tienes permiso para editar esta actividad', 403);
         }
 
         $json = $request->getContent();
@@ -196,8 +127,8 @@ class ActividadController extends AbstractController
         }
 
         try {
-            // Prepare update data array
-            $updateData = [
+            // S-3: Delegate update to service
+            $this->activityService->updateActivity($actividad, [
                 'nombre'           => $dto->nombre,
                 'descripcion'      => $dto->descripcion,
                 'fechaInicio'      => $dto->fechaInicio,
@@ -207,19 +138,14 @@ class ActividadController extends AbstractController
                 'sector'           => $dto->sector,
                 'odsIds'           => $dto->ods, 
                 'habilidadIds'    => $dto->habilidades,
-            ];
-
-            $updatedActividad = $this->activityService->updateActivity($actividad, $updateData);
+            ]);
 
             // Recalcular estado
-            $statusChanged = $this->activityService->checkAndUpdateStatus($updatedActividad);
-            
-            if ($statusChanged) {
-                $this->activityService->flush();
-            }
+            $this->activityService->checkAndUpdateStatus($actividad);
+            $this->activityService->flush();
 
         } catch (\Exception $e) {
-            return $this->errorResponse('Error actualizando actividad: ' . $e->getMessage(), 500);
+            return $this->errorResponse('Error actualizando actividad: ' . $e->getMessage(), 400);
         }
 
         return $this->json(['message' => 'Actividad actualizada con éxito'], 200);
@@ -429,8 +355,8 @@ class ActividadController extends AbstractController
                 'codActividad' => $actividad->getCodActividad(),
                 'nombre' => $actividad->getNombre(),
                 'descripcion' => $actividad->getDescripcion(),
-                'estado' => $actividad->getEstado(),
-                'estadoAprobacion' => $actividad->getEstadoAprobacion(),
+                'estado' => $actividad->getEstado() ? $actividad->getEstado()->value : null,
+                'estadoAprobacion' => $actividad->getEstadoAprobacion() ? $actividad->getEstadoAprobacion()->value : null,
                 'direccion' => $actividad->getDireccion(),
                 'sector'    => $actividad->getSector(),
                 'fechaInicio' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i:s') : null,

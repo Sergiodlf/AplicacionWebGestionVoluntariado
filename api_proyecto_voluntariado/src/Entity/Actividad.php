@@ -27,17 +27,13 @@ class Actividad
     #[Groups(['org:read'])]
     private ?string $nombre = null;
 
-    #[ORM\Column(name: 'ESTADO', length: 255)]
+    #[ORM\Column(name: 'ESTADO', length: 255, enumType: \App\Enum\ActivityStatus::class)]
     #[Groups(['org:read'])]
-    private ?string $estado = 'En Curso';
+    private ?\App\Enum\ActivityStatus $estado = \App\Enum\ActivityStatus::PENDIENTE;
 
-    #[ORM\Column(name: 'ESTADO_APROBACION', length: 20, options: ['default' => 'PENDIENTE'])]
+    #[ORM\Column(name: 'ESTADO_APROBACION', length: 20, enumType: \App\Enum\ActivityApproval::class)]
     #[Groups(['org:read'])]
-    private ?string $estadoAprobacion = 'PENDIENTE';
-
-    #[ORM\Column(name: 'ESTADO_NEW', length: 255, nullable: true)]
-    #[Groups(['org:read'])]
-    private ?string $estadoNew = null;
+    private ?\App\Enum\ActivityApproval $estadoAprobacion = \App\Enum\ActivityApproval::PENDIENTE;
 
     #[ORM\Column(name: 'DIRECCION', type: Types::STRING, length: 40)]
     #[Groups(['org:read'])]
@@ -147,36 +143,25 @@ class Actividad
         return $this;
     }
 
-    public function getEstado(): ?string
+    public function getEstado(): ?\App\Enum\ActivityStatus
     {
         return $this->estado;
     }
 
-    public function setEstado(string $estado): static
+    public function setEstado(\App\Enum\ActivityStatus $estado): static
     {
         $this->estado = $estado;
         return $this;
     }
 
-    public function getEstadoAprobacion(): ?string
+    public function getEstadoAprobacion(): ?\App\Enum\ActivityApproval
     {
         return $this->estadoAprobacion;
     }
 
-    public function setEstadoAprobacion(string $estadoAprobacion): static
+    public function setEstadoAprobacion(\App\Enum\ActivityApproval $estadoAprobacion): static
     {
         $this->estadoAprobacion = $estadoAprobacion;
-        return $this;
-    }
-
-    public function getEstadoNew(): ?string
-    {
-        return $this->estadoNew;
-    }
-
-    public function setEstadoNew(?string $estadoNew): static
-    {
-        $this->estadoNew = $estadoNew;
         return $this;
     }
 

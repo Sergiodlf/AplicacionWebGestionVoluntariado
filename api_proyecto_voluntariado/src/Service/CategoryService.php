@@ -11,7 +11,7 @@ use App\Repository\NecesidadRepository;
 use App\Repository\ODSRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
-class CategoryService
+class CategoryService implements CategoryServiceInterface
 {
     private CicloRepository $cicloRepository;
     private ODSRepository $odsRepository;
@@ -78,9 +78,10 @@ class CategoryService
             return false;
         }
 
-        // Raw SQL to clean up M2M relation before deleting entity
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement('DELETE FROM VOLUNTARIOS_HABILIDADES WHERE HABILIDAD_ID = :id', ['id' => $id]);
+        // Cleanup ManyToMany associations via bidirectional entity
+        foreach ($h->getVoluntarios() as $v) {
+            $v->removeHabilidad($h);
+        }
 
         $this->entityManager->remove($h);
         $this->entityManager->flush();
@@ -105,9 +106,10 @@ class CategoryService
             return false;
         }
 
-        // Raw SQL to clean up M2M relation before deleting entity
-        $conn = $this->entityManager->getConnection();
-        $conn->executeStatement('DELETE FROM VOLUNTARIOS_INTERESES WHERE INTERES_ID = :id', ['id' => $id]);
+        // Cleanup ManyToMany associations via bidirectional entity
+        foreach ($i->getVoluntarios() as $v) {
+            $v->removeInterese($i);
+        }
 
         $this->entityManager->remove($i);
         $this->entityManager->flush();

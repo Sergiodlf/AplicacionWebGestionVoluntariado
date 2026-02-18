@@ -12,7 +12,7 @@ use App\Enum\VolunteerStatus;
 
 #[ORM\Entity(repositoryClass: VoluntarioRepository::class)]
 #[ORM\Table(name: 'VOLUNTARIOS')]
-class Voluntario implements UserInterface
+class Voluntario implements Loginable, Notifiable
 {
     #[ORM\Id]
     #[ORM\Column(name: 'DNI', type: Types::STRING, length: 9, options: ['fixed' => true])]
@@ -22,12 +22,15 @@ class Voluntario implements UserInterface
     private ?string $nombre = null;
 
     #[ORM\Column(name: 'APELLIDO1', length: 100)]
+    #[Groups(['voluntario:read'])]
     private ?string $apellido1 = null;
 
     #[ORM\Column(name: 'APELLIDO2', length: 100)]
+    #[Groups(['voluntario:read'])]
     private ?string $apellido2 = null;
 
     #[ORM\Column(name: 'CORREO', length: 40, unique: true)]
+    #[Groups(['voluntario:read', 'user:read'])]
     private ?string $correo = null;
 
 
@@ -36,12 +39,15 @@ class Voluntario implements UserInterface
     private ?string $zona = null;
 
     #[ORM\Column(name: 'FECHA_NACIMIENTO', type: Types::DATETIME_MUTABLE)]
+    #[Groups(['voluntario:read'])]
     private ?\DateTimeInterface $fechaNacimiento = null;
 
     #[ORM\Column(name: 'EXPERIENCIA', length: 200, nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?string $experiencia = null;
 
     #[ORM\Column(name: 'COCHE', type: Types::BOOLEAN)]
+    #[Groups(['voluntario:read'])]
     private ?bool $coche = null;
 
     #[ORM\ManyToOne(targetEntity: Ciclo::class)]
@@ -49,28 +55,32 @@ class Voluntario implements UserInterface
     #[ORM\JoinColumn(name: 'NOMBRE_CICLOS', referencedColumnName: 'NOMBRE', nullable: true)]
     private ?Ciclo $ciclo = null;
 
-    #[ORM\ManyToMany(targetEntity: Habilidad::class)]
+    #[ORM\ManyToMany(targetEntity: Habilidad::class, inversedBy: 'voluntarios')]
     #[ORM\JoinTable(name: 'VOLUNTARIOS_HABILIDADES')]
     #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
     #[ORM\InverseJoinColumn(name: 'HABILIDAD_ID', referencedColumnName: 'id')]
     private Collection $habilidades;
 
-    #[ORM\ManyToMany(targetEntity: Interes::class)]
+    #[ORM\ManyToMany(targetEntity: Interes::class, inversedBy: 'voluntarios')]
     #[ORM\JoinTable(name: 'VOLUNTARIOS_INTERESES')]
     #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
     #[ORM\InverseJoinColumn(name: 'INTERES_ID', referencedColumnName: 'id')]
     private Collection $intereses;
 
     #[ORM\Column(name: 'DISPONIBILIDAD', type: Types::TEXT, nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?string $disponibilidad = null;
     
     #[ORM\Column(name: 'IDIOMAS', type: Types::TEXT, nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?string $idiomas = null;
 
     #[ORM\Column(name: 'ESTADO_VOLUNTARIO', length: 20, enumType: VolunteerStatus::class)]
+    #[Groups(['voluntario:read'])]
     private ?VolunteerStatus $estadoVoluntario = VolunteerStatus::PENDIENTE;
 
     #[ORM\Column(name: 'FCM_TOKEN', length: 255, nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?string $fcmToken = null;
 
     #[ORM\OneToMany(mappedBy: 'voluntario', targetEntity: Inscripcion::class, orphanRemoval: true)]
@@ -215,6 +225,29 @@ class Voluntario implements UserInterface
     
     public function getFcmToken(): ?string { return $this->fcmToken; }
     public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }
+
+    // --- Loginable ---
+    public function canLogin(): bool
+    {
+        return $this->estadoVoluntario === VolunteerStatus::ACEPTADO 
+            || $this->estadoVoluntario === VolunteerStatus::LIBRE;
+    }
+
+    public function getLoginDeniedReason(): ?string
+    {
+        if ($this->canLogin()) return null;
+        return match ($this->estadoVoluntario) {
+            VolunteerStatus::PENDIENTE => 'Tu cuenta está pendiente de aprobación.',
+            VolunteerStatus::RECHAZADO => 'Tu cuenta ha sido rechazada.',
+            default => 'Tu cuenta no está activa. Estado: ' . ($this->estadoVoluntario?->value ?? 'NULL'),
+        };
+    }
+
+    // --- Notifiable ---
+    public function getNotifiableEmail(): string
+    {
+        return (string) $this->correo;
+    }
 
     public function addInscripcion(Inscripcion $inscripcion): static
     {

@@ -6,7 +6,7 @@ use App\Entity\Actividad;
 use App\Entity\Organizacion;
 use Doctrine\ORM\EntityManagerInterface;
 
-class ActivityService
+class ActivityService implements ActivityServiceInterface
 {
     private $entityManager;
     private $odsRepository;
@@ -49,6 +49,7 @@ class ActivityService
 
     /**
      * Creates a new activity using the ORM.
+     * S-3: Extracted logic for date parsing and initial status.
      */
     public function createActivity(array $data, Organizacion $organizacion): ?Actividad
     {
@@ -57,27 +58,28 @@ class ActivityService
         if (isset($data['descripcion'])) {
             $actividad->setDescripcion($data['descripcion']);
         }
+        
         $now = new \DateTime();
         $fechaInicio = isset($data['fechaInicio']) ? new \DateTime($data['fechaInicio']) : new \DateTime();
+        $fechaFin = isset($data['fechaFin']) ? new \DateTime($data['fechaFin']) : (clone $fechaInicio)->modify('+30 days');
         
-        // Determine initial state based on start date
-        // If start date is in the future (> today), it is PENDING
-        // Otherwise it is OPEN (ABIERTA)
-        $estadoCalculado = ($fechaInicio > $now) ? 'PENDIENTE' : 'ABIERTA';
+        // L-2: Use Enums for initial state
+        $estadoCalculado = ($fechaInicio > $now) ? \App\Enum\ActivityStatus::PENDIENTE : \App\Enum\ActivityStatus::EN_CURSO;
         
-        $actividad->setEstado($data['estado'] ?? $estadoCalculado);
-        $actividad->setEstadoAprobacion($data['estadoAprobacion'] ?? 'PENDIENTE');
-        $actividad->setOrganizacion($organizacion);
+        $actividad->setEstado($data['estado'] instanceof \App\Enum\ActivityStatus ? $data['estado'] : $estadoCalculado);
         
-        $actividad->setFechaInicio($fechaInicio);
-        
-        if (isset($data['fechaFin'])) {
-            $actividad->setFechaFin(new \DateTime($data['fechaFin']));
+        $approval = $data['estadoAprobacion'] ?? \App\Enum\ActivityApproval::PENDIENTE;
+        if (is_string($approval)) {
+            $approval = \App\Enum\ActivityApproval::tryFrom(strtoupper($approval)) ?? \App\Enum\ActivityApproval::PENDIENTE;
         }
+        $actividad->setEstadoAprobacion($approval);
         
-        $actividad->setMaxParticipantes($data['maxParticipantes']);
-        $actividad->setMaxParticipantes($data['maxParticipantes']);
-        $actividad->setDireccion($data['direccion']);
+        $actividad->setOrganizacion($organizacion);
+        $actividad->setFechaInicio($fechaInicio);
+        $actividad->setFechaFin($fechaFin);
+        
+        $actividad->setMaxParticipantes($data['maxParticipantes'] ?? 10);
+        $actividad->setDireccion($data['direccion'] ?? 'Sede Principal');
         if (isset($data['sector'])) {
             $actividad->setSector($data['sector']);
         }
@@ -165,10 +167,11 @@ class ActivityService
         
         // 1. Determine Type and Validate using Enums
         if ($tipo === 'aprobacion') {
-            if (!\App\Enum\ActivityApproval::isValid($nuevoEstado)) {
+            $approval = \App\Enum\ActivityApproval::tryFrom(strtoupper($nuevoEstado));
+            if (!$approval) {
                 throw new \InvalidArgumentException("Estado de aprobación inválido: $nuevoEstado");
             }
-            $actividad->setEstadoAprobacion(strtoupper($nuevoEstado));
+            $actividad->setEstadoAprobacion($approval);
             $campoActualizado = 'estadoAprobacion';
 
         } elseif ($tipo === 'ejecucion') {
@@ -176,18 +179,19 @@ class ActivityService
             if (!$enumStatus) {
                 throw new \InvalidArgumentException("Estado de ejecución inválido: $nuevoEstado");
             }
-            $actividad->setEstado($enumStatus->value);
+            $actividad->setEstado($enumStatus);
             $campoActualizado = 'estado';
 
         } else {
             // Auto-detection logic (Legacy support)
-            if (\App\Enum\ActivityApproval::isValid($nuevoEstado)) {
-                $actividad->setEstadoAprobacion(strtoupper($nuevoEstado));
+            $approval = \App\Enum\ActivityApproval::tryFrom(strtoupper($nuevoEstado));
+            if ($approval) {
+                $actividad->setEstadoAprobacion($approval);
                 $campoActualizado = 'estadoAprobacion';
             } else {
                 $enumStatus = \App\Enum\ActivityStatus::fromLegacy($nuevoEstado);
-                 if ($enumStatus) {
-                    $actividad->setEstado($enumStatus->value);
+                if ($enumStatus) {
+                    $actividad->setEstado($enumStatus);
                     $campoActualizado = 'estado';
                 } else {
                      throw new \InvalidArgumentException("Estado desconocido o inválido: $nuevoEstado");
@@ -199,7 +203,7 @@ class ActivityService
 
         return [
             'campo_actualizado' => $campoActualizado,
-            'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado() : $actividad->getEstadoAprobacion(),
+            'valor_nuevo' => ($campoActualizado === 'estado') ? $actividad->getEstado()->value : $actividad->getEstadoAprobacion()->value,
             'actividad' => $actividad
         ];
     }
@@ -227,7 +231,7 @@ class ActivityService
 
         // Solo actualizamos si cambia
         if ($nuevoEstado && $estadoActual !== $nuevoEstado) {
-            $actividad->setEstado($nuevoEstado);
+            $actividad->setEstado(\App\Enum\ActivityStatus::from($nuevoEstado));
             return true;
         }
 
