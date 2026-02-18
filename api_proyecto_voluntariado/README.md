@@ -129,4 +129,47 @@ Esto generará/actualizará:
 | **Voluntario** | `voluntario_test@curso.com` | `123456` | Verificado |
 | **Organización** | `organizacion_test@curso.com` | `123456` | Verificado |
 
-*Nota: Estos usuarios tienen `emailVerified: true` en Firebase para poder hacer login inmediatamente.*
+
+---
+
+## 8. Arquitectura y Estándares (Guía para Desarrolladores)
+
+Este proyecto sigue una arquitectura por capas estricta para mantener el código ordenado, testable y mantenible.
+
+### 8.1. Patrón Controller-Service-Repository
+
+Cada componente tiene una responsabilidad única:
+
+1.  **Controller (`src/Controller`)**:
+    -   **Responsabilidad**: Entrada/Salida (HTTP).
+    -   **QUÉ HACE**: Recibe la `Request`, valida inputs básicos (o usa DTOs), llama al `Service` y devuelve una `JsonResponse`.
+    -   **QUÉ NO HACE**: **NUNCA** accede a la Base de Datos directamente (`EntityManager`, `Repository`). No contiene lógica de negocio compleja.
+
+2.  **Service (`src/Service`)**:
+    -   **Responsabilidad**: Lógica de Negocio.
+    -   **QUÉ HACE**: Orquesta todo. Llama a Repositorios para buscar datos, valida reglas de negocio (ej: "¿hay cupo?", "¿es voluntario?"), realiza cálculos y persiste cambios (`flush`).
+    -   **QUÉ NO HACE**: No maneja objetos HTTP (`Request`/`Response`). Devuelve Entidades, DTOs o booleanos.
+
+3.  **Repository (`src/Repository`)**:
+    -   **Responsabilidad**: Acceso a Datos (Query Logic).
+    -   **QUÉ HACE**: Contiene métodos para buscar datos específicos (ej: `findActiveInscriptions()`, `findByCif()`).
+    -   **QUÉ NO HACE**: No toma decisiones de negocio. Solo devuelve datos.
+
+### 8.2. Uso de DTOs y Enums
+
+-   **DTOs (Data Transfer Objects)**: Se usan para recibir datos del Frontend (POST/PUT) de forma tipada, evitando arrays asociativos mágicos (`$data['campo']`).
+-   **Enums (PHP 8.1+)**: Se usan para todos los estados y tipos finitos (`InscriptionStatus`, `UserRole`, `ActivityStatus`). **Está prohibido usar "strings mágicos"** para comparar estados.
+
+### 8.3. Console Commands (`src/Command`)
+
+Usamos Comandos de Consola de Symfony para tareas que no deben ser expuestas vía API REST o que requieren ejecución en segundo plano/cron.
+
+-   **Ubicación**: `src/Command`
+-   **Ejecución**: `php bin/console app:nombre-comando`
+-   **Casos de Uso**:
+    -   **Mantenimiento**: Corregir datos inconsistentes (ej: `app:fix-habilidades`).
+    -   **Tareas Programadas**: Verificar estados, enviar recordatorios masivos.
+    -   **Administración**: Crear usuarios admin iniciales (`app:create-admin`).
+    -   **Migración de Datos**: Mover datos de JSON a BD.
+
+> **Regla de Oro**: Si una operación tarda más de 2 segundos o es una tarea administrativa crítica, considera moverla a un Command en lugar de un Controller.
