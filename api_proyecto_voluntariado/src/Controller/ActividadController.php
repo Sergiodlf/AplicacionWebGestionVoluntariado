@@ -29,9 +29,8 @@ class ActividadController extends AbstractController
         $this->inscripcionService = $inscripcionService;
         $this->organizationService = $organizationService;
     }
-    // =========================================================================
-    // CREAR ACTIVIDAD (SOLUCIÓN BLINDADA: SQL PURO)
-    // =========================================================================
+    // CREAR ACTIVIDAD
+
     #[Route('/crear', name: 'create', methods: ['POST'])]
     public function create(
         Request $request,
@@ -48,17 +47,14 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'JSON inválido'], 400);
         }
 
-        // 1. Validar Organización (Token o CIF explícito)
+        // 1. Validar Organización
         $organizacion = null;
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
         
-        // A. Prioridad: Token de Organización
         if ($user instanceof Organizacion) {
             $organizacion = $user;
-        }
-        // B. Fallback: CIF en el JSON (para admins o debug)
-        elseif (!empty($dto->cifOrganizacion)) {
+        } elseif (!empty($dto->cifOrganizacion)) {
              $organizacion = $this->organizationService->getByCif($dto->cifOrganizacion);
         }
 
@@ -70,21 +66,19 @@ class ActividadController extends AbstractController
             ], 401);
         }
 
-        // --- CONTROL DE DUPLICIDAD (PV-40) ---
+        // CONTROL DE DUPLICIDAD
         if ($this->activityService->activityExists($dto->nombre, $organizacion)) {
             return $this->json(['error' => 'Ya existe una actividad con este nombre en tu organización'], 409);
         }
 
-        // 2. Preparar Fechas (FORMATO Ymd PARA SQL SERVER)
-        // Esto es lo que evita el error SQLSTATE [22007, 241]
+        // 2. Preparar Fechas
         $fechaInicioSql = null;
         $fechaFinSql = null;
 
         try {
-            // Fecha Inicio
             if ($dto->fechaInicio) {
                 $fInicio = new \DateTime($dto->fechaInicio);
-                $fechaInicioSql = $fInicio->format('Ymd'); // Ej: 20251201
+                $fechaInicioSql = $fInicio->format('Ymd');
 
                 // Validar que no sea anterior a hoy
                 $hoy = new \DateTime();
@@ -101,12 +95,12 @@ class ActividadController extends AbstractController
                 $fechaInicioSql = $fInicio->format('Ymd');
             }
 
-            // Fecha Fin
+
+
             if (!empty($dto->fechaFin)) {
                 $fFin = new \DateTime($dto->fechaFin);
                 $fechaFinSql = $fFin->format('Ymd');
             } else {
-                // Por defecto +30 días
                 $fFin = (new \DateTime())->modify('+30 days');
                 $fechaFinSql = $fFin->format('Ymd');
             }
@@ -120,18 +114,15 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Formato de fecha inválido. Usa AAAA-MM-DD'], 400);
         }
 
-        // 3. Preparar otros datos
         $maxParticipantes = $dto->maxParticipantes ?? 10;
 
-        // --- VALIDACIÓN DE CUPO MÁXIMO (PV-39) ---
         if ($maxParticipantes <= 0) {
             return $this->json(['error' => 'El cupo máximo de participantes debe ser mayor que cero'], 400);
         }
 
         $direccion = $dto->direccion ?? 'Sede Principal';
         
-        // Determinar estado inicial basado en fecha
-        // $fInicio ya fue instanciado arriba (líneas 67 o 70)
+        // Estado inicial
         $now = new \DateTime();
         $estadoCalculado = 'En curso';
         if ($fInicio > $now) {
@@ -139,13 +130,10 @@ class ActividadController extends AbstractController
         }
 
 
-        // 4. Create Activity via Service
         try {
-            // --- AUTO-APROBACIÓN PARA ADMINS ---
+            // Auto-aprobación para Admins
             $estadoAprobacion = 'PENDIENTE';
             
-            // Check if user is explicitly AdminUser or has ROLE_ADMIN
-            // $user here is already the domain user (or null)
             if (($user instanceof \App\Entity\Administrador) || 
                ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles()))) {
                 $estadoAprobacion = 'ACEPTADA';
@@ -153,18 +141,18 @@ class ActividadController extends AbstractController
 
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
-                'descripcion'      => $dto->descripcion, // <--- Add description
-                'estado'           => $estadoCalculado, // Forzar estado explícito
-                'estadoAprobacion' => $estadoAprobacion, // <--- Nueva variable
-                'fechaInicio'      => $fechaInicioSql,   // Use normalized Ymd string
-                'fechaFin'         => $fechaFinSql,      // Use normalized Ymd string (guaranteed not null)
+                'descripcion'      => $dto->descripcion, 
+                'estado'           => $estadoCalculado, 
+                'estadoAprobacion' => $estadoAprobacion, 
+                'fechaInicio'      => $fechaInicioSql,   
+                'fechaFin'         => $fechaFinSql,      
 
                 'maxParticipantes' => $maxParticipantes,
                 'direccion'        => $direccion,
                 'sector'           => $dto->sector,
                 'odsIds'           => $dto->ods, 
                 'habilidadIds'    => $dto->habilidades,
-                'necesidadIds'    => [] // Extend DTO if needed later
+                'necesidadIds'    => [] 
             ], $organizacion);
 
             if (!$created) {
@@ -187,7 +175,7 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'Actividad no encontrada'], 404);
         }
 
-        // Security Check: Only the organization that owns it can edit (or admin)
+        // Validar permisos
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
 
@@ -195,7 +183,6 @@ class ActividadController extends AbstractController
             return $this->json(['error' => 'No autorizado'], 401);
         }
         
-        // If user is Organization, check ownership
         if ($user instanceof Organizacion) {
             if ($actividad->getOrganizacion() !== $user) {
                 return $this->json(['error' => 'No tienes permiso para editar esta actividad'], 403);
@@ -226,7 +213,7 @@ class ActividadController extends AbstractController
 
             $updatedActividad = $this->activityService->updateActivity($actividad, $updateData);
 
-            // Re-calculate status just in case dates changed
+            // Recalcular estado
             $statusChanged = $this->activityService->checkAndUpdateStatus($updatedActividad);
             
             if ($statusChanged) {
@@ -252,7 +239,7 @@ class ActividadController extends AbstractController
         // Filtro por Estado de Ejecución
         $filters['estado'] = $request->query->get('estado') ?? 'NOT_CANCELLED';
 
-        // NUEVO FILTRO INTELIGENTE: SI HAY TOKEN DE VOLUNTARIO
+        // Filtro inteligente (excluir propias inscripciones si es voluntario)
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
 
@@ -262,13 +249,12 @@ class ActividadController extends AbstractController
              $filters['exclude_volunteer_dni'] = $excludeDni;
         }
 
-        // FILTRO POR FECHA (History)
+        // Filtro Histórico
         $filters['history'] = $request->query->getBoolean('history', false);
 
-        // Get Activities via Service/Repo
         $actividades = $this->activityService->getActivitiesByFilters($filters);
         
-        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        // Actualizar estados
         $modificado = false;
         foreach ($actividades as $actividad) {
             if ($this->activityService->checkAndUpdateStatus($actividad)) {
@@ -318,7 +304,7 @@ class ActividadController extends AbstractController
 
         $actividades = $this->activityService->getActivitiesByFilters($filters);
 
-        // --- ACTUALIZAR ESTADOS SEGÚN FECHA ---
+        // Actualizar estados
         $modificado = false;
         foreach ($actividades as $actividad) {
             if ($this->activityService->checkAndUpdateStatus($actividad)) {
@@ -352,7 +338,7 @@ class ActividadController extends AbstractController
 
             $actividades = $this->activityService->getActivitiesByFilters($filters);
 
-            // --- ACTUALIZAR ESTADOS ---
+            // Actualizar estados
             $modificado = false;
             foreach ($actividades as $actividad) {
                  if ($this->activityService->checkAndUpdateStatus($actividad)) {
@@ -368,54 +354,72 @@ class ActividadController extends AbstractController
             return $this->json(['error' => $e->getMessage()], 500);
         }
     }
-
-    // ... (Mantener resto de métodos create, edit, inscribir, desinscribir, updateEstado, delete) ...
-
-    #[Route('/{id}/inscribir', name: 'inscribir', methods: ['POST'])]
+    
+    // INSCRIBIRSE EN ACTIVIDAD
+    #[Route('/{id}/inscribir', name: 'inscribir', methods: ['POST', 'DELETE'])]
     public function inscribir(int $id, Request $request): JsonResponse
     {
-        // This method was not included in previous replace, but I provided "Mantener resto..."
-        // I need to make sure I include it in the FULL file write.
-        // Wait, I am overwriting the whole file. I need to make sure I have all methods.
-        // The previous file content had: create, edit, list, getMisActividades, getByOrganizacion, updateEstado, delete.
-        // It did NOT seem to have `inscribir`.
-        // Checked file content again (Step 81): It ends with comments `// ... (Mantener resto de métodos create, edit, inscribir, desinscribir, updateEstado, delete) ... `
-        // Wait, Step 81 view_file showed lines 1-457.
-        // Lines 370: `// ... (Mantener resto de métodos create, edit, inscribir, desinscribir, updateEstado, delete) ...`
-        // But then lines 400 has `updateEstado` and 435 `delete`.
-        // WHERE IS `inscribir`?
-        // Step 81 output does NOT show `inscribir`.
-        // It seems `inscribir` was NOT in the file I read in Step 81?
-        // Ah, maybe it was deleted in previous refactors or I missed it?
-        // Let's check `ActividadController.php` again (Step 96). It is the same.
-        // So `inscribir` is NOT in the *current* `ActividadController.php`?
-        // Or maybe it is inherited or I completely missed it.
-        // Wait, line 370 says `// ... (Mantener resto de métodos create, edit, inscribir, desinscribir, updateEstado, delete) ...`
-        // This suggests that `inscribir` might have been there but the file content I see in view_file seems to skip it?
-        // No, view_file showed ALL lines 1-457.
-        // If it's not there, it's not there.
-        // I should just implement what IS there.
-        
-        // Wait, I see `private $inscripcionService;` injected.
-        // Maybe `inscribir` is supposed to be there but was missing?
-        // If the user's file mentions it in comments, maybe I should be careful.
-        // But I can only work with what I see.
-        // I will write the file with the methods I have seen + the ones I refactored.
-        
-        // List of methods I see in Step 96:
-        // - create
-        // - edit
-        // - list
-        // - getMisActividades
-        // - getByOrganizacion
-        // - transformActivitiesToArray
-        // - updateEstado
-        // - delete
-        
-        // I'll stick to these.
-        return $this->json(['message' => 'Not implementation logic found in my view.'], 501);
+        $securityUser = $this->getUser();
+        $user = $securityUser?->getDomainUser();
+
+        if (!$user || !($user instanceof \App\Entity\Voluntario)) {
+            return $this->json(['error' => 'Acceso denegado. Solo voluntarios.'], 403);
+        }
+
+        $actividad = $this->activityService->getActivityById($id);
+        if (!$actividad) {
+            return $this->json(['error' => 'Actividad no encontrada'], 404);
+        }
+
+        // Desinscribir (DELETE)
+        if ($request->getMethod() === 'DELETE') {
+            $inscripcion = $this->inscripcionService->isVolunteerInscribed($actividad, $user);
+            if (!$inscripcion) {
+                return $this->json(['error' => 'No estás inscrito en esta actividad'], 404);
+            }
+            
+            try {
+                $this->inscripcionService->delete($inscripcion);
+                return $this->json(['message' => 'Te has desinscrito correctamente'], 200);
+            } catch (\Exception $e) {
+                return $this->json(['error' => 'Error al desinscribir'], 500);
+            }
+        }
+
+        // Inscripción (POST) - Validar duplicidad
+        $existing = $this->inscripcionService->isVolunteerInscribed($actividad, $user);
+        if ($existing) {
+             $estado = $existing->getEstado();
+             if ($estado !== \App\Enum\InscriptionStatus::CANCELADA && 
+                 $estado !== \App\Enum\InscriptionStatus::RECHAZADO &&
+                 $estado !== \App\Enum\InscriptionStatus::FINALIZADO) {
+                 return $this->json(['error' => 'Ya estás inscrito en esta actividad'], 409);
+             }
+        }
+
+        // Validar Cupo
+        if (!$existing || $existing->getEstado() === \App\Enum\InscriptionStatus::CANCELADA) {
+            $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
+            if ($ocupadas >= $actividad->getMaxParticipantes()) {
+                return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
+            }
+        }
+
+        try {
+            $autoAccept = false;
+            $inscripcion = $this->inscripcionService->createInscription($actividad, $user, $existing, $autoAccept);
+
+            return $this->json([
+                'message' => 'Inscripción realizada con éxito',
+                'estado' => $inscripcion->getEstado()->value,
+                'id_inscripcion' => $inscripcion->getId()
+            ], 201);
+
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Error al realizar la inscripción: ' . $e->getMessage()], 500);
+        }
     }
-    
+
     /**
      * Helper to transform entity array to JSON array
      */
