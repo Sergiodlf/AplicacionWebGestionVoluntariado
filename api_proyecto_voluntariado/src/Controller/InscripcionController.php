@@ -170,7 +170,7 @@ class InscripcionController extends AbstractController
 
 
 
-    #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
+    #[Route('/{id}', name: 'patch', methods: ['PATCH'])]
     public function updateEstado(int $id, Request $request): JsonResponse
     {
         $inscripcion = $this->inscripcionService->getById($id);

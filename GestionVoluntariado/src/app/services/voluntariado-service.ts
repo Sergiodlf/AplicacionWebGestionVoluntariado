@@ -85,7 +85,7 @@ export class VoluntariadoService {
   }
 
   updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE' | 'COMPLETADA'): Observable<any> {
-    const url = `${this.inscripcionesUrl}/${idInscripcion}/estado`;
+    const url = `${this.inscripcionesUrl}/${idInscripcion}`;
     return this.http.patch(url, { estado: estado });
   }
 
@@ -130,7 +130,7 @@ export class VoluntariadoService {
   }
 
   actualizarEstadoActividad(id: number, estado: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
+    return this.http.patch(`${this.apiUrl}/${id}`, { estado });
   }
 
   updateActivity(id: number, actividad: any): Observable<any> {

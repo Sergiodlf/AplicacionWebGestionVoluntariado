@@ -449,7 +449,7 @@ class ActividadController extends AbstractController
     }
 
     // ACTUALIZAR ESTADO DE ACTIVIDAD
-    #[Route('/{id}/estado', name: 'update_estado', methods: ['PATCH'])]
+    #[Route('/{id}', name: 'patch', methods: ['PATCH'])]
     public function updateEstado(int $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
