@@ -17,6 +17,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/api/organizations')]
 class OrganizacionController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private OrganizationService $organizationService;
 
     public function __construct(OrganizationService $organizationService)
@@ -57,7 +59,7 @@ class OrganizacionController extends AbstractController
                 ['groups' => ['org:write']] 
             );
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Formato JSON inválido.'], Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse('Formato JSON inválido.', Response::HTTP_BAD_REQUEST);
         }
 
         // We need a DTO here really, but for now we'll stick to how the code was structured or map it?
@@ -89,13 +91,13 @@ class OrganizacionController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getPropertyPath() . ': ' . $error->getMessage();
             }
-            return $this->json(['errors' => $errorMessages], Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse('Errores de validación', Response::HTTP_BAD_REQUEST, $errorMessages);
         }
         
         // Uniqueness check
         $dupeError = $this->organizationService->checkDuplicates($dto->cif, $dto->email);
         if ($dupeError) {
-             return $this->json(['error' => $dupeError], Response::HTTP_CONFLICT);
+             return $this->errorResponse($dupeError, Response::HTTP_CONFLICT);
         }
 
         $isAdmin = false;
@@ -107,7 +109,7 @@ class OrganizacionController extends AbstractController
         try {
             $createdOrg = $this->organizationService->registerOrganization($dto, $isAdmin);
         } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->errorResponse($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return $this->json(
@@ -123,7 +125,7 @@ class OrganizacionController extends AbstractController
     {
         $success = $this->organizationService->deleteOrganization($cif);
         if (!$success) {
-            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+            return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
         }
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
@@ -138,21 +140,18 @@ class OrganizacionController extends AbstractController
         if ($nuevoEstado) {
             $enumStatus = \App\Enum\OrganizationStatus::tryFrom(strtolower($nuevoEstado));
             if (!$enumStatus) {
-                return $this->json(
-                    ['error' => 'Estado inválido. Valores permitidos: ' . implode(', ', array_column(\App\Enum\OrganizationStatus::cases(), 'value'))], 
-                    Response::HTTP_BAD_REQUEST
-                );
+                return $this->errorResponse('Estado inválido. Valores permitidos: ' . implode(', ', array_column(\App\Enum\OrganizationStatus::cases(), 'value')), Response::HTTP_BAD_REQUEST);
             }
             
             $updatedOrg = $this->organizationService->updateState($cif, $enumStatus);
             if (!$updatedOrg) {
-                 return $this->json(['error' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+                 return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
             }
             
             return $this->json($updatedOrg, Response::HTTP_OK, [], ['groups' => ['org:read']]);
         }
 
-        return $this->json(['error' => 'No se proporcionó estado.'], Response::HTTP_BAD_REQUEST);
+        return $this->errorResponse('No se proporcionó estado.', Response::HTTP_BAD_REQUEST);
     }
 
     #[Route('/api/organizations/by-email', name: 'api_organizations_get_by_email', methods: ['GET'])]
@@ -160,12 +159,12 @@ class OrganizacionController extends AbstractController
     {
         $email = $request->query->get('email');
         if (!$email) {
-            return $this->json(['error' => 'El parmetro email es obligatorio.'], Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse('El parámetro email es obligatorio.', Response::HTTP_BAD_REQUEST);
         }
 
         $organizacion = $this->organizationService->getByEmail($email);
         if (!$organizacion) {
-            return $this->json(['error' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+            return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
         }
 
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
@@ -179,11 +178,11 @@ class OrganizacionController extends AbstractController
         try {
             $updatedOrg = $this->organizationService->updateOrganization($cif, $data);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar la organización: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar la organización: ' . $e->getMessage(), 500);
         }
 
         if (!$updatedOrg) {
-            return $this->json(['message' => 'Organización no encontrada.'], Response::HTTP_NOT_FOUND);
+            return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
         }
 
         return $this->json($updatedOrg, Response::HTTP_OK, [], ['groups' => ['org:read']]);
