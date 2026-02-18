@@ -21,69 +21,50 @@ class CategoryController extends AbstractController
         $this->categoryService = $categoryService;
     }
 
-    #[Route('/ciclos', name: 'api_categories_ciclos', methods: ['GET'])]
-    public function getCiclos(): JsonResponse
+    #[Route('', name: 'api_categories_list', methods: ['GET'])]
+    public function getAll(Request $request): JsonResponse
     {
-        $ciclos = $this->categoryService->getAllCiclos();
+        $type = $request->query->get('type');
         
         $data = [];
-        foreach ($ciclos as $ciclo) {
-            $data[] = [
-                'nombre' => $ciclo->getNombre(),
-                'curso' => $ciclo->getCurso(),
-            ];
+        $groups = [];
+
+        switch ($type) {
+            case 'ciclos':
+                $data = $this->categoryService->getAllCiclos();
+                $groups = ['ciclo:read'];
+                break;
+            case 'ods':
+                $data = $this->categoryService->getAllODS();
+                $groups = ['ods:read'];
+                break;
+            case 'habilidades':
+                $data = $this->categoryService->getAllHabilidades();
+                $groups = ['habilidad:read'];
+                break;
+            case 'intereses':
+                $data = $this->categoryService->getAllIntereses();
+                $groups = ['interes:read'];
+                break;
+            case 'necesidades':
+                $data = $this->categoryService->getAllNecesidades();
+                $groups = ['necesidad:read'];
+                break;
+            default:
+                return new JsonResponse(['error' => 'Tipo de categoría no válido o no especificado (ciclos, ods, habilidades, intereses, necesidades)'], 400);
         }
 
-        return $this->json($data);
-    }
-
-    #[Route('/ods', name: 'api_categories_ods', methods: ['GET'])]
-    public function getODS(): JsonResponse
-    {
-        $data = $this->categoryService->getAllODS();
         return new JsonResponse(
-            $this->serializer->serialize($data, 'json', ['groups' => 'ods:read']),
+            $this->serializer->serialize($data, 'json', ['groups' => $groups]),
             200,
             [],
             true
         );
     }
 
-    #[Route('/habilidades', name: 'api_categories_habilidades', methods: ['GET'])]
-    public function getHabilidades(): JsonResponse
-    {
-        $data = $this->categoryService->getAllHabilidades();
-        return new JsonResponse(
-            $this->serializer->serialize($data, 'json', ['groups' => 'habilidad:read']),
-            200,
-            [],
-            true
-        );
-    }
-
-    #[Route('/intereses', name: 'api_categories_intereses', methods: ['GET'])]
-    public function getIntereses(): JsonResponse
-    {
-        $data = $this->categoryService->getAllIntereses();
-        return new JsonResponse(
-            $this->serializer->serialize($data, 'json', ['groups' => 'interes:read']),
-            200,
-            [],
-            true
-        );
-    }
-
-    #[Route('/necesidades', name: 'api_categories_necesidades', methods: ['GET'])]
-    public function getNecesidades(): JsonResponse
-    {
-        $data = $this->categoryService->getAllNecesidades();
-        return new JsonResponse(
-            $this->serializer->serialize($data, 'json', ['groups' => 'necesidad:read']),
-            200,
-            [],
-            true
-        );
-    }
+    // Deprecated specific endpoints - keeping for compatibility if needed, or removing?
+    // Plan said "Integrate", implied replacing usage.
+    // For now I will remove the specific GET endpoints to enforce the new structure as discussed.
 
     #[Route('/habilidades', name: 'api_categories_habilidades_create', methods: ['POST'])]
     public function createHabilidad(Request $request): JsonResponse
