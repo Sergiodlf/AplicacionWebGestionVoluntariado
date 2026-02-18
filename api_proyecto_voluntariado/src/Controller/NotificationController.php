@@ -7,11 +7,14 @@ use App\Entity\Voluntario;
 use App\Entity\Organizacion;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/notificaciones', name: 'api_notificaciones_')]
 class NotificationController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private $notificationService;
 
     public function __construct(NotificationService $notificationService)
@@ -24,7 +27,7 @@ class NotificationController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user) {
-            return $this->json(['error' => 'Usuario no autenticado'], 401);
+            return $this->errorResponse('Usuario no autenticado', 401);
         }
 
         // Ensure we have the domain user entity
@@ -54,7 +57,7 @@ class NotificationController extends AbstractController
     {
         $notificacion = $this->notificationService->getNotificationById($id);
         if (!$notificacion) {
-            return $this->json(['error' => 'Notificación no encontrada'], 404);
+            return $this->errorResponse('Notificación no encontrada', 404);
         }
 
         // Security Check: Ensure user owns this notification
@@ -71,7 +74,7 @@ class NotificationController extends AbstractController
         }
 
         if (!$isOwner) {
-            return $this->json(['error' => 'No tienes permiso para marcar esta notificación'], 403);
+            return $this->errorResponse('No tienes permiso para marcar esta notificación', 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -80,7 +83,7 @@ class NotificationController extends AbstractController
             try {
                 $this->notificationService->markAsRead($notificacion);
             } catch (\Exception $e) {
-                return $this->json(['error' => 'Error al marcar como leída'], 500);
+                return $this->errorResponse('Error al marcar como leída', 500);
             }
         }
 

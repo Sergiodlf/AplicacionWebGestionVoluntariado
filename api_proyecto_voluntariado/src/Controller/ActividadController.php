@@ -16,6 +16,8 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[Route('/api/actividades', name: 'api_actividades_')]
 class ActividadController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private $activityService;
     private $inscripcionService;
     private $organizationService;
@@ -44,7 +46,7 @@ class ActividadController extends AbstractController
             /** @var CrearActividadDTO $dto */
             $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
         } catch (\Exception $e) {
-            return $this->json(['error' => 'JSON inválido'], 400);
+            return $this->errorResponse('JSON inválido', 400);
         }
 
         // 1. Validar Organización
@@ -59,16 +61,12 @@ class ActividadController extends AbstractController
         }
 
         if (!$organizacion) {
-            return $this->json([
-                'error' => 'Organización no identificada. Usa un Token válido o envía cifOrganizacion.',
-                'debug_user_class' => $user ? get_class($user) : 'null',
-                'debug_cif_received' => $dto->cifOrganizacion
-            ], 401);
+            return $this->errorResponse('Organización no identificada. Usa un Token válido o envía cifOrganizacion.', 401);
         }
 
         // CONTROL DE DUPLICIDAD
         if ($this->activityService->activityExists($dto->nombre, $organizacion)) {
-            return $this->json(['error' => 'Ya existe una actividad con este nombre en tu organización'], 409);
+            return $this->errorResponse('Ya existe una actividad con este nombre en tu organización', 409);
         }
 
         // 2. Preparar Fechas
@@ -88,7 +86,7 @@ class ActividadController extends AbstractController
                 $fInicioCheck->setTime(0, 0, 0);
 
                 if ($fInicioCheck < $hoy) {
-                    return $this->json(['error' => 'La fecha de inicio no puede ser anterior a la actual'], 400);
+                    return $this->errorResponse('La fecha de inicio no puede ser anterior a la actual', 400);
                 }
             } else {
                 $fInicio = new \DateTime();
@@ -107,17 +105,17 @@ class ActividadController extends AbstractController
 
             // Validación extra de lógica (Fin > Inicio)
             if ($fFin < $fInicio) {
-                return $this->json(['error' => 'La fecha de fin no puede ser anterior a la de inicio'], 400);
+                return $this->errorResponse('La fecha de fin no puede ser anterior a la de inicio', 400);
             }
 
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Formato de fecha inválido. Usa AAAA-MM-DD'], 400);
+            return $this->errorResponse('Formato de fecha inválido. Usa AAAA-MM-DD', 400);
         }
 
         $maxParticipantes = $dto->maxParticipantes ?? 10;
 
         if ($maxParticipantes <= 0) {
-            return $this->json(['error' => 'El cupo máximo de participantes debe ser mayor que cero'], 400);
+            return $this->errorResponse('El cupo máximo de participantes debe ser mayor que cero', 400);
         }
 
         $direccion = $dto->direccion ?? 'Sede Principal';
@@ -156,10 +154,10 @@ class ActividadController extends AbstractController
             ], $organizacion);
 
             if (!$created) {
-                return $this->json(['error' => 'No se pudo crear la actividad'], 500);
+                return $this->errorResponse('No se pudo crear la actividad', 500);
             }
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error de base de datos: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error de base de datos: ' . $e->getMessage(), 500);
         }
 
         return $this->json(['message' => 'Actividad creada con éxito'], 201);
@@ -172,7 +170,7 @@ class ActividadController extends AbstractController
         $actividad = $this->activityService->getActivityById($id);
 
         if (!$actividad) {
-            return $this->json(['error' => 'Actividad no encontrada'], 404);
+            return $this->errorResponse('Actividad no encontrada', 404);
         }
 
         // Validar permisos
@@ -180,12 +178,12 @@ class ActividadController extends AbstractController
         $user = $securityUser?->getDomainUser();
 
         if (!$user) {
-            return $this->json(['error' => 'No autorizado'], 401);
+            return $this->errorResponse('No autorizado', 401);
         }
         
         if ($user instanceof Organizacion) {
             if ($actividad->getOrganizacion() !== $user) {
-                return $this->json(['error' => 'No tienes permiso para editar esta actividad'], 403);
+                return $this->errorResponse('No tienes permiso para editar esta actividad', 403);
             }
         }
 
@@ -194,7 +192,7 @@ class ActividadController extends AbstractController
             /** @var CrearActividadDTO $dto */
             $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
         } catch (\Exception $e) {
-             return $this->json(['error' => 'JSON inválido'], 400);
+             return $this->errorResponse('JSON inválido', 400);
         }
 
         try {
@@ -221,7 +219,7 @@ class ActividadController extends AbstractController
             }
 
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error actualizando actividad: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error actualizando actividad: ' . $e->getMessage(), 500);
         }
 
         return $this->json(['message' => 'Actividad actualizada con éxito'], 200);
@@ -279,7 +277,7 @@ class ActividadController extends AbstractController
         $user = $securityUser?->getDomainUser();
 
         if (!$user || !($user instanceof Organizacion)) {
-            return $this->json(['error' => 'Acceso denegado. Debes iniciar sesión como Organización.'], 403);
+            return $this->errorResponse('Acceso denegado. Debes iniciar sesión como Organización.', 403);
         }
 
         $filters = ['organizacion' => $user];
@@ -325,7 +323,7 @@ class ActividadController extends AbstractController
         try {
             $organizacion = $this->organizationService->getByCif($cif);
             if (!$organizacion) {
-                return $this->json(['error' => 'Organización no encontrada'], 404);
+                return $this->errorResponse('Organización no encontrada', 404);
             }
 
             $filters = ['organizacion' => $organizacion];
@@ -351,7 +349,7 @@ class ActividadController extends AbstractController
 
             return $this->json($this->transformActivitiesToArray($actividades));
         } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
     
@@ -363,26 +361,26 @@ class ActividadController extends AbstractController
         $user = $securityUser?->getDomainUser();
 
         if (!$user || !($user instanceof \App\Entity\Voluntario)) {
-            return $this->json(['error' => 'Acceso denegado. Solo voluntarios.'], 403);
+            return $this->errorResponse('Acceso denegado. Solo voluntarios.', 403);
         }
 
         $actividad = $this->activityService->getActivityById($id);
         if (!$actividad) {
-            return $this->json(['error' => 'Actividad no encontrada'], 404);
+            return $this->errorResponse('Actividad no encontrada', 404);
         }
 
         // Desinscribir (DELETE)
         if ($request->getMethod() === 'DELETE') {
             $inscripcion = $this->inscripcionService->isVolunteerInscribed($actividad, $user);
             if (!$inscripcion) {
-                return $this->json(['error' => 'No estás inscrito en esta actividad'], 404);
+                return $this->errorResponse('No estás inscrito en esta actividad', 404);
             }
             
             try {
                 $this->inscripcionService->delete($inscripcion);
                 return $this->json(['message' => 'Te has desinscrito correctamente'], 200);
             } catch (\Exception $e) {
-                return $this->json(['error' => 'Error al desinscribir'], 500);
+                return $this->errorResponse('Error al desinscribir', 500);
             }
         }
 
@@ -393,7 +391,7 @@ class ActividadController extends AbstractController
              if ($estado !== \App\Enum\InscriptionStatus::CANCELADA && 
                  $estado !== \App\Enum\InscriptionStatus::RECHAZADO &&
                  $estado !== \App\Enum\InscriptionStatus::FINALIZADO) {
-                 return $this->json(['error' => 'Ya estás inscrito en esta actividad'], 409);
+                 return $this->errorResponse('Ya estás inscrito en esta actividad', 409);
              }
         }
 
@@ -401,7 +399,7 @@ class ActividadController extends AbstractController
         if (!$existing || $existing->getEstado() === \App\Enum\InscriptionStatus::CANCELADA) {
             $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
             if ($ocupadas >= $actividad->getMaxParticipantes()) {
-                return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
+                return $this->errorResponse('El cupo máximo de participantes se ha alcanzado.', 409);
             }
         }
 
@@ -416,7 +414,7 @@ class ActividadController extends AbstractController
             ], 201);
 
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al realizar la inscripción: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error al realizar la inscripción: ' . $e->getMessage(), 500);
         }
     }
 
@@ -457,7 +455,7 @@ class ActividadController extends AbstractController
         $tipo = $data['tipo'] ?? null;
 
         if (!$nuevoEstado) {
-            return $this->json(['error' => 'Falta el campo "estado"'], 400);
+            return $this->errorResponse('Falta el campo "estado"', 400);
         }
 
         try {
@@ -472,13 +470,13 @@ class ActividadController extends AbstractController
             return $this->json($jsonResponse);
 
         } catch (\InvalidArgumentException $e) {
-            return $this->json(['error' => $e->getMessage()], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             $code = 500;
             if ($e->getMessage() === 'Actividad no encontrada') {
                 $code = 404;
             }
-            return $this->json(['error' => $e->getMessage()], $code);
+            return $this->errorResponse($e->getMessage(), $code);
         }
     }
 
@@ -501,7 +499,7 @@ class ActividadController extends AbstractController
             return $this->json($jsonResponse, 200);
 
         } catch (\Exception $e) {
-            return $this->json(['error' => $e->getMessage()], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }

@@ -11,6 +11,8 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/api/voluntarios')]
 class VoluntarioController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private $volunteerService;
 
     public function __construct(VolunteerService $volunteerService)
@@ -71,7 +73,7 @@ class VoluntarioController extends AbstractController
         $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+            return $this->errorResponse('Voluntario no encontrado', 404);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -82,10 +84,7 @@ class VoluntarioController extends AbstractController
              $enumStatus = \App\Enum\VolunteerStatus::tryFrom($nuevoEstado);
              
              if (!$enumStatus) {
-                return $this->json([
-                    'error' => 'Estado inválido',
-                    'permitidos' => array_column(\App\Enum\VolunteerStatus::cases(), 'value')
-                ], 400);
+                return $this->errorResponse('Estado inválido', 400, ['permitidos' => array_column(\App\Enum\VolunteerStatus::cases(), 'value')]);
             }
             $this->volunteerService->updateStatus($voluntario, $enumStatus);
         }
@@ -102,7 +101,7 @@ class VoluntarioController extends AbstractController
         $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+            return $this->errorResponse('Voluntario no encontrado', 404);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -110,7 +109,7 @@ class VoluntarioController extends AbstractController
         try {
             $this->volunteerService->updateProfile($voluntario, $data);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar el perfil: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar el perfil: ' . $e->getMessage(), 500);
         }
 
         return $this->json([

@@ -27,6 +27,8 @@ use App\Enum\OrganizationStatus;
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private $volunteerService;
     private $organizationService;
     private $firebaseAuth;
@@ -65,35 +67,35 @@ class AuthController extends AbstractController
             /** @var RegistroVoluntarioDTO $dto */
             $dto = $serializer->deserialize($json, RegistroVoluntarioDTO::class, 'json');
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Datos JSON inválidos'], 400);
+            return $this->errorResponse('Datos JSON inválidos', 400);
         }
 
         // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS ---
         if (!$dto->dni || !$dto->email || !$dto->nombre || !$dto->password || !$dto->zona || !$dto->ciclo || !$dto->fechaNacimiento) {
-            return $this->json(['error' => 'Faltan campos obligatorios (dni, email, nombre, password, zona, ciclo, fechaNacimiento)'], 400);
+            return $this->errorResponse('Faltan campos obligatorios (dni, email, nombre, password, zona, ciclo, fechaNacimiento)', 400);
         }
 
         // --- VALIDACIÓN DE FORMATO DE EMAIL (PV-41) ---
         if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
-            return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
+            return $this->errorResponse('Formato de correo electrónico inválido', 400);
         }
 
         // --- VALIDACIÓN DE CONTRASEÑA (Mínimo 6 caracteres) ---
         if (strlen($dto->password) < 6) {
-            return $this->json(['error' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+            return $this->errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
         }
 
         // --- VALIDACIÓN DE UNICIDAD (Vía Service) ---
         $error = $this->volunteerService->checkDuplicates($dto->dni, $dto->email);
         if ($error) {
             $status = str_contains($error, 'existe') ? 409 : 400;
-            return $this->json(['error' => $error], $status);
+            return $this->errorResponse($error, $status);
         }
 
         // --- VALIDACIÓN DE NEGOCIO (Vía Service) --- (DNI, Age)
         $validationError = $this->volunteerService->validateDTO($dto);
         if ($validationError) {
-            return $this->json(['error' => $validationError], 400);
+            return $this->errorResponse($validationError, 400);
         }
 
         // --- PRE-CHECK ADMIN --- 
@@ -113,10 +115,10 @@ class AuthController extends AbstractController
             
             // Si es un mensaje conocido (validación o duplicado), devolvemos 400/409
             if (str_contains($e->getMessage(), 'ya está registrado')) {
-                return $this->json(['error' => $e->getMessage()], 409);
+                return $this->errorResponse($e->getMessage(), 409);
             }
             
-            return $this->json(['error' => 'Error al registrar voluntario', 'detalle' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al registrar voluntario', 500, $e->getMessage());
         }
 
         return $this->json(['message' => 'Voluntario registrado correctamente' . ($isAdmin ? ' (Auto-Aceptado)' : '')], 201);
@@ -137,7 +139,7 @@ class AuthController extends AbstractController
             /** @var RegistroOrganizacionDTO $dto */
             $dto = $serializer->deserialize($json, RegistroOrganizacionDTO::class, 'json');
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Datos JSON inválidos'], 400);
+            return $this->errorResponse('Datos JSON inválidos', 400);
         }
 
         // --- VALIDACIÓN DE CAMPOS OBLIGATORIOS (PV-38) ---
@@ -146,31 +148,29 @@ class AuthController extends AbstractController
             empty($dto->direccion) || empty($dto->localidad) || empty($dto->descripcion) || 
             empty($dto->cp) || empty($dto->contacto)
         ) {
-            return $this->json([
-                'error' => 'Faltan campos obligatorios. Debes completar: cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto'
-            ], 400);
+            return $this->errorResponse('Faltan campos obligatorios. Debes completar: cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto', 400);
         }
 
         // --- VALIDACIÓN DE FORMATO DE EMAIL (PV-41) ---
         if (!filter_var($dto->email, FILTER_VALIDATE_EMAIL)) {
-            return $this->json(['error' => 'Formato de correo electrónico inválido'], 400);
+            return $this->errorResponse('Formato de correo electrónico inválido', 400);
         }
 
         // --- VALIDACIÓN DE CONTRASEÑA (Mínimo 6 caracteres) ---
         if (strlen($dto->password) < 6) {
-            return $this->json(['error' => 'La contraseña debe tener al menos 6 caracteres'], 400);
+            return $this->errorResponse('La contraseña debe tener al menos 6 caracteres', 400);
         }
         
         // --- VALIDACIÓN DUP (Vía Service) ---
         $error = $this->organizationService->checkDuplicates($dto->cif, $dto->email);
         if ($error) {
-            return $this->json(['error' => $error], 409);
+            return $this->errorResponse($error, 409);
         }
 
         // --- VALIDACIÓN DE NEGOCIO (Vía Service) --- (CIF)
         $validationError = $this->organizationService->validateDTO($dto);
         if ($validationError) {
-            return $this->json(['error' => $validationError], 400);
+            return $this->errorResponse($validationError, 400);
         }
 
         // --- PRE-CHECK ADMIN ---
@@ -188,9 +188,9 @@ class AuthController extends AbstractController
             file_put_contents('last_error_org.txt', $e->getMessage() . "\n" . $e->getTraceAsString());
             
             if (str_contains($e->getMessage(), 'ya está registrado')) {
-                return $this->json(['error' => $e->getMessage()], 409);
+                return $this->errorResponse($e->getMessage(), 409);
             }
-            return $this->json(['error' => 'Error al guardar organización', 'mensaje_tecnico' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al guardar organización', 500, $e->getMessage());
         }
 
         return $this->json(['message' => 'Organización creada correctamente'], 201);
@@ -210,13 +210,13 @@ class AuthController extends AbstractController
         $password = $data['password'] ?? null;
 
         if (!$email || !$password) {
-            return $this->json(['error' => 'Email y contraseña requeridos'], 400);
+            return $this->errorResponse('Email y contraseña requeridos', 400);
         }
 
         $apiKey = $_ENV['FIREBASE_API_KEY'] ?? $_SERVER['FIREBASE_API_KEY'] ?? getenv('FIREBASE_API_KEY');
         
         if (!$apiKey) {
-            return $this->json(['error' => 'Error de configuración en servidor: Falta FIREBASE_API_KEY'], 500);
+            return $this->errorResponse('Error de configuración en servidor: Falta FIREBASE_API_KEY', 500);
         }
 
         try {
@@ -236,10 +236,7 @@ class AuthController extends AbstractController
             try {
                 $localUser = $this->unifiedUserProvider->loadUserByIdentifier($email);
             } catch (UserNotFoundException $e) {
-                 return $this->json([
-                     'error' => 'Inconsistencia de cuenta.',
-                     'detalle' => 'El usuario existe en el sistema de autenticación pero no tiene perfil en la base de datos local.'
-                 ], 404);
+                 return $this->errorResponse('Inconsistencia de cuenta. El usuario existe en el sistema de autenticación pero no tiene perfil en la base de datos local.', 404);
             }
 
             if ($localUser instanceof \App\Security\User\SecurityUser) {
@@ -252,24 +249,24 @@ class AuthController extends AbstractController
                 $estado = $localUser->getEstadoVoluntario();
                 if ($estado !== VolunteerStatus::ACEPTADO && $estado !== VolunteerStatus::LIBRE) {
                     if ($estado === VolunteerStatus::PENDIENTE) {
-                        return $this->json(['error' => 'Cuenta pendiente de aprobación', 'message' => 'Tu cuenta está pendiente de aprobación.'], 403);
+                        return $this->errorResponse('Tu cuenta está pendiente de aprobación.', 403);
                     } elseif ($estado === VolunteerStatus::RECHAZADO) {
-                        return $this->json(['error' => 'Cuenta rechazado', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
+                        return $this->errorResponse('Tu cuenta ha sido rechazada.', 403);
                     } else {
                         // Safe fallback for value
                         $val = $estado ? $estado->value : 'NULL';
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $val], 403);
+                        return $this->errorResponse('Tu cuenta no está activa. Estado: ' . $val, 403);
                     }
                 }
             } elseif ($localUser instanceof Organizacion) {
                 $estado = $localUser->getEstado();
                 if ($estado !== OrganizationStatus::APROBADO) {
                     if ($estado === OrganizationStatus::PENDIENTE) {
-                        return $this->json(['error' => 'Organización pendiente de aprobación', 'message' => 'Tu organización está pendiente de aprobación.'], 403);
+                        return $this->errorResponse('Tu organización está pendiente de aprobación.', 403);
                     } elseif ($estado === OrganizationStatus::RECHAZADO) {
-                        return $this->json(['error' => 'Organización rechazada', 'message' => 'Tu organización ha sido rechazada.'], 403);
+                        return $this->errorResponse('Tu organización ha sido rechazada.', 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL')], 403);
+                        return $this->errorResponse('Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL'), 403);
                     }
                 }
             }
@@ -301,11 +298,11 @@ class AuthController extends AbstractController
                 $msg = 'Error desconocido de autenticación';
             }
             if (in_array($msg, ['EMAIL_NOT_FOUND', 'INVALID_PASSWORD', 'INVALID_LOGIN_CREDENTIALS'])) {
-                return $this->json(['error' => 'Credenciales inválidas (' . $msg . ')'], 401);
+                return $this->errorResponse('Credenciales inválidas (' . $msg . ')', 401);
             }
-            return $this->json(['error' => 'Error de Firebase: ' . $msg], 400);
+            return $this->errorResponse('Error de Firebase: ' . $msg, 400);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error interno: ' . $e->getMessage(), 500);
         }
     }
 
@@ -324,7 +321,7 @@ class AuthController extends AbstractController
         $token = $data['token'] ?? null;
 
         if (!$token) {
-            return $this->json(['error' => 'Token de Firebase requerido'], 400);
+            return $this->errorResponse('Token de Firebase requerido', 400);
         }
 
         try {
@@ -335,18 +332,13 @@ class AuthController extends AbstractController
             $emailVerified = $claims->get('email_verified');
 
             if (!$email) {
-                return $this->json(['error' => 'El token no contiene un email válido'], 400);
+                return $this->errorResponse('El token no contiene un email válido', 400);
             }
 
             try {
                 $localUser = $this->unifiedUserProvider->loadUserByIdentifier($email);
             } catch (UserNotFoundException $e) {
-                 return $this->json([
-                     'error' => 'Usuario no registrado',
-                     'message' => 'No existe una cuenta vinculada a este correo de Google. Por favor, regístrate primero.',
-                     'email' => $email, 
-                     'uid' => $uid
-                 ], 404);
+                 return $this->errorResponse('No existe una cuenta vinculada a este correo de Google. Por favor, regístrate primero.', 404, ['email' => $email, 'uid' => $uid]);
             }
 
             if ($localUser instanceof \App\Security\User\SecurityUser) {
@@ -359,23 +351,23 @@ class AuthController extends AbstractController
                 $estado = $localUser->getEstadoVoluntario();
                 if ($estado !== VolunteerStatus::ACEPTADO && $estado !== VolunteerStatus::LIBRE) {
                     if ($estado === VolunteerStatus::PENDIENTE) {
-                        return $this->json(['error' => 'Cuenta pendiente de aprobación', 'message' => 'Tu cuenta está pendiente de aprobación.'], 403);
+                        return $this->errorResponse('Tu cuenta está pendiente de aprobación.', 403);
                     } elseif ($estado === VolunteerStatus::RECHAZADO) {
-                        return $this->json(['error' => 'Cuenta rechazado', 'message' => 'Tu cuenta ha sido rechazada.'], 403);
+                        return $this->errorResponse('Tu cuenta ha sido rechazada.', 403);
                     } else {
                         $val = $estado ? $estado->value : 'NULL';
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu cuenta no está activa. Estado: ' . $val], 403);
+                        return $this->errorResponse('Tu cuenta no está activa. Estado: ' . $val, 403);
                     }
                 }
             } elseif ($localUser instanceof Organizacion) {
                 $estado = $localUser->getEstado();
                 if ($estado !== OrganizationStatus::APROBADO) {
                     if ($estado === OrganizationStatus::PENDIENTE) {
-                        return $this->json(['error' => 'Organización pendiente de aprobación', 'message' => 'Tu organización está pendiente de aprobación.'], 403);
+                        return $this->errorResponse('Tu organización está pendiente de aprobación.', 403);
                     } elseif ($estado === OrganizationStatus::RECHAZADO) {
-                         return $this->json(['error' => 'Organización rechazada', 'message' => 'Tu organización ha sido rechazada.'], 403);
+                         return $this->errorResponse('Tu organización ha sido rechazada.', 403);
                     } else {
-                        return $this->json(['error' => 'Acceso denegado', 'message' => 'Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL')], 403);
+                        return $this->errorResponse('Tu organización no está activa. Estado: ' . ($estado?->value ?? 'NULL'), 403);
                     }
                 }
             }
@@ -392,9 +384,9 @@ class AuthController extends AbstractController
             ]);
 
         } catch (FailedToVerifyToken $e) {
-            return $this->json(['error' => 'Token inválido o expirado: ' . $e->getMessage()], 401);
+            return $this->errorResponse('Token inválido o expirado: ' . $e->getMessage(), 401);
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Error interno al verificar Google Login: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error interno al verificar Google Login: ' . $e->getMessage(), 500);
         }
     }
     
@@ -405,7 +397,7 @@ class AuthController extends AbstractController
         $email = $data['email'] ?? null;
 
         if (!$email) {
-            return $this->json(['error' => 'Email es obligatorio'], 400);
+            return $this->errorResponse('Email es obligatorio', 400);
         }
 
         try {
@@ -425,7 +417,7 @@ class AuthController extends AbstractController
         } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
             return $this->json(['message' => 'Si el correo existe, se ha enviado un enlace de recuperación.']);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al procesar la solicitud: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error al procesar la solicitud: ' . $e->getMessage(), 500);
         }
     }
 
@@ -437,7 +429,7 @@ class AuthController extends AbstractController
             $user = $securityUser?->getDomainUser();
 
             if (!$user) {
-                return $this->json(['error' => 'Usuario no autenticado o token inválido'], 401);
+                return $this->errorResponse('Usuario no autenticado o token inválido', 401);
             }
 
             if ($user instanceof Administrador) {
@@ -487,10 +479,10 @@ class AuthController extends AbstractController
                 ]);
             }
 
-            return $this->json(['error' => 'Tipo de usuario desconocido: ' . get_class($user)], 500);
+            return $this->errorResponse('Tipo de usuario desconocido: ' . get_class($user), 500);
 
         } catch (\Throwable $e) {
-            return $this->json(['error' => 'Error interno: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error interno: ' . $e->getMessage(), 500);
         }
     }
 
@@ -501,7 +493,7 @@ class AuthController extends AbstractController
         $user = $securityUser?->getDomainUser();
 
         if (!$user) {
-            return $this->json(['error' => 'Usuario no autenticado'], 401);
+            return $this->errorResponse('Usuario no autenticado', 401);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -510,22 +502,22 @@ class AuthController extends AbstractController
             if ($user instanceof Voluntario) {
                 // RELOAD USER to ensure it is managed
                 $userManaged = $this->volunteerService->getById($user->getDni());
-                if (!$userManaged) return $this->json(['error' => 'Usuario no encontrado'], 404);
+                if (!$userManaged) return $this->errorResponse('Usuario no encontrado', 404);
                 
                 $this->volunteerService->updateProfile($userManaged, $data);
             } 
             elseif ($user instanceof Organizacion) {
                 // RELOAD USER to ensure it is managed
                 $orgManaged = $this->organizationService->getByCif($user->getCif());
-                if (!$orgManaged) return $this->json(['error' => 'Organización no encontrada'], 404);
+                if (!$orgManaged) return $this->errorResponse('Organización no encontrada', 404);
                 
                 $this->organizationService->updateProfile($orgManaged, $data);
             } 
             else {
-                return $this->json(['error' => 'Tipo de usuario no soportado para actualización de perfil'], 400);
+                return $this->errorResponse('Tipo de usuario no soportado para actualización de perfil', 400);
             }
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar perfil', 'detalle' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar perfil', 500, $e->getMessage());
         }
 
         return $this->json(['message' => 'Perfil actualizado correctamente']);

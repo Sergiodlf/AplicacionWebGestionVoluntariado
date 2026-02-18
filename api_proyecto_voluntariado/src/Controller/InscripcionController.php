@@ -19,6 +19,8 @@ use App\Service\OrganizationService;
 #[Route('/api/inscripciones', name: 'api_inscripciones_')]
 class InscripcionController extends AbstractController
 {
+    use ApiErrorTrait;
+
     private $inscripcionService;
     private $notificationService;
     private $activityService;
@@ -79,10 +81,7 @@ class InscripcionController extends AbstractController
 
             return $this->json($data);
         } catch (\Throwable $e) {
-            return $this->json([
-                'error' => 'Error interno en el servidor',
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse('Error interno en el servidor', 500);
         }
     }
 
@@ -94,17 +93,17 @@ class InscripcionController extends AbstractController
         $codActividad = $data['codActividad'] ?? null;
 
         if (!$dni || !$codActividad) {
-            return $this->json(['error' => 'Faltan datos (dniVoluntario, codActividad)'], 400);
+            return $this->errorResponse('Faltan datos (dniVoluntario, codActividad)', 400);
         }
 
         $voluntario = $this->volunteerService->getById($dni);
         if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+            return $this->errorResponse('Voluntario no encontrado', 404);
         }
 
         $actividad = $this->activityService->getActivityById($codActividad);
         if (!$actividad) {
-            return $this->json(['error' => 'Actividad no encontrada'], 404);
+            return $this->errorResponse('Actividad no encontrada', 404);
         }
 
         // Verificar si ya existe la inscripción
@@ -120,18 +119,17 @@ class InscripcionController extends AbstractController
         if ($existing) {
             // Si está en un estado que permite reintentar, lo reactivamos (lógica abajo)
             if (!in_array($existing->getEstado(), $estadosReInscripcion)) {
-                return $this->json([
-                    'error' => 'El voluntario ya está inscrito en esta actividad',
+                return $this->errorResponse('El voluntario ya está inscrito en esta actividad', 409, [
                     'code' => 'DUPLICATE_INSCRIPTION',
                     'id_inscripcion' => $existing->getId(),
                     'estado' => $existing->getEstado()?->value
-                ], 409);
+                ]);
             }
         } else {
             // VALIDACIÓN DE CUPO MÁXIMO (Solo si es nueva inscripción)
              $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
              if ($ocupadas >= $actividad->getMaxParticipantes()) {
-                 return $this->json(['error' => 'El cupo máximo de participantes se ha alcanzado.'], 409);
+                 return $this->errorResponse('El cupo máximo de participantes se ha alcanzado.', 409);
              }
         }
 
@@ -158,7 +156,7 @@ class InscripcionController extends AbstractController
         try {
             $inscripcion = $this->inscripcionService->createInscription($actividad, $voluntario, $existing, $autoAccept);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al crear la inscripción: ' . $e->getMessage()], 500);
+            return $this->errorResponse('Error al crear la inscripción: ' . $e->getMessage(), 500);
         }
 
         return $this->json([
@@ -176,29 +174,26 @@ class InscripcionController extends AbstractController
         $inscripcion = $this->inscripcionService->getById($id);
 
         if (!$inscripcion) {
-            return $this->json(['error' => 'Inscripción no encontrada'], 404);
+            return $this->errorResponse('Inscripción no encontrada', 404);
         }
 
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
 
         if (!$nuevoEstado) {
-            return $this->json(['error' => 'Falta el campo "estado"'], 400);
+            return $this->errorResponse('Falta el campo "estado"', 400);
         }
 
         // Validación de estados permitidos
         $enumStatus = \App\Enum\InscriptionStatus::tryFrom(strtoupper($nuevoEstado));
         if (!$enumStatus) {
-            return $this->json([
-                'error' => 'Estado inválido',
-                'permitidos' => array_column(\App\Enum\InscriptionStatus::cases(), 'value')
-            ], 400);
+            return $this->errorResponse('Estado inválido', 400, ['permitidos' => array_column(\App\Enum\InscriptionStatus::cases(), 'value')]);
         }
 
         try {
             $this->inscripcionService->updateStatus($inscripcion, $enumStatus);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al actualizar el estado'], 500);
+            return $this->errorResponse('Error al actualizar el estado', 500);
         }
 
         return $this->json([
@@ -214,25 +209,25 @@ class InscripcionController extends AbstractController
         $inscripcion = $this->inscripcionService->getById($id);
 
         if (!$inscripcion) {
-            return $this->json(['error' => 'Inscripción no encontrada'], 404);
+            return $this->errorResponse('Inscripción no encontrada', 404);
         }
 
         // SEGURIDAD: Verificar que el usuario sea el dueño de la inscripción o un Admin
         $user = $this->getUser();
         if ($user instanceof Voluntario) {
             if ($inscripcion->getVoluntario()->getDni() !== $user->getDni()) {
-                 return $this->json(['error' => 'No tienes permiso para eliminar esta inscripción'], 403);
+                 return $this->errorResponse('No tienes permiso para eliminar esta inscripción', 403);
             }
         } elseif ($user instanceof Organizacion) {
             // Opcional: Permitir a la org eliminar inscripciones de sus actividades?
             // De momento lo restringimos
-            return $this->json(['error' => 'Las organizaciones no pueden eliminar inscripciones directamente'], 403);
+            return $this->errorResponse('Las organizaciones no pueden eliminar inscripciones directamente', 403);
         }
 
         try {
             $this->inscripcionService->delete($inscripcion);
         } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al eliminar la inscripción'], 500);
+            return $this->errorResponse('Error al eliminar la inscripción', 500);
         }
 
         return $this->json(['message' => 'Inscripción cancelada correctamente'], 200);
@@ -252,7 +247,7 @@ class InscripcionController extends AbstractController
         $voluntario = $this->volunteerService->getById($dni);
 
         if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
+            return $this->errorResponse('Voluntario no encontrado', 404);
         }
 
         // Recuperar parámetro 'estado'
@@ -295,7 +290,7 @@ class InscripcionController extends AbstractController
         $user = $this->getUser();
 
         if (!$user || !($user instanceof Voluntario)) {
-            return $this->json(['error' => 'Acceso denegado. Debes ser un voluntario.'], 403);
+            return $this->errorResponse('Acceso denegado. Debes ser un voluntario.', 403);
         }
 
         return $this->getInscripcionesVoluntario($user->getDni(), $request);
@@ -308,7 +303,7 @@ class InscripcionController extends AbstractController
             // 1. Check Organizacion
             $organizacion = $this->organizationService->getByCif($cif);
             if (!$organizacion) {
-                return $this->json(['error' => 'Organización no encontrada'], 404);
+                return $this->errorResponse('Organización no encontrada', 404);
             }
             
             // 2. Query Repository
@@ -343,7 +338,7 @@ class InscripcionController extends AbstractController
             
             return $this->json($data);
         } catch (\Throwable $e) {
-            return $this->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }
