@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'CICLOS')]
@@ -11,10 +12,12 @@ class Ciclo
 {
     #[ORM\Id]
     #[ORM\Column(name: 'CURSO', type: Types::SMALLINT)]
+    #[Groups(['ciclo:read'])]
     private ?int $curso = null;
 
     #[ORM\Id]
     #[ORM\Column(name: 'NOMBRE', type: Types::STRING, length: 100)]
+    #[Groups(['ciclo:read'])]
     private ?string $nombre = null;
 
     public function getCurso(): ?int

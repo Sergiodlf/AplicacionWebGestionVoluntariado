@@ -10,7 +10,7 @@ export class VolunteerService {
 
   private apiUrl = '/api/auth/register/voluntario';
   private apiGetUrl = '/api/voluntarios';
-  private apiCiclosUrl = '/api/categories/ciclos';
+  private apiCategoriesUrl = '/api/categories';
 
   private volunteersSubject = new BehaviorSubject<Volunteer[] | null>(null);
   volunteers$ = this.volunteersSubject.asObservable();
@@ -80,7 +80,7 @@ export class VolunteerService {
   }
 
   getCiclos(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiCiclosUrl);
+    return this.http.get<any[]>(`${this.apiCategoriesUrl}?type=ciclos`);
   }
 
   private mapToVolunteer(v: any): Volunteer {
