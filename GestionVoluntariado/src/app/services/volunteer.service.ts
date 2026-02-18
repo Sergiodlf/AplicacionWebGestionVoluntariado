@@ -1,7 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, map, tap } from 'rxjs';
 import { Volunteer } from '../models/Volunteer';
 
 @Injectable({
@@ -11,7 +10,7 @@ export class VolunteerService {
 
   private apiUrl = '/api/auth/register/voluntario';
   private apiGetUrl = '/api/voluntarios';
-  private apiCiclosUrl = '/api/categories/ciclos'; // Updated URL
+  private apiCiclosUrl = '/api/categories/ciclos';
 
   private volunteersSubject = new BehaviorSubject<Volunteer[] | null>(null);
   volunteers$ = this.volunteersSubject.asObservable();
@@ -27,32 +26,10 @@ export class VolunteerService {
 
   loadVolunteers(): Observable<Volunteer[]> {
     return this.http.get<any[]>(this.apiGetUrl).pipe(
-      map((volunteers: any[]) => volunteers.map((v: any) => ({
-        nombre: v.nombre,
-        apellido1: v.apellido1,
-        email: v.correo,
-        habilidades: v.habilidades || [],
-        disponibilidad: this.parseJson(v.disponibilidad),
-        intereses: v.intereses || [],
-        id: (v.inscripciones && v.inscripciones.length > 0) ? v.inscripciones[0].id_inscripcion : undefined,
-        status: v.estado_voluntario || 'PENDIENTE',
-        dni: v.dni,
-        birthDate: v.fechaNacimiento,
-        experience: v.experiencia,
-        hasCar: v.coche,
-        languages: this.parseJson(v.idiomas),
-        zona: v.zona,
-        ciclo: v.ciclo
-      } as Volunteer))),
-      tap(data => this.volunteersSubject.next(data))
+      map((volunteers: any[]) => volunteers.map((v: any) => this.mapToVolunteer(v))),
+      tap((data: Volunteer[]) => this.volunteersSubject.next(data))
     );
   }
-
-  // Helper to maintain compatibility if optimistic updates are needed, 
-  // but for now we trust the GET.
-  // Implementation of add/remove would need to call API mostly.
-
-  /** ---------- AQUI VIENE LO IMPORTANTE: POST REAL A API ---------- */
 
   createVolunteer(voluntario: any): Observable<any> {
     return this.http.post(this.apiUrl, voluntario);
@@ -68,29 +45,19 @@ export class VolunteerService {
   }
 
   getVolunteerByEmail(email: string): Observable<Volunteer> {
-    return this.http.get<any>(`/api/voluntarios/email/${email}`).pipe(
-      map(v => ({
-        nombre: v.nombre,
-        apellido1: v.apellido1,
-        email: v.correo,
-        habilidades: v.habilidades || [],
-        disponibilidad: this.parseJson(v.disponibilidad),
-        intereses: v.intereses || [],
-        status: v.estado_voluntario || 'PENDIENTE',
-        dni: v.dni,
-        birthDate: v.fechaNacimiento,
-        experience: v.experiencia,
-        hasCar: v.coche,
-        languages: this.parseJson(v.idiomas),
-        zona: v.zona,
-        ciclo: v.ciclo
-      } as Volunteer))
+    return this.http.get<any[]>(this.apiGetUrl, { params: { email } }).pipe(
+      map((volunteers: any[]) => {
+        if (volunteers && volunteers.length > 0) {
+          return this.mapToVolunteer(volunteers[0]);
+        }
+        throw new Error('Voluntario no encontrado');
+      })
     );
   }
 
   getProfile(): Observable<Volunteer> {
     return this.http.get<any>('/api/auth/profile').pipe(
-      map(response => {
+      map((response: any) => {
         const v = response.datos;
         return {
           nombre: v.nombre,
@@ -114,6 +81,26 @@ export class VolunteerService {
 
   getCiclos(): Observable<any[]> {
     return this.http.get<any[]>(this.apiCiclosUrl);
+  }
+
+  private mapToVolunteer(v: any): Volunteer {
+    return {
+      nombre: v.nombre,
+      apellido1: v.apellido1,
+      email: v.correo,
+      habilidades: v.habilidades || [],
+      disponibilidad: this.parseJson(v.disponibilidad),
+      intereses: v.intereses || [],
+      id: (v.inscripciones && v.inscripciones.length > 0) ? v.inscripciones[0].id_inscripcion : undefined,
+      status: v.estado_voluntario || 'PENDIENTE',
+      dni: v.dni,
+      birthDate: v.fechaNacimiento,
+      experience: v.experiencia,
+      hasCar: v.coche,
+      languages: this.parseJson(v.idiomas),
+      zona: v.zona,
+      ciclo: v.ciclo
+    } as Volunteer;
   }
 
   private parseJson(value: any): string[] {
