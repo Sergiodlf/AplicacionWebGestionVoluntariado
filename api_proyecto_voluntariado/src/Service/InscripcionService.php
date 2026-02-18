@@ -8,17 +8,16 @@ use App\Entity\Voluntario;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Enum\InscriptionStatus;
 
-class InscripcionService
+class InscripcionService implements InscripcionServiceInterface
 {
-    private $entityManager;
-    private $notificationService;
+    private NotificationManagerInterface $notificationManager;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        \App\Service\NotificationService $notificationService
+        NotificationManagerInterface $notificationManager
     ) {
         $this->entityManager = $entityManager;
-        $this->notificationService = $notificationService;
+        $this->notificationManager = $notificationManager;
     }
 
     public function getAll(?string $estado = null): array
@@ -84,6 +83,7 @@ class InscripcionService
     {
         if ($existing) {
              $inscripcion = $existing;
+             $inscripcion->setFechaInscripcion(new \DateTime());
              // Reactivate
         } else {
             $inscripcion = new Inscripcion();
@@ -159,13 +159,11 @@ class InscripcionService
                 $cuerpo = "Un administrador ha aceptado tu solicitud de voluntariado. Toca para ver más detalles.";
                 
                 if ($voluntario) {
-                    $this->notificationService->sendToUser(
+                    $this->notificationManager->notifyUser(
                         $voluntario, 
                         $titulo, 
                         $cuerpo, 
                         [
-                            'title' => $titulo,
-                            'body' => $cuerpo,
                             'type' => 'MATCH_ACCEPTED',
                             'matchId' => (string)$inscripcion->getId(),
                             'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
@@ -179,7 +177,7 @@ class InscripcionService
             }
 
             if ($titulo && $voluntario) {
-                $this->notificationService->sendToUser(
+                $this->notificationManager->notifyUser(
                     $voluntario, 
                     $titulo, 
                     $cuerpo, 

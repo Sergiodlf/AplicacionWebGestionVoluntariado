@@ -27,9 +27,28 @@ class Inscripcion
     #[ORM\Column(name: 'ESTADO', length: 20, enumType: InscriptionStatus::class)]
     private ?InscriptionStatus $estado = InscriptionStatus::PENDIENTE;
 
+    #[ORM\Column(name: 'FECHA_INSCRIPCION', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $fechaInscripcion = null;
+
+    public function __construct()
+    {
+        $this->fechaInscripcion = new \DateTime();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getFechaInscripcion(): ?\DateTimeInterface
+    {
+        return $this->fechaInscripcion;
+    }
+
+    public function setFechaInscripcion(?\DateTimeInterface $fechaInscripcion): static
+    {
+        $this->fechaInscripcion = $fechaInscripcion;
+        return $this;
     }
 
     public function getVoluntario(): ?Voluntario

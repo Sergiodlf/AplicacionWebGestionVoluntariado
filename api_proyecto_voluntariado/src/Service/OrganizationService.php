@@ -8,20 +8,23 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Enum\OrganizationStatus;
 
 
-class OrganizationService
+class OrganizationService implements OrganizationServiceInterface
 {
     private $entityManager;
 
-    private $notificationService;
+    private EmailServiceInterface $emailService;
+    private NotificationManagerInterface $notificationManager;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         \Kreait\Firebase\Contract\Auth $firebaseAuth,
-        NotificationService $notificationService
+        EmailServiceInterface $emailService,
+        NotificationManagerInterface $notificationManager
     ) {
         $this->entityManager = $entityManager;
         $this->firebaseAuth = $firebaseAuth;
-        $this->notificationService = $notificationService;
+        $this->emailService = $emailService;
+        $this->notificationManager = $notificationManager;
     }
 
 
@@ -104,7 +107,7 @@ class OrganizationService
 
                 try {
                     $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
-                    $this->notificationService->sendEmail(
+                    $this->emailService->sendEmail(
                         $dto->email,
                         'Verifica tu correo - Gestión Voluntariado',
                         sprintf('<p>Hola %s,</p><p>Gracias por registrar tu organización. Por favor verifica tu correo en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
@@ -188,8 +191,18 @@ class OrganizationService
             $newState = OrganizationStatus::tryFrom(strtolower($newState)) ?? OrganizationStatus::PENDIENTE;
         }
 
+        $oldEstado = $org->getEstado();
         $org->setEstado($newState);
         $this->entityManager->flush();
+
+        if ($oldEstado !== OrganizationStatus::APROBADO && $newState === OrganizationStatus::APROBADO) {
+            $this->notificationManager->notifyUser(
+                $org,
+                "¡Organización Aceptada!",
+                "Tu organización ha sido aceptada en la plataforma. Ya puedes publicar actividades y gestionar voluntarios."
+            );
+        }
+
         return $org;
     }
 

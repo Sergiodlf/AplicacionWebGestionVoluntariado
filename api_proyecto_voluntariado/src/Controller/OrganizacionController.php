@@ -51,41 +51,18 @@ class OrganizacionController extends AbstractController
         ValidatorInterface $validator
     ): JsonResponse {
         try {
-            /** @var Organizacion $organizacion */
-            $organizacion = $serializer->deserialize(
+            /** @var \App\Model\RegistroOrganizacionDTO $dto */
+            $dto = $serializer->deserialize(
                 $request->getContent(), 
-                Organizacion::class, 
-                'json',
-                ['groups' => ['org:write']] 
+                \App\Model\RegistroOrganizacionDTO::class, 
+                'json'
             );
         } catch (\Exception $e) {
             return $this->errorResponse('Formato JSON inválido.', Response::HTTP_BAD_REQUEST);
         }
 
-        // We need a DTO here really, but for now we'll stick to how the code was structured or map it?
-        // The service expects a DTO. The controller deserializes to Entity. 
-        // This is a disconnect. The service was using `RegistroOrganizacionDTO`.
-        // Let's create the DTO from the entity manually or adjust the controller to deserialize to DTO.
-        
-        $data = json_decode($request->getContent(), true);
-        
-        $dto = new \App\Model\RegistroOrganizacionDTO();
-        $dto->cif = $organizacion->getCif();
-        $dto->nombre = $organizacion->getNombre();
-        $dto->email = $organizacion->getEmail();
-        $dto->password = $data['password'] ?? '123456'; // Fallback or required?
-        $dto->direccion = $organizacion->getDireccion();
-        $dto->cp = $organizacion->getCp();
-        $dto->localidad = $organizacion->getLocalidad();
-        $dto->descripcion = $organizacion->getDescripcion();
-        $dto->contacto = $organizacion->getContacto();
-        $dto->sector = $organizacion->getSector();
-
-        // Validation logic
-        // ... (This logic should ideally be in the service or a validator)
-        
-        // 3. VALIDACIÓN
-        $errors = $validator->validate($organizacion);
+        // 1. VALIDACIÓN
+        $errors = $validator->validate($dto);
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {

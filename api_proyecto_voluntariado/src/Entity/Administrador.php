@@ -1,20 +1,16 @@
-<?php
-
-namespace App\Entity;
-
-use App\Repository\AdministradorRepository;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AdministradorRepository::class)]
-class Administrador implements UserInterface
+class Administrador implements Loginable, Notifiable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['user:read'])]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -23,6 +19,7 @@ class Administrador implements UserInterface
 
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:read'])]
     private ?string $nombre = null;
 
     public function getId(): ?int
@@ -42,19 +39,6 @@ class Administrador implements UserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->email;
-    }
-
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
@@ -72,14 +56,7 @@ class Administrador implements UserInterface
     }
 
 
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials(): void
-    {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
-    }
+
 
     public function getNombre(): ?string
     {
@@ -91,5 +68,27 @@ class Administrador implements UserInterface
         $this->nombre = $nombre;
 
         return $this;
+    }
+
+    // --- Loginable ---
+    public function canLogin(): bool
+    {
+        return true; // Admins are always allowed if they exist in DB
+    }
+
+    public function getLoginDeniedReason(): ?string
+    {
+        return null;
+    }
+
+    // --- Notifiable ---
+    public function getNotifiableEmail(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getFcmToken(): ?string
+    {
+        return null; // Admins don't have personal tokens for now
     }
 }

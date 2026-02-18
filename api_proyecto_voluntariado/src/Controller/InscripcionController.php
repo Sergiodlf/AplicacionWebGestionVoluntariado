@@ -74,7 +74,9 @@ class InscripcionController extends AbstractController
                     'habilidades_actividad' => $actividad->getHabilidades(), // Requisitos
                     'necesidades_actividad' => $actividad->getNecesidades()->map(fn($n) => ['id' => $n->getId(), 'nombre' => $n->getNombre()])->toArray(),
                     'maxParticipantes' => $actividad->getMaxParticipantes(),
-                    'fecha_fin_actividad' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d') : null,
+                    'fecha_inicio_actividad' => $actividad->getFechaInicio() ? $actividad->getFechaInicio()->format('Y-m-d H:i') : null,
+                    'fecha_fin_actividad' => $actividad->getFechaFin() ? $actividad->getFechaFin()->format('Y-m-d H:i') : null,
+                    'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
                     'estado' => $inscripcion->getEstado()?->value 
                 ];
             }
@@ -323,15 +325,12 @@ class InscripcionController extends AbstractController
                 $data[] = [
                     'id_inscripcion' => $inscripcion->getId(),
                     'estado' => $inscripcion->getEstado()?->value,
-                    // 'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
+                    'fecha_inscripcion' => $inscripcion->getFechaInscripcion() ? $inscripcion->getFechaInscripcion()->format('Y-m-d H:i') : null,
                     'voluntario' => [
                         'dni' => $voluntario->getDni(),
-                        // 'nombre' => $voluntario->getNombre() . ' ' . $voluntario->getApellido1(),
-                        // 'email' => $voluntario->getUserIdentifier(), 
                     ],
                     'actividad' => [
                         'codActividad' => $actividad->getCodActividad(),
-                        // 'nombre' => $actividad->getNombre()
                     ]
                 ];
             }

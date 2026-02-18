@@ -14,7 +14,7 @@ use App\Enum\OrganizationStatus;
 
 #[ORM\Entity(repositoryClass: OrganizacionRepository::class)]
 #[ORM\Table(name: 'ORGANIZACIONES')]
-class Organizacion implements UserInterface
+class Organizacion implements Loginable, Notifiable
 {
     // Grupos de Serialización:
     // 'org:read'  -> Para serializar (enviar a Angular en GET o respuesta POST).
@@ -89,24 +89,9 @@ class Organizacion implements UserInterface
         $this->actividades = new ArrayCollection();
     }
 
-    // --- Métodos de seguridad ---
-
-
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->email;
-    }
-
     public function getRoles(): array
     {
         return ['ROLE_ORGANIZACION'];
-    }
-
-
-
-    public function eraseCredentials(): void
-    {
-        // Limpia datos sensibles después de la autenticación si es necesario
     }
 
     // --- Getters y Setters ---
@@ -200,4 +185,26 @@ class Organizacion implements UserInterface
     public function setFcmToken(?string $token): static { $this->fcmToken = $token; return $this; }
 
     public function getActividades(): Collection { return $this->actividades; }
+
+    // --- Loginable ---
+    public function canLogin(): bool
+    {
+        return $this->estado === OrganizationStatus::APROBADO;
+    }
+
+    public function getLoginDeniedReason(): ?string
+    {
+        if ($this->canLogin()) return null;
+        return match ($this->estado) {
+            OrganizationStatus::PENDIENTE => 'Tu organización está pendiente de aprobación.',
+            OrganizationStatus::RECHAZADO => 'Tu organización ha sido rechazada.',
+            default => 'Tu organización no está activa. Estado: ' . ($this->estado?->value ?? 'NULL'),
+        };
+    }
+
+    // --- Notifiable ---
+    public function getNotifiableEmail(): string
+    {
+        return (string) $this->email;
+    }
 }
