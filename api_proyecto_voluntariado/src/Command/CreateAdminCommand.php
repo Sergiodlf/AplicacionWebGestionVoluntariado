@@ -3,8 +3,8 @@
 namespace App\Command;
 
 use App\Entity\Administrador;
+use App\Service\FirebaseServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Kreait\Firebase\Contract\Auth;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,7 +21,7 @@ class CreateAdminCommand extends Command
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private Auth $firebaseAuth
+        private FirebaseServiceInterface $firebaseService
     ) {
         parent::__construct();
     }
@@ -42,29 +42,12 @@ class CreateAdminCommand extends Command
         $password = $input->getArgument('password');
         $nombre = $input->getArgument('nombre');
 
-        // 1. Create User in Firebase
+        // 1. Create User in Firebase (Centralized)
         $io->section('Creating Firebase User...');
         try {
-            // Check if user exists
-            try {
-                $firebaseUser = $this->firebaseAuth->getUserByEmail($email);
-                $io->note('User already exists in Firebase. Updating claims...');
-            } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
-                // Create user
-                $userProperties = [
-                    'email' => $email,
-                    'emailVerified' => true,
-                    'password' => $password,
-                    'displayName' => $nombre,
-                    'disabled' => false,
-                ];
-                $firebaseUser = $this->firebaseAuth->createUser($userProperties);
-                $io->success('Firebase user created: ' . $firebaseUser->uid);
-            }
-
-            // Set Admin Claims
-            $this->firebaseAuth->setCustomUserClaims($firebaseUser->uid, ['rol' => 'admin', 'admin' => true]);
-            $io->success('Firebase claims set (rol: admin).');
+            $uid = $this->firebaseService->createUser($email, $password, $nombre);
+            $this->firebaseService->setUserRole($uid, 'admin');
+            $io->success('Firebase user and claims processed (rol: admin).');
 
         } catch (\Exception $e) {
             $io->error('Firebase Error: ' . $e->getMessage());

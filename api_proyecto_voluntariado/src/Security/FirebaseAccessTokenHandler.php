@@ -2,8 +2,6 @@
 
 namespace App\Security;
 
-use Kreait\Firebase\Contract\Auth;
-use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
 use Symfony\Component\Security\Http\AccessToken\AccessTokenHandlerInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;

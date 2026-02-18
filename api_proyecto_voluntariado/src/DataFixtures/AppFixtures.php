@@ -13,14 +13,14 @@ use App\Entity\Habilidad;
 use App\Entity\Interes;
 use App\Entity\Necesidad;
 use App\Entity\Actividad;
+use App\Service\FirebaseServiceInterface;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use Kreait\Firebase\Contract\Auth;
 
 class AppFixtures extends Fixture
 {
     public function __construct(
-        private Auth $firebaseAuth
+        private FirebaseServiceInterface $firebaseService
     ) {}
 
     public function load(ObjectManager $manager): void
@@ -294,24 +294,7 @@ class AppFixtures extends Fixture
     private function upsertFirebaseUser(string $email, string $password, string $displayName, array $claims): void
     {
         try {
-            try {
-                $user = $this->firebaseAuth->getUserByEmail($email);
-                $uid = $user->uid;
-                $this->firebaseAuth->updateUser($uid, [
-                    'password' => $password,
-                    'emailVerified' => true,
-                    'displayName' => $displayName
-                ]);
-            } catch (\Kreait\Firebase\Exception\Auth\UserNotFound $e) {
-                $user = $this->firebaseAuth->createUser([
-                    'email' => $email,
-                    'password' => $password,
-                    'emailVerified' => true,
-                    'displayName' => $displayName
-                ]);
-                $uid = $user->uid;
-            }
-            $this->firebaseAuth->setCustomUserClaims($uid, $claims);
+            $this->firebaseService->syncUser($email, $password, $displayName, $claims);
         } catch (\Throwable $e) {
             echo "   ⚠️ Firebase Warning ($email): " . $e->getMessage() . "\n";
         }

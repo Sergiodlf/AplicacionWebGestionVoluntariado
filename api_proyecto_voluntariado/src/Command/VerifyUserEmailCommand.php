@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use Kreait\Firebase\Contract\Auth;
+use App\Service\FirebaseServiceInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,7 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class VerifyUserEmailCommand extends Command
 {
     public function __construct(
-        private Auth $firebaseAuth
+        private FirebaseServiceInterface $firebaseService
     ) {
         parent::__construct();
     }
@@ -35,13 +35,10 @@ class VerifyUserEmailCommand extends Command
         $email = $input->getArgument('email');
 
         try {
-            $user = $this->firebaseAuth->getUserByEmail($email);
-            
-            $this->firebaseAuth->updateUser($user->uid, [
-                'emailVerified' => true
-            ]);
+            $uid = $this->firebaseService->getUidByEmail($email);
+            $this->firebaseService->verifyEmail($uid);
 
-            $io->success(sprintf('User "%s" (UID: %s) has been verified successfully.', $email, $user->uid));
+            $io->success(sprintf('User "%s" (UID: %s) has been verified successfully.', $email, $uid));
 
             return Command::SUCCESS;
 

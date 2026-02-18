@@ -13,16 +13,17 @@ class OrganizationService implements OrganizationServiceInterface
     private $entityManager;
 
     private EmailServiceInterface $emailService;
+    private FirebaseServiceInterface $firebaseService;
     private NotificationManagerInterface $notificationManager;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
-        \Kreait\Firebase\Contract\Auth $firebaseAuth,
+        FirebaseServiceInterface $firebaseService,
         EmailServiceInterface $emailService,
         NotificationManagerInterface $notificationManager
     ) {
         $this->entityManager = $entityManager;
-        $this->firebaseAuth = $firebaseAuth;
+        $this->firebaseService = $firebaseService;
         $this->emailService = $emailService;
         $this->notificationManager = $notificationManager;
     }
@@ -91,42 +92,23 @@ class OrganizationService implements OrganizationServiceInterface
     public function registerOrganization(RegistroOrganizacionDTO $dto, bool $isAdmin = false): Organizacion
     {
 
-        // 1. Create User in Firebase (If not exists)
+        // 1. Create User in Firebase (Centralized via FirebaseService)
         try {
-            $userProperties = [
-                'email' => $dto->email,
-                'emailVerified' => false,
-                'password' => $dto->password,
-                'displayName' => $dto->nombre,
-                'disabled' => false,
-            ];
-            
+            $uid = $this->firebaseService->createUser($dto->email, $dto->password, $dto->nombre);
+            $this->firebaseService->setUserRole($uid, 'organizacion');
+
             try {
-                $createdUser = $this->firebaseAuth->createUser($userProperties);
-                $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'organizacion']);
-
-                try {
-                    $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
-                    $this->emailService->sendEmail(
-                        $dto->email,
-                        'Verifica tu correo - Gestión Voluntariado',
-                        sprintf('<p>Hola %s,</p><p>Gracias por registrar tu organización. Por favor verifica tu correo en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
-                    );
-                } catch (\Throwable $e) {
-                    // El email de verificación no es crítico
-                }
-
-            } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
-                // If exists, just check/set claims
-                try {
-                    $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
-                    $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'organizacion']);
-                } catch (\Exception $ex) {
-                    // Ignorar si no se pueden asignar claims
-                }
+                $link = $this->firebaseService->getEmailVerificationLink($dto->email);
+                $this->emailService->sendEmail(
+                    $dto->email,
+                    'Verifica tu correo - Gestión Voluntariado',
+                    sprintf('<p>Hola %s,</p><p>Gracias por registrar tu organización. Por favor verifica tu correo en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
+                );
+            } catch (\Throwable $e) {
+                // El email de verificación no es crítico
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw $e;
         }
 

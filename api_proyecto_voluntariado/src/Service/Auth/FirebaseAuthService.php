@@ -2,28 +2,25 @@
 
 namespace App\Service\Auth;
 
-use Kreait\Firebase\Contract\Auth;
-use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use App\Service\FirebaseServiceInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class FirebaseAuthService implements AuthServiceInterface
 {
     public function __construct(
-        private Auth $firebaseAuth,
+        private FirebaseServiceInterface $firebaseService,
         private HttpClientInterface $httpClient
     ) {}
 
     public function verifyToken(string $token): AuthUserDTO
     {
         try {
-            $verifiedIdToken = $this->firebaseAuth->verifyIdToken($token);
-            $claims = $verifiedIdToken->claims();
+            $claims = $this->firebaseService->verifyIdToken($token);
             
-            $uid = $claims->get('sub');
-            $email = (string) $claims->get('email');
-            $emailVerified = (bool) $claims->get('email_verified');
+            $uid = $claims['sub'] ?? null;
+            $email = $claims['email'] ?? null;
+            $emailVerified = $claims['email_verified'] ?? false;
             
             if (empty($email)) {
                 throw new CustomUserMessageAuthenticationException('The access token does not contain an email claim.');
@@ -31,15 +28,13 @@ class FirebaseAuthService implements AuthServiceInterface
 
             return new AuthUserDTO(
                 uid: $uid,
-                email: $email,
-                emailVerified: $emailVerified,
-                claims: $claims->all()
+                email: (string) $email,
+                emailVerified: (bool) $emailVerified,
+                claims: $claims
             );
 
-        } catch (FailedToVerifyToken $e) {
-            throw new CustomUserMessageAuthenticationException('Invalid or expired Firebase token: ' . $e->getMessage());
         } catch (\Throwable $e) {
-            throw new CustomUserMessageAuthenticationException('Authentication error: ' . $e->getMessage());
+            throw new CustomUserMessageAuthenticationException($e->getMessage());
         }
     }
 
@@ -64,14 +59,8 @@ class FirebaseAuthService implements AuthServiceInterface
 
         $firebaseData = $response->toArray();
 
-        // Get email verification status
-        $emailVerified = false;
-        try {
-            $firebaseUser = $this->firebaseAuth->getUser($firebaseData['localId']);
-            $emailVerified = $firebaseUser->emailVerified;
-        } catch (\Exception $e) {
-            // Don't break login if verification check fails
-        }
+        // Get email verification status via centralized service
+        $emailVerified = $this->firebaseService->isEmailVerified($firebaseData['localId']);
 
         return new AuthResultDTO(
             idToken: $firebaseData['idToken'],
@@ -85,6 +74,6 @@ class FirebaseAuthService implements AuthServiceInterface
 
     public function getPasswordResetLink(string $email): string
     {
-        return $this->firebaseAuth->getPasswordResetLink($email);
+        return $this->firebaseService->getPasswordResetLink($email);
     }
 }
