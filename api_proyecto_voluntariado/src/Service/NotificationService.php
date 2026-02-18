@@ -145,4 +145,27 @@ class NotificationService
             ]);
         }
     }
+    public function getNotificationsForUser(object $user): array
+    {
+        $repo = $this->em->getRepository(\App\Entity\Notificacion::class);
+        
+        if ($user instanceof \App\Entity\Voluntario) {
+            return $repo->findByVoluntario($user->getDni());
+        } elseif ($user instanceof \App\Entity\Organizacion) {
+            return $repo->findByOrganizacion($user->getCif());
+        }
+        
+        return [];
+    }
+
+    public function getNotificationById(int $id): ?\App\Entity\Notificacion
+    {
+        return $this->em->getRepository(\App\Entity\Notificacion::class)->find($id);
+    }
+
+    public function markAsRead(\App\Entity\Notificacion $notificacion): void
+    {
+        $notificacion->setLeido(true);
+        $this->em->flush();
+    }
 }

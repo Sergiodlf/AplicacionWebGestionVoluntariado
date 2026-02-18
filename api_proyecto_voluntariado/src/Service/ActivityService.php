@@ -26,6 +26,14 @@ class ActivityService
     }
 
     /**
+     * Finds an activity by ID.
+     */
+    public function getActivityById(int $id): ?Actividad
+    {
+        return $this->entityManager->getRepository(Actividad::class)->find($id);
+    }
+
+    /**
      * Checks if an activity with the same name already exists for an organization.
      */
     public function activityExists(string $nombre, Organizacion $organizacion): bool
@@ -320,5 +328,39 @@ class ActivityService
 
         $this->entityManager->flush();
         return $actividad;
+    }
+    public function flush(): void
+    {
+        $this->entityManager->flush();
+    }
+
+    public function countVisible(): int
+    {
+        $now = new \DateTime();
+        return $this->entityManager->getRepository(Actividad::class)->createQueryBuilder('a')
+            ->select('count(a.codActividad)')
+            ->where('a.estadoAprobacion = :aceptada')
+            ->andWhere('a.estado != :cancelado')
+            ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
+            ->setParameter('aceptada', 'ACEPTADA')
+            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countPending(): int
+    {
+        $now = new \DateTime();
+        return $this->entityManager->getRepository(Actividad::class)->createQueryBuilder('a')
+            ->select('count(a.codActividad)')
+            ->where('a.estadoAprobacion = :pendiente')
+            ->andWhere('a.estado != :cancelado')
+            ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
+            ->setParameter('pendiente', 'PENDIENTE')
+            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }
