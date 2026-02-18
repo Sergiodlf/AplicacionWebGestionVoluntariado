@@ -22,6 +22,6 @@ export class ActividadService {
 
   // Nuevo método para actualizar estado
   actualizarEstado(id: number, estado: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/estado`, { estado });
+    return this.http.patch(`${this.apiUrl}/${id}`, { estado });
   }
 }

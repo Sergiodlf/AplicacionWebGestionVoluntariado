@@ -49,8 +49,8 @@ class NotificationController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/{id}/read', name: 'mark_read', methods: ['PATCH'])]
-    public function markRead(int $id): JsonResponse
+    #[Route('/{id}', name: 'patch', methods: ['PATCH'])]
+    public function update(int $id, Request $request): JsonResponse
     {
         $notificacion = $this->notificationService->getNotificationById($id);
         if (!$notificacion) {
@@ -74,12 +74,16 @@ class NotificationController extends AbstractController
             return $this->json(['error' => 'No tienes permiso para marcar esta notificación'], 403);
         }
 
-        try {
-            $this->notificationService->markAsRead($notificacion);
-        } catch (\Exception $e) {
-            return $this->json(['error' => 'Error al marcar como leída'], 500);
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['leido']) && $data['leido'] === true) {
+            try {
+                $this->notificationService->markAsRead($notificacion);
+            } catch (\Exception $e) {
+                return $this->json(['error' => 'Error al marcar como leída'], 500);
+            }
         }
 
-        return $this->json(['message' => 'Notificación marcada como leída']);
+        return $this->json(['message' => 'Notificación actualizada correctamente']);
     }
 }
