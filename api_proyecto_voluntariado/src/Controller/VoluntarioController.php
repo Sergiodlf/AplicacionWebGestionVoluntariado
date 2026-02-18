@@ -43,7 +43,7 @@ class VoluntarioController extends AbstractController
                 'habilidades' => $voluntario->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
                 'intereses' => $voluntario->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
                 'idiomas' => $voluntario->getIdiomas(),
-                'estado_voluntario' => $voluntario->getEstadoVoluntario(),
+                'estado_voluntario' => $voluntario->getEstadoVoluntario()?->value,
                 'disponibilidad' => $voluntario->getDisponibilidad(),
                 'ciclo' => $voluntario->getCiclo() ? (string)$voluntario->getCiclo() : null,
                 
@@ -52,7 +52,7 @@ class VoluntarioController extends AbstractController
                     return [
                         'id_inscripcion' => $inscripcion->getId(),
                         'actividad' => $inscripcion->getActividad() ? $inscripcion->getActividad()->getNombre() : 'Actividad Eliminada',
-                        'estado' => $inscripcion->getEstado(),
+                        'estado' => $inscripcion->getEstado()?->value,
                     ];
                 })->toArray(),
             ];
@@ -76,20 +76,20 @@ class VoluntarioController extends AbstractController
         // 1. Actualizar Estado
         if (isset($data['estado'])) {
              $nuevoEstado = $data['estado'];
-             $estadosPermitidos = ['PENDIENTE', 'ACEPTADO', 'RECHAZADO'];
+             $enumStatus = \App\Enum\VolunteerStatus::tryFrom($nuevoEstado);
              
-             if (!in_array(strtoupper($nuevoEstado), $estadosPermitidos)) {
+             if (!$enumStatus) {
                 return $this->json([
                     'error' => 'Estado inválido',
-                    'permitidos' => $estadosPermitidos
+                    'permitidos' => array_column(\App\Enum\VolunteerStatus::cases(), 'value')
                 ], 400);
             }
-            $this->volunteerService->updateStatus($voluntario, $nuevoEstado);
+            $this->volunteerService->updateStatus($voluntario, $enumStatus);
         }
 
         return $this->json([
             'message' => 'Voluntario actualizado correctamente',
-            'estado' => $voluntario->getEstadoVoluntario()
+            'estado' => $voluntario->getEstadoVoluntario()?->value
         ]);
     }
 
@@ -115,7 +115,7 @@ class VoluntarioController extends AbstractController
             'habilidades' => $voluntario->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
             'intereses' => $voluntario->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
             'idiomas' => $voluntario->getIdiomas(),
-            'estado_voluntario' => $voluntario->getEstadoVoluntario(),
+            'estado_voluntario' => $voluntario->getEstadoVoluntario()?->value,
             'disponibilidad' => $voluntario->getDisponibilidad(),
             'ciclo' => $voluntario->getCiclo() ? (string)$voluntario->getCiclo() : null
         ];

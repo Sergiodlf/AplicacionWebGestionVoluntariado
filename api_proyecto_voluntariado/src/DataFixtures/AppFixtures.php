@@ -2,6 +2,8 @@
 
 namespace App\DataFixtures;
 
+use App\Enum\VolunteerStatus;
+use App\Enum\OrganizationStatus;
 use App\Entity\Ciclo;
 use App\Entity\Organizacion;
 use App\Entity\Voluntario;
@@ -120,7 +122,7 @@ class AppFixtures extends Fixture
             $testVol->setFechaNacimiento(new \DateTime('1995-01-01'));
             $testVol->setExperiencia('Usuario de prueba documentado en el README.');
             $testVol->setCoche(true);
-            $testVol->setEstadoVoluntario('LIBRE');
+            $testVol->setEstadoVoluntario(VolunteerStatus::LIBRE);
             $testVol->setCiclo($ciclos[0]); // DAM
             $testVol->addHabilidad($habilidades[0]);
             $testVol->addInterese($intereses[0]);
@@ -147,7 +149,7 @@ class AppFixtures extends Fixture
             $testOrg->setLocalidad('Pamplona');
             $testOrg->setCp('31000');
             $testOrg->setSector('Social');
-            $testOrg->setEstado('ACEPTADA');
+            $testOrg->setEstado(OrganizationStatus::APROBADO);
             $testOrg->setDescripcion('Organización de prueba documentada en el README.');
             $testOrg->setContacto('600000000');
             
@@ -188,7 +190,7 @@ class AppFixtures extends Fixture
             $vol->setFechaNacimiento(new \DateTime('2000-01-01'));
             $vol->setExperiencia('Usuario de prueba generado via Fixtures.');
             $vol->setCoche(true);
-            $vol->setEstadoVoluntario('ACEPTADO');
+            $vol->setEstadoVoluntario(VolunteerStatus::ACEPTADO);
             $vol->setCiclo($ciclos[array_rand($ciclos)]);
             $vol->addHabilidad($habilidades[array_rand($habilidades)]);
             $vol->addInterese($intereses[array_rand($intereses)]);
@@ -224,7 +226,7 @@ class AppFixtures extends Fixture
             $org->setLocalidad("Pamplona");
             $org->setCp("31000");
             $org->setSector($sectores[$i % count($sectores)]);
-            $org->setEstado('aprobado');
+            $org->setEstado(OrganizationStatus::APROBADO);
             $org->setDescripcion("Labor social enfocada en " . $org->getSector());
             $org->setContacto("600" . str_pad((string)$i, 6, '0', STR_PAD_LEFT));
 

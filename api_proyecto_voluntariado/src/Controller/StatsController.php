@@ -34,25 +34,30 @@ class StatsController extends AbstractController
     public function getGeneralStats(): JsonResponse
     {
         // 2. VOLUNTARIOS (Solo activos - ACEPTADO)
-        $totalVoluntarios = $this->volunteerService->countByStatus('ACEPTADO');
-        $voluntariosPendientes = $this->volunteerService->countByStatus('PENDIENTE');
+        $totalVoluntarios = $this->volunteerService->countByStatus(\App\Enum\VolunteerStatus::ACEPTADO);
+        $voluntariosPendientes = $this->volunteerService->countByStatus(\App\Enum\VolunteerStatus::PENDIENTE);
 
         // 3. ORGANIZACIONES (Solo activas - ACEPTADA)
-        $totalOrganizaciones = $this->organizationService->countByStatus('ACEPTADA');
-        $organizacionesPendientes = $this->organizationService->countByStatus('PENDIENTE');
+        $totalOrganizaciones = $this->organizationService->countByStatus(\App\Enum\OrganizationStatus::APROBADO);
+        $organizacionesPendientes = $this->organizationService->countByStatus(\App\Enum\OrganizationStatus::PENDIENTE);
 
         // 4. ACTIVIDADES (PROJECTS)
-        $totalActividades = $this->activityService->countVisible();
+        $totalActividades = $this->activityService->countVisible(); // Assuming this service is already safe or handles strings
         $actividadesPendientes = $this->activityService->countPending();
 
         // 5. INSCRIPCIONES (MATCHES)
         // Definimos "Matches" como inscripciones exitosas o en proceso
-        $totalMatches = $this->inscripcionService->countByStatus(['CONFIRMADO', 'ACEPTADO', 'EN_CURSO', 'FINALIZADO', 'COMPLETADA']);
+        $totalMatches = $this->inscripcionService->countByStatus([
+            \App\Enum\InscriptionStatus::CONFIRMADO, 
+            \App\Enum\InscriptionStatus::EN_CURSO, 
+            \App\Enum\InscriptionStatus::FINALIZADO, 
+            \App\Enum\InscriptionStatus::COMPLETADA
+        ]);
 
         // 6. DESGLOSE INSCRIPCIONES
-        $inscripcionesCompletadas = $this->inscripcionService->countByStatus(['FINALIZADO', 'COMPLETADA']);
-        $inscripcionesPendientes = $this->inscripcionService->countByStatus('PENDIENTE');
-        $inscripcionesAceptadas = $this->inscripcionService->countByStatus(['CONFIRMADO', 'ACEPTADO', 'EN_CURSO']);
+        $inscripcionesCompletadas = $this->inscripcionService->countByStatus([\App\Enum\InscriptionStatus::FINALIZADO, \App\Enum\InscriptionStatus::COMPLETADA]);
+        $inscripcionesPendientes = $this->inscripcionService->countByStatus(\App\Enum\InscriptionStatus::PENDIENTE);
+        $inscripcionesAceptadas = $this->inscripcionService->countByStatus([\App\Enum\InscriptionStatus::CONFIRMADO, \App\Enum\InscriptionStatus::EN_CURSO]);
 
         // 7. TOTAL PENDIENTES (General del sistema a revisar por admin)
         // Sumamos voluntarios pendientes + organizaciones pendientes + actividades pendientes

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Organizacion;
 use App\Model\RegistroOrganizacionDTO;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Enum\OrganizationStatus;
 
 
 class OrganizationService
@@ -89,13 +90,6 @@ class OrganizationService
      */
     public function registerOrganization(RegistroOrganizacionDTO $dto, bool $isAdmin = false): Organizacion
     {
-        // ... (existing implementation) ...
-        // For brevity in this replacement, I'm assuming I should overwrite the file or be careful with the replacement.
-        // Actually, since I have to replace a chunk, let me just add the new methods at the end of the class.
-        // But wait, I need to make sure I don't lose the registerOrganization method.
-        // The instruction says "Add missing service methods", so I'll try to append them or replace the end of the class.
-        // Better: I will use a larger context to ensure I don't break registerOrganization.
-        
         // ... Re-implementing registerOrganization to be safe ...
         // 1. Create User in Firebase (If not exists)
         try {
@@ -123,7 +117,13 @@ class OrganizationService
                 }
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
-                throw new \Exception('El correo electrónico ya está registrado en Firebase.');
+                // If exists, just check/set claims
+                try {
+                    $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
+                    $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'organizacion']);
+                } catch (\Exception $ex) {
+                    // Ignore
+                }
             }
 
         } catch (\Exception $e) {
@@ -143,9 +143,9 @@ class OrganizationService
         $org->setSector($dto->sector);
 
         if ($isAdmin) {
-            $org->setEstado('aprobado'); 
+            $org->setEstado(OrganizationStatus::APROBADO); 
         } else {
-             $org->setEstado('pendiente'); 
+             $org->setEstado(OrganizationStatus::PENDIENTE); 
         }
 
         $this->entityManager->persist($org);
@@ -181,11 +181,15 @@ class OrganizationService
         return true;
     }
 
-    public function updateState(string $cif, string $newState): ?Organizacion
+    public function updateState(string $cif, string|OrganizationStatus $newState): ?Organizacion
     {
         $org = $this->getByCif($cif);
         if (!$org) {
             return null;
+        }
+
+        if (is_string($newState)) {
+            $newState = OrganizationStatus::tryFrom(strtolower($newState)) ?? OrganizationStatus::PENDIENTE;
         }
 
         $org->setEstado($newState);
@@ -224,8 +228,11 @@ class OrganizationService
         // Reuse logic
         return $this->updateOrganization($org->getCif(), $data);
     }
-    public function countByStatus(string $status): int
+    public function countByStatus(string|OrganizationStatus $status): int
     {
+        if (is_string($status)) {
+            $status = OrganizationStatus::tryFrom(strtolower($status)) ?? OrganizationStatus::PENDIENTE;
+        }
         return $this->entityManager->getRepository(Organizacion::class)->count(['estado' => $status]);
     }
 }

@@ -24,7 +24,10 @@ class InscripcionRepository extends ServiceEntityRepository
     /**
      * @return Inscripcion[] Returns an array of Inscripcion objects
      */
-    public function findByOrganizacionAndEstado(string $cif, ?string $estado = null): array
+    /**
+     * @return Inscripcion[] Returns an array of Inscripcion objects
+     */
+    public function findByOrganizacionAndEstado(string $cif, string|\App\Enum\InscriptionStatus|null $estado = null): array
     {
         $qb = $this->createQueryBuilder('i')
             ->join('i.actividad', 'a')
@@ -33,6 +36,7 @@ class InscripcionRepository extends ServiceEntityRepository
             ->setParameter('cif', $cif);
 
         if ($estado) {
+            // Automatic Custom Type conversion by Doctrine for Enum
             $qb->andWhere('i.estado = :estado')
                ->setParameter('estado', $estado);
         }
@@ -45,9 +49,15 @@ class InscripcionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('i')
             ->select('count(i.id)')
             ->where('i.actividad = :actividad')
+            // Use Enum cases. Doctrine will convert them to backing values.
             ->andWhere('i.estado IN (:estados)')
             ->setParameter('actividad', $actividad)
-            ->setParameter('estados', ['PENDIENTE', 'CONFIRMADO', 'CONFIRMADA', 'ACEPTADA', 'EN_CURSO', 'EN CURSO']) // Maintain compatibility with legacy strings for now
+            ->setParameter('estados', [
+                \App\Enum\InscriptionStatus::PENDIENTE, 
+                \App\Enum\InscriptionStatus::CONFIRMADO, 
+                \App\Enum\InscriptionStatus::EN_CURSO, 
+                \App\Enum\InscriptionStatus::COMPLETADA
+            ]) 
             ->getQuery()
             ->getSingleScalarResult();
     }

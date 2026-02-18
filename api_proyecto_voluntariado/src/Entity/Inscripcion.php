@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\InscripcionRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Enum\InscriptionStatus;
 
 #[ORM\Entity(repositoryClass: InscripcionRepository::class)]
 #[ORM\Table(name: 'INSCRIPCIONES')]
@@ -23,8 +24,8 @@ class Inscripcion
     #[ORM\JoinColumn(name: 'CODACTIVIDAD', referencedColumnName: 'CODACTIVIDAD', nullable: false, columnDefinition: 'SMALLINT')]
     private ?Actividad $actividad = null;
 
-    #[ORM\Column(name: 'ESTADO', length: 20)]
-    private ?string $estado = 'PENDIENTE';
+    #[ORM\Column(name: 'ESTADO', length: 20, enumType: InscriptionStatus::class)]
+    private ?InscriptionStatus $estado = InscriptionStatus::PENDIENTE;
 
     public function getId(): ?int
     {
@@ -53,12 +54,12 @@ class Inscripcion
         return $this;
     }
 
-    public function getEstado(): ?string
+    public function getEstado(): ?InscriptionStatus
     {
         return $this->estado;
     }
 
-    public function setEstado(string $estado): static
+    public function setEstado(InscriptionStatus $estado): static
     {
         $this->estado = $estado;
         return $this;
