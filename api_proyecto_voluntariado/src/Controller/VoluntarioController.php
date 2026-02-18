@@ -25,6 +25,9 @@ class VoluntarioController extends AbstractController
         if ($estado = $request->query->get('estado')) {
             $criteria['estadoVoluntario'] = $estado;
         }
+        if ($email = $request->query->get('email')) {
+            $criteria['correo'] = $email;
+        }
 
         $voluntarios = $this->volunteerService->getAll($criteria);
 
@@ -91,36 +94,6 @@ class VoluntarioController extends AbstractController
             'message' => 'Voluntario actualizado correctamente',
             'estado' => $voluntario->getEstadoVoluntario()?->value
         ]);
-    }
-
-    #[Route('/email/{email}', name: 'api_voluntarios_get_by_email', methods: ['GET'])]
-    public function getByEmail(string $email): JsonResponse
-    {
-        $voluntario = $this->volunteerService->getByEmail($email);
-
-        if (!$voluntario) {
-            return $this->json(['error' => 'Voluntario no encontrado'], 404);
-        }
-
-        $data = [
-            'dni' => $voluntario->getDni(),
-            'nombre' => $voluntario->getNombre(),
-            'apellido1' => $voluntario->getApellido1(),
-            'apellido2' => $voluntario->getApellido2(),
-            'correo' => $voluntario->getCorreo(),
-            'zona' => $voluntario->getZona(),
-            'fechaNacimiento' => $voluntario->getFechaNacimiento() ? $voluntario->getFechaNacimiento()->format('Y-m-d') : null,
-            'experiencia' => $voluntario->getExperiencia(),
-            'coche' => $voluntario->isCoche(),
-            'habilidades' => $voluntario->getHabilidades()->map(fn($h) => ['id' => $h->getId(), 'nombre' => $h->getNombre()])->toArray(),
-            'intereses' => $voluntario->getIntereses()->map(fn($i) => ['id' => $i->getId(), 'nombre' => $i->getNombre()])->toArray(),
-            'idiomas' => $voluntario->getIdiomas(),
-            'estado_voluntario' => $voluntario->getEstadoVoluntario()?->value,
-            'disponibilidad' => $voluntario->getDisponibilidad(),
-            'ciclo' => $voluntario->getCiclo() ? (string)$voluntario->getCiclo() : null
-        ];
-
-        return $this->json($data);
     }
 
     #[Route('/{dni}', name: 'api_voluntarios_update', methods: ['PUT'])]
