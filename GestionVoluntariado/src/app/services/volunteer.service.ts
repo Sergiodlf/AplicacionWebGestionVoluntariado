@@ -36,7 +36,6 @@ export class VolunteerService {
   }
 
   updateStatus(dni: string, status: string): Observable<any> {
-    console.log(`Updating status for DNI ${dni} to ${status}. URL: /api/voluntarios/${dni}`);
     return this.http.patch(`/api/voluntarios/${dni}`, { estado: status });
   }
 

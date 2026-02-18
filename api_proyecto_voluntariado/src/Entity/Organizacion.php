@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use Symfony\Component\Serializer\Annotation\Groups; // 👈 Importación esencial
+use Symfony\Component\Serializer\Annotation\Groups;
 use App\Repository\OrganizacionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -31,7 +31,7 @@ class Organizacion implements UserInterface
     #[Assert\NotBlank]
     private ?string $nombre = null;
 
-    // Usamos columnDefinition para evitar que intente cambiar VARCHAR a NVARCHAR
+    // VARCHAR explícito para evitar migraciones a NVARCHAR en SQL Server
     #[ORM\Column(name: 'EMAIL', length: 100, unique: true, columnDefinition: 'VARCHAR(100) NOT NULL UNIQUE')]
     #[Groups(['org:read', 'org:write'])]
     #[Assert\NotBlank]
@@ -44,7 +44,7 @@ class Organizacion implements UserInterface
     #[Groups(['org:read', 'org:write'])]
     private ?string $sector = null;
 
-    // Quitamos nullable: true porque en SQL es NOT NULL
+
     #[ORM\Column(name: 'DIRECCION', length: 40)]
     #[Groups(['org:read', 'org:write'])]
     #[Assert\NotBlank]
@@ -55,7 +55,7 @@ class Organizacion implements UserInterface
     #[Assert\NotBlank]
     private ?string $localidad = null;
 
-    // MARTILLAZO AQUÍ: Definimos CHAR(5) explícitamente para que no choque con la Constraint
+    // CHAR(5) explícito para coincidir con la constraint de la BBDD
     #[ORM\Column(name: 'CP', type: Types::STRING, length: 5, columnDefinition: 'CHAR(5) NOT NULL')] 
     #[Groups(['org:read', 'org:write'])]
     #[Assert\NotBlank]
@@ -89,9 +89,8 @@ class Organizacion implements UserInterface
         $this->actividades = new ArrayCollection();
     }
 
-    // ==========================================
-    // MÉTODOS DE SEGURIDAD
-    // ==========================================
+    // --- Métodos de seguridad ---
+
 
     public function getUserIdentifier(): string
     {
@@ -110,9 +109,8 @@ class Organizacion implements UserInterface
         // Limpia datos sensibles después de la autenticación si es necesario
     }
 
-    // ==========================================
-    // GETTERS Y SETTERS
-    // ==========================================
+    // --- Getters y Setters ---
+
 
     public function getCif(): ?string
     {

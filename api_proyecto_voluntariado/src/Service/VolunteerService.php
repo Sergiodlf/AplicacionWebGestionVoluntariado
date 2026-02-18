@@ -105,8 +105,7 @@ class VolunteerService
      */
     public function registerVolunteer(RegistroVoluntarioDTO $dto, bool $isAdmin = false): Voluntario
     {
-        error_log('Registering volunteer: ' . $dto->email);
-        
+
         // 1. Create User in Firebase (If not exists)
         try {
             $userProperties = [
@@ -118,14 +117,9 @@ class VolunteerService
             ];
             
             try {
-                // Attempt creation
                 $createdUser = $this->firebaseAuth->createUser($userProperties);
-                error_log("Firebase user created: " . $createdUser->uid);
-                
-                // Set custom claims (rol: voluntario)
                 $this->firebaseAuth->setCustomUserClaims($createdUser->uid, ['rol' => 'voluntario']);
 
-                // --- NEW: SEND VERIFICATION EMAIL ---
                 try {
                     $link = $this->firebaseAuth->getEmailVerificationLink($dto->email);
                     $this->notificationService->sendEmail(
@@ -134,20 +128,15 @@ class VolunteerService
                         sprintf('<p>Hola %s,</p><p>Para activar tu cuenta, por favor verifica tu correo haciendo clic en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
                     );
                 } catch (\Throwable $e) {
-                    error_log("Error sending verification email: " . $e->getMessage());
+                    // El email de verificación no es crítico, no interrumpir el flujo
                 }
-                // ------------------------------------
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
-                // Si el email ya existe en Firebase, recuperamos el usuario para asignarle claims
                 $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
                 $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'voluntario']);
             }
 
         } catch (\Exception $e) {
-            error_log("Error creating Firebase user: " . $e->getMessage());
-            // Depending on requirements, we might want to stop here.
-            // But if it's a "weak password" error from Firebase, we should probably return it.
             throw $e;
         }
 
@@ -191,7 +180,7 @@ class VolunteerService
             if ($cicloEntity) {
                 $voluntario->setCiclo($cicloEntity);
             } else {
-                error_log("Ciclo not found: " . print_r($cicloData, true));
+                // Ciclo no encontrado, se ignora
             }
         }
         

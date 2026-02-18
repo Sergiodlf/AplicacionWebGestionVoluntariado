@@ -70,8 +70,8 @@ export class OrganizationService {
     // return this.http.delete(`${this.apiUrl}/${cif}`);
 
     // O si quieres cambiar el estado a "Rechazado":
-     const updateData = { estado: 'rechazado' };
-     return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
+    const updateData = { estado: 'rechazado' };
+    return this.http.patch(`${this.apiUrl}/${cif}`, updateData);
   }
 
   /**
@@ -93,7 +93,6 @@ export class OrganizationService {
 
   getProfile(): Observable<Organization> {
     return this.http.get<any>('/api/auth/profile').pipe(
-      tap(response => console.log('Organization Profile:', response)),
       map(response => response.datos as Organization)
     );
   }

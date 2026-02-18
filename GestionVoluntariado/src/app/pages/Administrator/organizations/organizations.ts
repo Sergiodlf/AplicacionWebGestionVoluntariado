@@ -161,7 +161,6 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   // LÓGICA DE INTERFAZ Y ACCIONES //
 
   onTabChange(tab: 'left' | 'middle' | 'right') {
-    console.log('Tab changed to:', tab);
     this.activeTab = tab;
     // Map status-toggle options to our currentTab ('pending' | 'approved')
     if (tab === 'right') {
@@ -214,7 +213,6 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   }
 
   onFormSubmit(data: Organization): void {
-    console.log('Organización creada y recibida:', data);
     this.closeModal();
     this.organizationService.notifyOrganizationUpdate();
   }

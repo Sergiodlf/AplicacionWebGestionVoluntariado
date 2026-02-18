@@ -12,19 +12,19 @@ class OrganizationService
 {
     private $entityManager;
 
-    private $notificationService; // NEW
+    private $notificationService;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         \Kreait\Firebase\Contract\Auth $firebaseAuth,
-        NotificationService $notificationService // INJECTED
+        NotificationService $notificationService
     ) {
         $this->entityManager = $entityManager;
         $this->firebaseAuth = $firebaseAuth;
         $this->notificationService = $notificationService;
     }
 
-    // ... checkDuplicates and validateDTO remain unchanged ...
+
 
     public function checkDuplicates(string $cif, string $email): ?string
     {
@@ -48,7 +48,7 @@ class OrganizationService
 
     private function isValidCif(string $cif): bool
     {
-        // ... (Keep existing implementation logic) ...
+
          $cif = strtoupper(trim($cif));
         if (!preg_match('/^[ABCDEFGHJKLMNPQRSUVW][0-9]{7}[0-9A-J]$/', $cif)) {
             return false;
@@ -83,14 +83,11 @@ class OrganizationService
 
 
     /**
-     * Registers a new organization.
-     */
-    /**
-     * Registers a new organization.
+     * Registra una nueva organización.
      */
     public function registerOrganization(RegistroOrganizacionDTO $dto, bool $isAdmin = false): Organizacion
     {
-        // ... Re-implementing registerOrganization to be safe ...
+
         // 1. Create User in Firebase (If not exists)
         try {
             $userProperties = [
@@ -113,7 +110,7 @@ class OrganizationService
                         sprintf('<p>Hola %s,</p><p>Gracias por registrar tu organización. Por favor verifica tu correo en el siguiente enlace:</p><p><a href="%s">Verificar Correo</a></p>', $dto->nombre, $link)
                     );
                 } catch (\Throwable $e) {
-                    error_log("Error sending verification email (Org): " . $e->getMessage());
+                    // El email de verificación no es crítico
                 }
 
             } catch (\Kreait\Firebase\Exception\Auth\EmailExists $e) {
@@ -122,12 +119,11 @@ class OrganizationService
                     $existingUser = $this->firebaseAuth->getUserByEmail($dto->email);
                     $this->firebaseAuth->setCustomUserClaims($existingUser->uid, ['rol' => 'organizacion']);
                 } catch (\Exception $ex) {
-                    // Ignore
+                    // Ignorar si no se pueden asignar claims
                 }
             }
 
         } catch (\Exception $e) {
-            error_log("Error creating Firebase user (Org): " . $e->getMessage());
             throw $e;
         }
 
@@ -213,7 +209,7 @@ class OrganizationService
         if (isset($data['descripcion'])) $org->setDescripcion($data['descripcion']);
         if (isset($data['contacto'])) $org->setContacto($data['contacto']);
 
-        // FCM Token (Added support here or separate method? Let's add it here to unify)
+        // FCM Token
         if (isset($data['fcmToken'])) {
             $org->setFcmToken($data['fcmToken']);
         }
@@ -224,8 +220,7 @@ class OrganizationService
 
     public function updateProfile(Organizacion $org, array $data): Organizacion
     {
-        // Wrapper around updateOrganization but accepts Entity directly
-        // Reuse logic
+
         return $this->updateOrganization($org->getCif(), $data);
     }
     public function countByStatus(string|OrganizationStatus $status): int

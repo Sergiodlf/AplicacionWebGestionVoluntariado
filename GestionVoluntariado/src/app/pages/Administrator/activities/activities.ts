@@ -72,7 +72,6 @@ export class ActivitiesComponent implements OnInit {
   }
 
   loadActivities() {
-    console.log('ActivitiesComponent: calling getAllVoluntariados(false, ALL)...');
 
     this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL' }).subscribe({
       next: (allData) => {
@@ -123,8 +122,6 @@ export class ActivitiesComponent implements OnInit {
           .filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'))
           .map(mapActivity);
 
-        console.log('Admin Pending Loaded:', this.pendingOpportunities.length);
-        console.log('Admin Accepted Loaded:', this.acceptedOpportunities.length);
 
         // Populate common list for filtering
         this.volunteeringOpportunities = [...this.pendingOpportunities, ...this.acceptedOpportunities];
@@ -167,7 +164,6 @@ export class ActivitiesComponent implements OnInit {
       this.filters = { ...this.tempFilters, ods: [...this.tempFilters.ods], skills: [...this.tempFilters.skills] };
     }
 
-    console.log('Applying filters:', this.filters, 'Search:', this.searchTerm);
     const sourceList = this.activeTab === 'left' ? this.pendingOpportunities : this.acceptedOpportunities;
 
     this.filteredOpportunities = sourceList.filter(item => {
@@ -263,7 +259,6 @@ export class ActivitiesComponent implements OnInit {
   }
 
   onAction(item: any) {
-    console.log('Action clicked for:', item.title);
     if (item.estado?.toUpperCase() === 'PENDIENTE') {
       this.voluntariadoService.actualizarEstadoActividad(item.id, 'ACEPTADA').subscribe({
         next: () => {

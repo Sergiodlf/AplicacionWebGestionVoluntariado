@@ -86,7 +86,6 @@ export class MisVoluntariadosOrganizacion implements OnInit {
       // Check if we have backup in localStorage to show something while waiting or if auth fails
       const backupCif = localStorage.getItem('user_cif'); // We specifically saved this in AuthService now
       if (backupCif) {
-        console.log('Using backup CIF while waiting for profile...');
         this.currentCif = backupCif;
         this.fetchActivities();
         return;
@@ -97,20 +96,16 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   fetchActivities() {
     if (!this.currentCif) return;
 
-    console.log('Fetching activities for CIF:', this.currentCif);
 
     const pending$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'PENDIENTE');
     const accepted$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'ACEPTADA');
 
     forkJoin([pending$, accepted$]).subscribe({
       next: ([pendingRes, acceptedRes]) => {
-        console.log('RAW Returned Pending:', pendingRes);
-        console.log('RAW Returned Accepted:', acceptedRes);
 
         // Helper to safely check status handling property variations
         const checkApproval = (item: any, expected: string) => {
           const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
-          console.log(`Checking item ${item.nombre} [${item.codActividad}]: Val=${val}, Expected=${expected}, Match=${val === expected}`);
           return val === expected;
         };
 
@@ -119,8 +114,6 @@ export class MisVoluntariadosOrganizacion implements OnInit {
         const pendingResults = pendingRes.filter(i => checkApproval(i, 'PENDIENTE'));
         const acceptedResults = acceptedRes.filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'));
 
-        console.log('Filtered Pending:', pendingResults);
-        console.log('Filtered Accepted:', acceptedResults);
 
         this.countPending = pendingResults.length;
         this.countAccepted = acceptedResults.length;
@@ -247,7 +240,6 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   }
 
   openEditModal(item: any) {
-    console.log('Opening edit modal for:', item);
     this.editingActivity = item;
     this.modalOpen = true;
   }
@@ -266,7 +258,6 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   }
 
   onAction(item: any) {
-    console.log('Action in Mis Voluntariados:', item.title);
   }
 
   onVoluntariadoCreated(newVoluntariado: any) {

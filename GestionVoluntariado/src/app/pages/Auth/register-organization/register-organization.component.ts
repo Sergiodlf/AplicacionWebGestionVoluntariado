@@ -23,7 +23,6 @@ export class RegisterOrganizationComponent {
     ) { }
 
     onRegistrationSuccess(org: any) {
-        console.log('Registrando organización (Backend Direct):', org);
 
         this.authService.isRegistrationInProgress = true;
 
