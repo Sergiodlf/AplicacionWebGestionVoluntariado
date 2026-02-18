@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: API Plataforma de Voluntariado
   description: API Backend para la gestión de voluntarios, organizaciones y actividades solidarias.
-  version: 1.0.0
+  version: 2.0.0
 servers:
   - url: http://localhost:8000/api
     description: Servidor Local Symfony
@@ -12,23 +12,175 @@ paths:
   # AUTENTICACIÓN Y REGISTRO
   # ==========================================
 
-  /auth/profile:
+  /auth/register/voluntario:
     post:
       tags:
         - Autenticación
-      summary: Obtener perfil (Token o Email)
-      security:
-        - bearerAuth: []
-      description: Recupera el perfil del usuario autenticado vía Token (recomendado) o por Email en body.
+      summary: Registrar nuevo voluntario
+      description: Crea un voluntario con perfil completo (habilidades, disponibilidad, etc.)
       requestBody:
-        required: false
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoluntarioRegistro"
+      responses:
+        "201":
+          description: Voluntario creado correctamente
+        "400":
+          description: Datos inválidos o contraseña demasiado corta
+        "409":
+          description: El DNI o Correo ya existen
+
+  /auth/register/organizacion:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar nueva organización
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizacionRegistro"
+      responses:
+        "201":
+          description: Organización creada correctamente
+        "400":
+          description: Datos inválidos o campos obligatorios faltantes
+        "409":
+          description: El CIF o Email ya existen
+
+  /auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Login unificado (proxy Firebase)
+      description: Autentica al usuario contra Firebase y valida su estado en la base de datos local.
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
+              required: [email, password]
               properties:
                 email:
                   type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Login correcto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                    description: Firebase ID Token
+                  refreshToken:
+                    type: string
+                  expiresIn:
+                    type: string
+                  localId:
+                    type: string
+                  email:
+                    type: string
+                  emailVerified:
+                    type: boolean
+                  rol:
+                    type: string
+                    enum: [admin, voluntario, organizacion]
+        "400":
+          description: Email y contraseña requeridos
+        "401":
+          description: Credenciales inválidas
+        "403":
+          description: Cuenta pendiente, rechazada o inactiva
+        "404":
+          description: Usuario no encontrado en base de datos local
+
+  /auth/login/google:
+    post:
+      tags:
+        - Autenticación
+      summary: Login con Google (Firebase Token)
+      description: Verifica un token de Google/Firebase y devuelve sesión si el usuario existe localmente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Firebase ID Token de Google Sign-In
+      responses:
+        "200":
+          description: Login correcto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  token:
+                    type: string
+                  email:
+                    type: string
+                  emailVerified:
+                    type: boolean
+                  rol:
+                    type: string
+        "400":
+          description: Token requerido o email inválido
+        "401":
+          description: Token inválido o expirado
+        "404":
+          description: No existe cuenta vinculada a este correo
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Autenticación
+      summary: Recuperar contraseña
+      description: Envía un email con enlace de recuperación de contraseña vía Firebase.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Si el correo existe, se ha enviado un enlace de recuperación
+        "400":
+          description: Email es obligatorio
+        "500":
+          description: Error al procesar la solicitud
+
+  /auth/profile:
+    get:
+      tags:
+        - Autenticación
+      summary: Obtener perfil del usuario autenticado
+      security:
+        - bearerAuth: []
+      description: Recupera el perfil del usuario autenticado vía Token.
       responses:
         "200":
           description: Perfil del usuario
@@ -39,12 +191,13 @@ paths:
                 properties:
                   tipo:
                     type: string
+                    enum: [admin, voluntario, organizacion]
                   datos:
                     type: object
         "401":
-          description: No autorizado
-        "404":
-          description: Usuario no encontrado
+          description: No autorizado o token inválido
+        "500":
+          description: Tipo de usuario desconocido
     put:
       tags:
         - Autenticación
@@ -70,40 +223,120 @@ paths:
         "500":
           description: Error del servidor
 
-  /auth/register/voluntario:
-    post:
-      tags:
-        - Autenticación
-      summary: Registrar nuevo voluntario
-      description: Crea un voluntario con perfil completo (habilidades, disponibilidad, etc.)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VoluntarioRegistro"
-      responses:
-        "201":
-          description: Voluntario creado correctamente
-        "409":
-          description: El DNI o Correo ya existen
+  # ==========================================
+  # VOLUNTARIOS
+  # ==========================================
 
-  /auth/register/organizacion:
-    post:
+  /voluntarios:
+    get:
       tags:
-        - Autenticación
-      summary: Registrar nueva organización
+        - Voluntarios
+      summary: Listar todos los voluntarios
+      description: Devuelve la lista completa de voluntarios registrados. Se puede filtrar por estado o buscar por email.
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [PENDIENTE, ACEPTADO, RECHAZADO, LIBRE]
+          required: false
+          description: Filtrar voluntarios por su estado en la plataforma.
+        - in: query
+          name: email
+          schema:
+            type: string
+          required: false
+          description: Buscar voluntario por email exacto.
+      responses:
+        "200":
+          description: Lista recuperada con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VoluntarioDetalle"
+
+  /voluntarios/{dni}:
+    patch:
+      tags:
+        - Voluntarios
+      summary: Actualizar estado del voluntario
+      description: Cambia el estado del voluntario en la plataforma (PENDIENTE, ACEPTADO, RECHAZADO, LIBRE).
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OrganizacionRegistro"
+              type: object
+              required: [estado]
+              properties:
+                estado:
+                  type: string
+                  enum: [PENDIENTE, ACEPTADO, RECHAZADO, LIBRE]
       responses:
-        "201":
-          description: Organización creada correctamente
-        "409":
-          description: El CIF o Email ya existen
+        "200":
+          description: Voluntario actualizado correctamente
+          content:
+            application/json:
+              example:
+                message: "Voluntario actualizado correctamente"
+                estado: "ACEPTADO"
+        "400":
+          description: Estado inválido
+        "404":
+          description: Voluntario no encontrado
+    put:
+      tags:
+        - Voluntarios
+      summary: Actualizar perfil completo de voluntario
+      description: Actualiza todos los datos editables de un voluntario por su DNI.
+      parameters:
+        - name: dni
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                zona:
+                  type: string
+                experiencia:
+                  type: string
+                coche:
+                  type: boolean
+                habilidades:
+                  type: array
+                  items:
+                    type: integer
+                intereses:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          description: Voluntario actualizado correctamente
+        "404":
+          description: Voluntario no encontrado
+        "500":
+          description: Error al actualizar
+
+  # ==========================================
+  # ORGANIZACIONES
+  # ==========================================
 
   /organizations:
     get:
@@ -131,7 +364,7 @@ paths:
     post:
       tags:
         - Organizaciones
-      summary: Registrar nueva organización
+      summary: Registrar nueva organización (vía admin)
       description: Crea una nueva organización en la plataforma.
       requestBody:
         required: true
@@ -194,6 +427,36 @@ paths:
                 $ref: "#/components/schemas/OrganizacionDetalle"
         "404":
           description: Organización no encontrada
+    patch:
+      tags:
+        - Organizaciones
+      summary: Actualizar estado u otros campos parciales de una organización
+      description: Permite cambiar el estado (pendiente, aprobado, rechazado) u otros campos parciales.
+      parameters:
+        - name: cif
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado:
+                  type: string
+                  enum: [pendiente, aprobado, rechazado]
+                fcmToken:
+                  type: string
+      responses:
+        "200":
+          description: Organización actualizada correctamente
+        "400":
+          description: Estado inválido
+        "404":
+          description: Organización no encontrada
     delete:
       tags:
         - Organizaciones
@@ -210,82 +473,20 @@ paths:
         "404":
           description: Organización no encontrada
 
-  /organizations/{cif}/state:
-    patch:
-      tags:
-        - Organizaciones
-      summary: Actualizar estado de una organización
-      description: Permite cambiar el estado (pendiente, aprobado, rechazado) de una organización.
-      parameters:
-        - name: cif
-          in: path
-          required: true
-          description: CIF de la organización
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [estado]
-              properties:
-                estado:
-                  type: string
-                  enum: [pendiente, aprobado, rechazado]
-                  example: "aprobado"
-      responses:
-        "200":
-          description: Estado actualizado correctamente
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OrganizacionDetalle"
-        "400":
-          description: Estado inválido
-        "404":
-          description: Organización no encontrada
-
-  /voluntarios/email/{email}:
-    get:
-      summary: Obtiene los datos de un voluntario por su email.
-      tags:
-        - Voluntarios
-      parameters:
-        - in: path
-          name: email
-          schema:
-            type: string
-          required: true
-          description: Correo electrónico del voluntario
-      responses:
-        "200":
-          description: Datos del voluntario.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VoluntarioDetalle"
-        "404":
-          description: Voluntario no encontrado.
-
   /organizations/by-email:
-    post:
+    get:
       summary: Obtiene una organización por su email.
       tags:
         - Organizaciones
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email]
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: "organizacion@email.com"
+      parameters:
+        - in: query
+          name: email
+          schema:
+            type: string
+            format: email
+          required: true
+          description: Email de la organización a buscar
+          example: "organizacion@email.com"
       responses:
         "200":
           description: Datos de la organización.
@@ -301,37 +502,6 @@ paths:
   # ==========================================
   # ACTIVIDADES
   # ==========================================
-  /actividades/organizacion/{cif}:
-    get:
-      summary: Obtiene las actividades de una organización con sus inscripciones (opcionalmente filtradas).
-      tags:
-        - Actividades
-      parameters:
-        - in: path
-          name: cif
-          schema:
-            type: string
-          required: true
-          description: CIF de la organización
-
-        - in: query
-          name: estadoAprobacion
-          schema:
-            type: string
-            enum: [PENDIENTE, ACEPTADA, RECHAZADA]
-          required: false
-          description: Filtra las actividades por el visto bueno del organizador.
-      responses:
-        "200":
-          description: Lista de actividades con información detallada e inscripciones.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ActividadConInscripciones"
-        "404":
-          description: Organización no encontrada.
 
   /actividades:
     get:
@@ -373,17 +543,16 @@ paths:
         "201":
           description: Actividad creada exitosamente
 
-  /actividades/{codActividad}/inscribir:
-    post:
+  /actividades/{id}/editar:
+    put:
       tags:
         - Actividades
-      summary: Inscribir voluntario en actividad
-      description: Apunta a un voluntario a una actividad específica.
+      summary: Editar una actividad existente
+      description: Actualiza los datos de una actividad existente.
       parameters:
-        - name: codActividad
+        - name: id
           in: path
           required: true
-          description: ID único de la actividad
           schema:
             type: integer
       requestBody:
@@ -391,41 +560,122 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InscripcionRequest"
+              $ref: "#/components/schemas/ActividadCreacion"
       responses:
-        "201":
-          description: Inscripción creada.
+        "200":
+          description: Actividad actualizada correctamente
         "404":
-          description: Actividad o Voluntario no encontrado.
-        "409":
-          description: Ya inscrito.
+          description: Actividad no encontrada
 
-  /actividades/{id}/desinscribir:
-    delete:
+  /actividades/mis-actividades:
+    get:
       tags:
         - Actividades
-      summary: Desinscribirse de una actividad (Smart Unsubscribe)
-      description: Permite al voluntario autenticado desapuntarse de una actividad indicando solo el ID de la actividad. El servidor localiza la inscripción correspondiente.
+      summary: Obtener actividades del usuario autenticado
+      security:
+        - bearerAuth: []
+      description: Devuelve las actividades en las que el voluntario autenticado está inscrito (con estado CONFIRMADO).
+      responses:
+        "200":
+          description: Lista de actividades del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActividadDetalle"
+        "403":
+          description: Solo voluntarios tienen acceso
+
+  /actividades/organizacion/{cif}:
+    get:
+      summary: Obtiene las actividades de una organización (opcionalmente filtradas).
+      tags:
+        - Actividades
+      parameters:
+        - in: path
+          name: cif
+          schema:
+            type: string
+          required: true
+          description: CIF de la organización
+        - in: query
+          name: estadoAprobacion
+          schema:
+            type: string
+            enum: [PENDIENTE, ACEPTADA, RECHAZADA]
+          required: false
+          description: Filtra las actividades por el visto bueno del organizador.
+        - in: query
+          name: estado
+          schema:
+            type: string
+          required: false
+          description: Filtra por estado de ejecución de la actividad.
+      responses:
+        "200":
+          description: Lista de actividades con información detallada.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActividadDetalle"
+        "404":
+          description: Organización no encontrada.
+
+  /actividades/{id}/inscribir:
+    post:
+      tags:
+        - Actividades
+      summary: Inscribirse en una actividad (Smart Subscribe)
+      security:
+        - bearerAuth: []
+      description: El voluntario autenticado se apunta a la actividad indicada.
       parameters:
         - name: id
           in: path
           required: true
-          description: ID de la Actividad
+          description: ID de la actividad
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Inscripción creada.
+        "200":
+          description: Ya estaba inscrito (estado reactivado).
+        "403":
+          description: Solo voluntarios pueden inscribirse.
+        "404":
+          description: Actividad no encontrada.
+    delete:
+      tags:
+        - Actividades
+      summary: Desinscribirse de una actividad (Smart Unsubscribe)
+      security:
+        - bearerAuth: []
+      description: El voluntario autenticado se desapunta de la actividad indicada.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la actividad
           schema:
             type: integer
       responses:
         "200":
           description: Te has desapuntado correctamente
         "403":
-          description: No autorizado (Token inválido)
+          description: No autorizado
         "404":
-          description: Actividad no encontrada o no estás inscrito en ella
+          description: Actividad no encontrada o no estás inscrito
 
-  /actividades/{id}/estado:
+  /actividades/{id}:
     patch:
-      summary: Actualiza el estado de ejecución de una actividad.
       tags:
         - Actividades
+      summary: Actualizar estado de una actividad
+      description: Cambia el estado de ejecución o de aprobación de una actividad.
       parameters:
         - in: path
           name: id
@@ -443,31 +693,67 @@ paths:
               properties:
                 estado:
                   type: string
-                  enum: [PENDIENTE, EN CURSO, FINALIZADO, CANCELADO]
+                  description: "Nuevo estado"
                 tipo:
                   type: string
                   enum: [ejecucion, aprobacion]
-                  description: "Tipo de estado a cambiar (opcional)"
+                  description: "Tipo de estado a cambiar (opcional, por defecto infiere)"
       responses:
         "200":
           description: Estado actualizado.
+          content:
+            application/json:
+              example:
+                message: "Estado actualizado correctamente"
+                campo_actualizado: "estado"
+                valor_nuevo: "EN_CURSO"
         "400":
           description: Estado inválido o faltante.
         "404":
           description: Actividad no encontrada.
+    delete:
+      tags:
+        - Actividades
+      summary: Eliminar o cancelar actividad
+      description: Elimina la actividad si no tiene inscripciones; si las tiene, la cancela.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Actividad eliminada o cancelada
+          content:
+            application/json:
+              example:
+                message: "Actividad eliminada permanentemente."
+                action: "deleted"
+        "404":
+          description: Actividad no encontrada
 
   # ==========================================
   # INSCRIPCIONES
   # ==========================================
+
   /inscripciones:
     get:
       tags:
         - Inscripciones
-      summary: Listar todas las inscripciones pendientes
-      description: Devuelve una lista de todas las inscripciones con estado PENDIENTE en el sistema.
+      summary: Listar todas las inscripciones
+      description: Devuelve una lista de inscripciones, opcionalmente filtrada por estado.
+      parameters:
+        - in: query
+          name: estado
+          schema:
+            type: string
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO, COMPLETADA]
+          required: false
+          description: Filtrar inscripciones por estado.
       responses:
         "200":
-          description: Lista de pendientes recuperada con éxito
+          description: Lista recuperada con éxito
           content:
             application/json:
               schema:
@@ -478,7 +764,7 @@ paths:
       tags:
         - Inscripciones
       summary: Crear una nueva inscripción
-      description: Permite a un voluntario inscribirse en una actividad especificando ambos IDs.
+      description: Permite inscribir a un voluntario en una actividad especificando ambos IDs.
       requestBody:
         required: true
         content:
@@ -488,10 +774,6 @@ paths:
       responses:
         "201":
           description: Inscripción creada correctamente
-          content:
-            application/json:
-              example:
-                message: "Inscripción creada correctamente"
         "400":
           description: Faltan datos o son inválidos
         "404":
@@ -500,27 +782,6 @@ paths:
           description: El voluntario ya está inscrito
 
   /inscripciones/{id}:
-    delete:
-      tags:
-        - Inscripciones
-      summary: Cancelar inscripción
-      description: Elimina una inscripción existente. Solo el voluntario propietario puede realizar esta acción.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID de la inscripción
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Inscripción cancelada correctamente
-        "403":
-          description: No tienes permiso
-        "404":
-          description: Inscripción no encontrada
-
-  /inscripciones/{id}/estado:
     patch:
       tags:
         - Inscripciones
@@ -530,7 +791,6 @@ paths:
         - name: id
           in: path
           required: true
-          description: ID numérico de la inscripción
           schema:
             type: integer
       requestBody:
@@ -551,12 +811,32 @@ paths:
           description: Estado inválido o falta campo
         "404":
           description: Inscripción no encontrada
+    delete:
+      tags:
+        - Inscripciones
+      summary: Cancelar inscripción
+      description: Elimina una inscripción existente. Solo el voluntario propietario puede realizar esta acción.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Inscripción cancelada correctamente
+        "403":
+          description: No tienes permiso
+        "404":
+          description: Inscripción no encontrada
 
   /inscripciones/me:
     get:
       tags:
         - Inscripciones
       summary: Mis Inscripciones (Usa Token)
+      security:
+        - bearerAuth: []
       description: Recupera las inscripciones del voluntario autenticado. Permite filtrar por estado.
       parameters:
         - name: estado
@@ -564,7 +844,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO]
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO, COMPLETADA]
           description: Estado de la inscripción (opcional)
       responses:
         "200":
@@ -575,15 +855,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActividadInscritaDetalle"
-        "401":
-          description: No autenticado
+        "403":
+          description: Solo voluntarios tienen acceso
 
-  /inscripciones/voluntario/{dni}/actividades-aceptadas:
+  /inscripciones/voluntario/{dni}/inscripciones:
     get:
       tags:
         - Inscripciones
-      summary: Listar actividades ACEPTADAS de un voluntario (filtro opcional por estado)
-      description: Recupera actividades donde el voluntario está CONFIRMADO, permitiendo filtrar por el estado de la actividad (PENDIENTE, EN CURSO, FINALIZADO).
+      summary: Listar inscripciones de un voluntario
+      description: Recupera las inscripciones de un voluntario, opcionalmente filtradas por estado de inscripción.
       parameters:
         - name: dni
           in: path
@@ -594,14 +874,13 @@ paths:
         - name: estado
           in: query
           required: false
-          description: Estado de la actividad para filtrar (ej. PENDIENTE, EN CURSO)
+          description: Estado de la inscripción para filtrar
           schema:
             type: string
-            enum: ["PENDIENTE", "EN_CURSO", "FINALIZADO"]
-            example: "PENDIENTE"
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO, COMPLETADA]
       responses:
         "200":
-          description: Lista de actividades filtradas
+          description: Lista de inscripciones
           content:
             application/json:
               schema:
@@ -616,7 +895,7 @@ paths:
       tags:
         - Inscripciones
       summary: Listar inscripciones de actividades de una organización
-      description: Devuelve todas las inscripciones (solicitudes de voluntarios) para las actividades creadas por la organización especificada.
+      description: Devuelve todas las inscripciones para las actividades creadas por la organización especificada.
       parameters:
         - name: cif
           in: path
@@ -630,9 +909,7 @@ paths:
           description: Filtrar por estado de la inscripción
           schema:
             type: string
-            enum:
-              ["PENDIENTE", "CONFIRMADO", "RECHAZADO", "EN_CURSO", "FINALIZADO"]
-            example: "PENDIENTE"
+            enum: [PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO, COMPLETADA]
       responses:
         "200":
           description: Lista de inscripciones recuperada con éxito
@@ -645,131 +922,91 @@ paths:
         "404":
           description: Organización no encontrada
 
-  /voluntarios:
+  # ==========================================
+  # NOTIFICACIONES
+  # ==========================================
+
+  /notificaciones:
     get:
       tags:
-        - Voluntarios
-      summary: Listar todos los voluntarios
-      description: Devuelve la lista completa de voluntarios registrados, opcionalmente filtrada por estado.
-      parameters:
-        - in: query
-          name: estado
-          schema:
-            type: string
-            enum: [PENDIENTE, ACEPTADO, RECHAZADA]
-          required: false
-          description: Filtrar voluntarios por su estado en la plataforma.
+        - Notificaciones
+      summary: Listar notificaciones del usuario autenticado
+      security:
+        - bearerAuth: []
       responses:
         "200":
-          description: Lista recuperada con éxito
+          description: Lista de notificaciones
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/VoluntarioDetalle"
+                  $ref: "#/components/schemas/Notificacion"
+        "401":
+          description: No autenticado
 
-  /voluntarios/{dni}/estado:
+  /notificaciones/{id}:
     patch:
       tags:
-        - Voluntarios
-      summary: Actualizar estado global del voluntario (PLATAFORMA)
-      description: Cambia el estado del voluntario en la plataforma (PENDIENTE, ACEPTADO, RECHAZADO).
+        - Notificaciones
+      summary: Marcar notificación como leída
+      security:
+        - bearerAuth: []
       parameters:
-        - name: dni
+        - name: id
           in: path
           required: true
-          description: DNI del voluntario
           schema:
-            type: string
+            type: integer
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateEstadoRequest"
+              type: object
+              properties:
+                leido:
+                  type: boolean
+                  example: true
       responses:
         "200":
-          description: Estado actualizado correctamente
-          content:
-            application/json:
-              example:
-                message: "Estado del voluntario actualizado correctamente"
-                nuevo_estado: "ACEPTADO"
-        "400":
-          description: Estado inválido
+          description: Notificación actualizada correctamente
+        "403":
+          description: No tienes permiso para marcar esta notificación
         "404":
-          description: Voluntario no encontrado
-
-  # ==========================================
-  # CICLOS FORMATIVOS
-  # ==========================================
-  /ciclos:
-    get:
-      tags:
-        - Ciclos
-      summary: Listar todos los ciclos formativos
-      description: Devuelve la lista de ciclos y cursos disponibles para el registro de voluntarios.
-      responses:
-        "200":
-          description: Lista de ciclos recuperada con éxito
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CicloDetalle"
-
-  # ==========================================
-  # ESTADÍSTICAS (DASHBOARD)
-  # ==========================================
-  /stats/general:
-    get:
-      summary: Obtener estadísticas generales del dashboard
-      tags:
-        - Estadísticas
-      description: Devuelve los contadores de voluntarios, organizaciones y matches para el panel de control.
-      responses:
-        "200":
-          description: Estadísticas recuperadas correctamente
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardStats"
+          description: Notificación no encontrada
 
   # ==========================================
   # CATEGORÍAS (DATA MAESTRA)
   # ==========================================
 
-  /categories/ods:
+  /categories:
     get:
       tags:
         - Categorías
-      summary: Listar ODS
+      summary: Listar categorías por tipo
+      description: Endpoint unificado que devuelve ciclos, ODS, habilidades, intereses o necesidades según el parámetro type.
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [ciclos, ods, habilidades, intereses, necesidades]
+          required: true
+          description: Tipo de categoría a listar.
       responses:
         "200":
-          description: Lista de ODS
+          description: Lista de la categoría solicitada
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ODS"
+                  type: object
+        "400":
+          description: Tipo de categoría no válido o no especificado
 
   /categories/habilidades:
-    get:
-      tags:
-        - Categorías
-      summary: Listar Habilidades
-      responses:
-        "200":
-          description: Lista de Habilidades
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Habilidad"
     post:
       tags:
         - Categorías
@@ -809,19 +1046,6 @@ paths:
           description: Habilidad no encontrada
 
   /categories/intereses:
-    get:
-      tags:
-        - Categorías
-      summary: Listar Intereses
-      responses:
-        "200":
-          description: Lista de Intereses
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Interes"
     post:
       tags:
         - Categorías
@@ -860,20 +1084,23 @@ paths:
         "404":
           description: Interés no encontrado
 
-  /categories/necesidades:
+  # ==========================================
+  # ESTADÍSTICAS (DASHBOARD)
+  # ==========================================
+
+  /stats/general:
     get:
+      summary: Obtener estadísticas generales del dashboard
       tags:
-        - Categorías
-      summary: Listar Necesidades
+        - Estadísticas
+      description: Devuelve los contadores de voluntarios, organizaciones, actividades y matches para el panel de control.
       responses:
         "200":
-          description: Lista de Necesidades
+          description: Estadísticas recuperadas correctamente
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Necesidad"
+                $ref: "#/components/schemas/DashboardStats"
 
 components:
   securitySchemes:
@@ -921,6 +1148,16 @@ components:
           type: integer
         nombre:
           type: string
+
+    CicloDetalle:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: "Desarrollo de Aplicaciones Multiplataforma"
+        curso:
+          type: string
+          example: "2º"
 
     # --- MODELO REGISTRO VOLUNTARIO ---
     VoluntarioRegistro:
@@ -1026,7 +1263,6 @@ components:
             type: string
         estado_voluntario:
           type: string
-          description: "Estado del voluntario en la plataforma (PENDIENTE, ACEPTADO, etc.)"
           example: "PENDIENTE"
         disponibilidad:
           type: array
@@ -1043,7 +1279,6 @@ components:
                 type: integer
               actividad:
                 type: string
-                description: "Nombre de la actividad"
               estado:
                 type: string
 
@@ -1051,17 +1286,7 @@ components:
     OrganizacionRegistro:
       type: object
       required:
-        [
-          cif,
-          nombre,
-          email,
-          password,
-          direccion,
-          localidad,
-          descripcion,
-          cp,
-          contacto,
-        ]
+        [cif, nombre, email, password, direccion, localidad, descripcion, cp, contacto]
       properties:
         cif:
           type: string
@@ -1078,9 +1303,6 @@ components:
         sector:
           type: string
           example: "Salud"
-        zona:
-          type: string
-          example: "Burlada"
         descripcion:
           type: string
           example: "ONG dedicada a..."
@@ -1106,7 +1328,6 @@ components:
           type: string
         estado:
           type: string
-          description: "Estado de la organización (pendiente, aprobado, rechazado)"
           example: "pendiente"
         email:
           type: string
@@ -1123,6 +1344,9 @@ components:
           type: string
         contacto:
           type: string
+        fcmToken:
+          type: string
+          nullable: true
         actividades:
           type: array
           items:
@@ -1200,14 +1424,6 @@ components:
             type: object
 
     # --- MODELO INSCRIPCIÓN ---
-    InscripcionRequest:
-      type: object
-      required: [dni_voluntario]
-      properties:
-        dni_voluntario:
-          type: string
-          example: "12345678Z"
-
     InscripcionNueva:
       type: object
       required: [dniVoluntario, codActividad]
@@ -1218,75 +1434,6 @@ components:
         codActividad:
           type: integer
           example: 1
-
-    InscripcionPendiente:
-      type: object
-      properties:
-        id_inscripcion:
-          type: integer
-        codActividad:
-          type: integer
-        nombre_actividad:
-          type: string
-        fecha_actividad:
-          type: string
-        nombre_organizacion:
-          type: string
-        estado:
-          type: string
-
-    # --- MODELO CICLO ---
-    CicloDetalle:
-      type: object
-      properties:
-        nombre:
-          type: string
-          example: "Desarrollo de Aplicaciones Multiplataforma"
-        curso:
-          type: string
-          example: "2º"
-
-    ActividadInscritaDetalle:
-      type: object
-      properties:
-        id_inscripcion:
-          type: integer
-        estado_inscripcion:
-          type: string
-        codActividad:
-          type: integer
-        nombre:
-          type: string
-        direccion:
-          type: string
-        fechaInicio:
-          type: string
-          format: date-time
-        fechaFin:
-          type: string
-          format: date-time
-        organizacion:
-          type: string
-        estado_actividad:
-          type: string
-        ods:
-          type: array
-          items:
-            type: object
-        habilidades:
-          type: array
-          items:
-            type: object
-
-    # --- MODELO ACTUALIZAR ESTADO ---
-    UpdateEstadoRequest:
-      type: object
-      required: [estado]
-      properties:
-        estado:
-          type: string
-          description: "Nuevo estado (PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO)"
-          example: "CONFIRMADO"
 
     InscripcionDetalle:
       type: object
@@ -1321,9 +1468,63 @@ components:
           type: array
           items:
             type: object
+        necesidades_actividad:
+          type: array
+          items:
+            type: object
+        maxParticipantes:
+          type: integer
         estado:
           type: string
           example: "PENDIENTE"
+
+    ActividadInscritaDetalle:
+      type: object
+      properties:
+        id_inscripcion:
+          type: integer
+        estado_inscripcion:
+          type: string
+        codActividad:
+          type: integer
+        nombre:
+          type: string
+        direccion:
+          type: string
+        fechaInicio:
+          type: string
+          format: date-time
+        fechaFin:
+          type: string
+          format: date-time
+        organizacion:
+          type: string
+        estado_actividad:
+          type: string
+        ods:
+          type: array
+          items:
+            type: object
+        habilidades:
+          type: array
+          items:
+            type: object
+        necesidades:
+          type: array
+          items:
+            type: object
+        maxParticipantes:
+          type: integer
+
+    # --- MODELO ACTUALIZAR ESTADO ---
+    UpdateEstadoRequest:
+      type: object
+      required: [estado]
+      properties:
+        estado:
+          type: string
+          description: "Nuevo estado (PENDIENTE, CONFIRMADO, RECHAZADO, EN_CURSO, FINALIZADO, COMPLETADA)"
+          example: "CONFIRMADO"
 
     InscripcionOrganizacionDetalle:
       type: object
@@ -1338,46 +1539,29 @@ components:
           properties:
             dni:
               type: string
-            telefono:
-              type: string
-              nullable: true
         actividad:
           type: object
           properties:
             codActividad:
               type: integer
-            nombre:
-              type: string
 
-    ActividadConInscripciones:
+    # --- MODELO NOTIFICACIÓN ---
+    Notificacion:
       type: object
       properties:
-        codActividad:
+        id:
           type: integer
-        nombre:
+        titulo:
           type: string
-        descripcion:
+        mensaje:
           type: string
-        estado:
-          type: string
-        estadoAprobacion:
-          type: string
-          example: "PENDIENTE"
-        direccion:
-          type: string
-        fechaInicio:
+        fecha:
           type: string
           format: date-time
-        maxParticipantes:
-          type: integer
-        ods:
-          type: array
-          items:
-            type: object
-        habilidades:
-          type: array
-          items:
-            type: object
+        leido:
+          type: boolean
+        tipo:
+          type: string
 
     # --- MODELO ESTADÍSTICAS ---
     DashboardStats:
