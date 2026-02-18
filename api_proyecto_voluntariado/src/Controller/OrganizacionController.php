@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-namespace App\Controller;
+
 
 use App\Entity\Organizacion;
 use App\Service\OrganizationService;
