@@ -204,7 +204,6 @@ class Organizacion implements Loginable, Notifiable
         };
     }
 
-    // --- Notifiable ---
     public function getNotifiableEmail(): string
     {
         return (string) $this->email;

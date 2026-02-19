@@ -15,7 +15,8 @@ export interface Organization {
   actividades?: any[];
 
   // Vista Dashboard: Campo necesario para filtrar
-  estado: 'Pendiente' | 'Aprobado' | 'Rechazado' | 'pendiente' | 'aprobado' | 'rechazado';
+  // Backend devuelve mayúsculas (PENDIENTE, APROBADO, RECHAZADO)
+  estado: string;
 }
 
 /**

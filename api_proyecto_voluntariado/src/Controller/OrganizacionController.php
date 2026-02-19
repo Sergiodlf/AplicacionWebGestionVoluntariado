@@ -26,7 +26,8 @@ class OrganizacionController extends AbstractController
         $this->organizationService = $organizationService;
     }
 
-    #[Route('/api/organizations', name: 'api_organizations_list', methods: ['GET'])]
+    //#[Route('/api/organizations', name: 'api_organizations_list', methods: ['GET'])]
+    #[Route('', name: 'api_organizations_list', methods: ['GET'])]
     public function getOrganizations(Request $request): JsonResponse
     {
         $criteria = [];
@@ -44,7 +45,8 @@ class OrganizacionController extends AbstractController
         );
     }
 
-    #[Route('/api/organizations', name: 'api_organizations_create', methods: ['POST'])]
+    //#[Route('/api/organizations', name: 'api_organizations_create', methods: ['POST'])]
+    #[Route('', name: 'api_organizations_create', methods: ['POST'])]
     public function createOrganization(
         Request $request, 
         SerializerInterface $serializer,
@@ -97,7 +99,8 @@ class OrganizacionController extends AbstractController
         );
     }
 
-    #[Route('/api/organizations/{cif}', name: 'api_organizations_delete', methods: ['DELETE'])]
+    //#[Route('/api/organizations/{cif}', name: 'api_organizations_delete', methods: ['DELETE'])]
+    #[Route('/{cif}', name: 'api_organizations_delete', methods: ['DELETE'])]
     public function deleteOrganization(string $cif): JsonResponse
     {
         $success = $this->organizationService->deleteOrganization($cif);
@@ -108,7 +111,7 @@ class OrganizacionController extends AbstractController
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[Route('/api/organizations/{cif}', name: 'api_organizations_patch', methods: ['PATCH'])]
+    #[Route('/{cif}', name: 'api_organizations_patch', methods: ['PATCH'])]
     public function updateState(string $cif, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -147,7 +150,7 @@ class OrganizacionController extends AbstractController
         return $this->json($organizacion, Response::HTTP_OK, [], ['groups' => ['org:read']]);
     }
 
-    #[Route('/api/organizations/{cif}', name: 'api_organizations_update', methods: ['PUT'])]
+    #[Route('/{cif}', name: 'api_organizations_update', methods: ['PUT'])]
     public function update(string $cif, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
