@@ -109,8 +109,8 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
         this.filterAndSetOrganizations(); // Apply filters
 
-        const pending = data.filter((org) => org.estado?.toLowerCase() === 'PENDIENTE');
-        const approved = data.filter((org) => org.estado?.toLowerCase() === 'APROBADO');
+        const pending = data.filter((org) => org.estado?.toLowerCase() === 'pendiente');
+        const approved = data.filter((org) => org.estado?.toLowerCase() === 'aprobado');
         this.pendingCount.set(pending.length);
         this.approvedCount.set(approved.length);
         this.isLoading = false;
@@ -137,7 +137,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     const filtered = this.allOrganizations.filter((org) => {
       // 1. Status Filter (Tab)
       const status = org.estado?.trim().toLowerCase();
-      const target = this.currentTab === 'PENDIENTE' ? 'PENDIENTE' : 'APROBADO';
+      const target = this.currentTab === 'PENDIENTE' ? 'pendiente' : 'aprobado';
       if (status !== target) return false;
 
       // 2. Attribute Filters
