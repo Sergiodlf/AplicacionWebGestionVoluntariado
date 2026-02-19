@@ -30,26 +30,20 @@ class ProfileController extends AbstractController
     public function getProfile(SerializerInterface $serializer): JsonResponse
     {
         try {
-            $securityUser = $this->getUser();
-            $user = $securityUser?->getDomainUser();
+            $userWrapper = $this->getUser();
 
-            if (!$user) {
+            if (!$userWrapper instanceof \App\Security\User\User) {
                 return $this->errorResponse('Usuario no autenticado o token inválido', 401);
             }
 
-            // S-4: Use Serializer Groups for lean responses
-            $groups = ['user:read'];
-            $tipo = 'desconocido';
-
-            if ($user instanceof Administrador) {
-                $tipo = 'admin';
-            } elseif ($user instanceof Voluntario) {
-                $tipo = 'voluntario';
-                $groups[] = 'voluntario:read';
-            } elseif ($user instanceof Organizacion) {
-                $tipo = 'organizacion';
-                $groups[] = 'org:read';
+            $user = $userWrapper->getDomainUser();
+            if (!$user) {
+                return $this->errorResponse('Usuario de dominio no encontrado', 404);
             }
+
+            // S-4: Use Standard User methods
+            $tipo = $userWrapper->getType();
+            $groups = $userWrapper->getSerializationGroups();
 
             return $this->json([
                 'tipo' => $tipo,
@@ -64,8 +58,13 @@ class ProfileController extends AbstractController
     #[Route('/profile', name: 'update_profile', methods: ['PUT'])]
     public function updateProfile(Request $request): JsonResponse
     {
-        $securityUser = $this->getUser();
-        $user = $securityUser?->getDomainUser();
+        $userWrapper = $this->getUser();
+        
+        if (!$userWrapper instanceof \App\Security\User\User) {
+            return $this->errorResponse('Usuario no autenticado o token inválido', 401);
+        }
+
+        $user = $userWrapper->getDomainUser();
 
         if (!$user) {
             return $this->errorResponse('Usuario no autenticado', 401);
@@ -74,13 +73,15 @@ class ProfileController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         try {
-            if ($user instanceof Voluntario) {
+            $type = $userWrapper->getType();
+
+            if ($type === 'voluntario') {
                 $userManaged = $this->volunteerService->getById($user->getDni());
                 if (!$userManaged) return $this->errorResponse('Usuario no encontrado', 404);
                 
                 $this->volunteerService->updateProfile($userManaged, $data);
             } 
-            elseif ($user instanceof Organizacion) {
+            elseif ($type === 'organizacion') {
                 $orgManaged = $this->organizationService->getByCif($user->getCif());
                 if (!$orgManaged) return $this->errorResponse('Organización no encontrada', 404);
                 

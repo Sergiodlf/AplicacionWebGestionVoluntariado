@@ -8,7 +8,7 @@ use Symfony\Component\Security\Http\AccessToken\AccessTokenHandlerInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
-use App\Security\User\SecurityUser;
+use App\Security\User\User;
 
 /**
  * Maneja la autenticación mediante Access Tokens de Firebase.
@@ -48,7 +48,7 @@ class FirebaseAccessTokenHandler implements AccessTokenHandlerInterface
                     // Esto permite acceso de emergencia o inicial a administradores.
                     if (in_array('admin', $authUser->claims) || ($authUser->claims['rol'] ?? '') === 'admin') {
                         $this->logger->info('FirebaseAccessTokenHandler: Admin login detected for non-local user.', ['email' => $authUser->email]);
-                        return new SecurityUser($authUser->email, ['ROLE_ADMIN'], null);
+                        return new User($authUser->email, ['ROLE_ADMIN'], null);
                     }
 
                     $this->logger->warning('FirebaseAccessTokenHandler: User not found in database.', ['email' => $authUser->email]);

@@ -140,10 +140,7 @@ class InscripcionController extends AbstractController
         $user = $this->getUser();
         $autoAccept = false;
 
-        // Check if user is Admin using the custom AdminUser class or role check if simple user
-        if ($user instanceof \App\Security\User\AdminUser) {
-            $autoAccept = true;
-        } elseif (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
+        if (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles())) {
             $autoAccept = true;
         }
 

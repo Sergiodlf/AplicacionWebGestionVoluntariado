@@ -7,6 +7,7 @@ use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use App\Security\User\User;
 
 /**
  * Proveedor de usuarios unificado que delega la resolución a resolvers específicos de dominio.
@@ -21,12 +22,13 @@ class UnifiedUserProvider implements UserProviderInterface
         private iterable $resolvers
     ) {}
 
+
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
         foreach ($this->resolvers as $resolver) {
             $domainUser = $resolver->resolve($identifier);
             if ($domainUser) {
-                return new \App\Security\User\SecurityUser(
+                return new User(
                     $identifier, 
                     [$resolver->getSupportedRole()], 
                     $domainUser
@@ -44,6 +46,6 @@ class UnifiedUserProvider implements UserProviderInterface
 
     public function supportsClass(string $class): bool
     {
-        return $class === \App\Security\User\SecurityUser::class;
+        return $class === User::class;
     }
 }

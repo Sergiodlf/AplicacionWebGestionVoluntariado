@@ -51,7 +51,7 @@ class LoginController extends AbstractController
                 return $this->errorResponse('Inconsistencia de cuenta. El usuario existe en el sistema de autenticación pero no tiene perfil en la base de datos local.', 404);
             }
 
-            if ($localUser instanceof \App\Security\User\SecurityUser) {
+            if ($localUser instanceof \App\Security\User\User) {
                 $localUser = $localUser->getDomainUser();
             }
 
@@ -111,7 +111,7 @@ class LoginController extends AbstractController
                 return $this->errorResponse('No existe una cuenta vinculada a este correo de Google. Por favor, regístrate primero.', 404, ['email' => $authUser->email, 'uid' => $authUser->uid]);
             }
 
-            if ($localUser instanceof \App\Security\User\SecurityUser) {
+            if ($localUser instanceof \App\Security\User\User) {
                 $localUser = $localUser->getDomainUser();
             }
 
