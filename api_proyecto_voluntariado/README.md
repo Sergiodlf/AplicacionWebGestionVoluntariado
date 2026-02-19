@@ -169,7 +169,8 @@ Usamos Comandos de Consola de Symfony para tareas que no deben ser expuestas ví
 -   **Casos de Uso**:
     -   **Mantenimiento**: Corregir datos inconsistentes (ej: `app:fix-habilidades`).
     -   **Tareas Programadas**: Verificar estados, enviar recordatorios masivos.
-    -   **Administración**: Crear usuarios admin iniciales (`app:create-admin`).
+    -   **Administración**: Crear usuarios admin iniciales (`app:create-admin`) y verificar correos manualmente (`app:verify-email`).
+-   **Firebase**: Toda la lógica con el SDK está centralizada en `FirebaseService` para cumplir con DIP.
     -   **Migración de Datos**: Mover datos de JSON a BD.
 
 > **Regla de Oro**: Si una operación tarda más de 2 segundos o es una tarea administrativa crítica, considera moverla a un Command en lugar de un Controller.
