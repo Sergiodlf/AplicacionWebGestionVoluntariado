@@ -30,6 +30,7 @@ security:
         - { path: ^/api/auth/forgot-password, roles: PUBLIC_ACCESS }
         - { path: ^/api/categories, roles: PUBLIC_ACCESS }
         - { path: ^/api/ciclos, roles: PUBLIC_ACCESS }
+        - { path: ^/api/inscripciones, roles: PUBLIC_ACCESS }
 
         # Require authentication for everything else in /api
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

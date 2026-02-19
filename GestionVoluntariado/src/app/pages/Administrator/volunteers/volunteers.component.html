@@ -59,18 +59,26 @@
 
       <div class="flex-grow-1 overflow-auto">
         <div class="container-fluid px-4 pb-4">
-          @if (isLoading) {
+          @if (isLoading || isFiltering) {
           <div class="d-flex flex-column align-items-center justify-content-center py-5">
             <div class="mb-3">
               <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
             </div>
-            <h5 class="text-custom-blue fw-light">Cargando voluntarios...</h5>
+            <h5 class="text-custom-blue fw-light">{{ isLoading ? 'Cargando voluntarios...' : 'Aplicando filtros...' }}</h5>
           </div>
           } @else {
           <div class="row g-4">
             @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
             volunteer.email) {
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6" [style.opacity]="loadingVolunteerId === volunteer.dni ? 0.6 : 1" 
+              [style.pointer-events]="loadingVolunteerId === volunteer.dni ? 'none' : 'auto'">
+              @if (loadingVolunteerId === volunteer.dni) {
+              <div class="position-absolute top-50 start-50 translate-middle z-5">
+                <div class="spinner-border text-custom-blue" role="status" style="width: 3rem; height: 3rem;">
+                  <span class="visually-hidden">Procesando...</span>
+                </div>
+              </div>
+              }
               <app-volunteer-card [name]="volunteer.nombre" [email]="volunteer.email" [skills]="volunteer.habilidades"
                 [availability]="volunteer.disponibilidad" [interests]="volunteer.intereses"
                 [languages]="volunteer.languages || []" [ciclo]="volunteer.ciclo || ''" [status]="volunteer.status"
@@ -85,11 +93,12 @@
             }
           </div>
           }
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+
 
 <!-- Filter Modal -->
 @if (showFilterModal) {
