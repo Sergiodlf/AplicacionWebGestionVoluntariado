@@ -6,6 +6,7 @@ use App\Enum\VolunteerStatus;
 use App\Enum\OrganizationStatus;
 use App\Enum\ActivityStatus;
 use App\Enum\ActivityApproval;
+use App\Enum\InscriptionStatus;
 use App\Entity\Ciclo;
 use App\Entity\Organizacion;
 use App\Entity\Voluntario;
@@ -15,6 +16,7 @@ use App\Entity\Habilidad;
 use App\Entity\Interes;
 use App\Entity\Necesidad;
 use App\Entity\Actividad;
+use App\Entity\Inscripcion;
 use App\Service\FirebaseServiceInterface;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -308,7 +310,101 @@ class AppFixtures extends Fixture
         }
 
         $manager->flush();
+
+        // 8. CREATE MATCHES/INSCRIPTIONS BASED ON SKILL SIMILARITY
+        echo "🎯 Creating smart Inscriptions (based on skill matching)...\n";
+        
+        $allVolunteers = $manager->getRepository(Voluntario::class)->findAll();
+        $allActivities = $manager->getRepository(Actividad::class)->findAll();
+        
+        foreach ($allActivities as $activity) {
+            // Get activity's needed skills (necesidades)
+            $activityNeeds = $activity->getNecesidades();
+            
+            if ($activityNeeds->isEmpty()) {
+                // If activity has no specific needs, add some random ones
+                $randomNeeds = [
+                    $manager->getRepository(Necesidad::class)->findOneBy(['nombre' => 'Programación']) 
+                        ?? $this->createNecessity('Programación', $manager),
+                    $manager->getRepository(Necesidad::class)->findOneBy(['nombre' => 'Diseño Gráfico']) 
+                        ?? $this->createNecessity('Diseño Gráfico', $manager),
+                ];
+                foreach ($randomNeeds as $need) {
+                    if ($need) $activity->addNecesidad($need);
+                }
+            }
+            
+            // Score volunteers based on skill match
+            $volunteerScores = [];
+            foreach ($allVolunteers as $volunteer) {
+                $score = 0;
+                $matchedSkills = 0;
+                
+                // Check how many of volunteer's skills match activity's needs
+                foreach ($volunteer->getHabilidades() as $skill) {
+                    foreach ($activity->getNecesidades() as $need) {
+                        if (strtolower($skill->getNombre()) === strtolower($need->getNombre())) {
+                            $score += 10;
+                            $matchedSkills++;
+                        }
+                    }
+                }
+                
+                // Add bonus for sector match
+                if ($volunteer->getIntereses()->count() > 0) {
+                    foreach ($volunteer->getIntereses() as $interest) {
+                        if (strtolower($interest->getNombre()) === strtolower($activity->getSector())) {
+                            $score += 5;
+                        }
+                    }
+                }
+                
+                if ($score > 0) {
+                    $volunteerScores[] = [
+                        'volunteer' => $volunteer,
+                        'score' => $score,
+                        'matchedSkills' => $matchedSkills
+                    ];
+                }
+            }
+            
+            // Sort by score (descending) and create inscriptions for top matches
+            usort($volunteerScores, fn($a, $b) => $b['score'] <=> $a['score']);
+            
+            $maxMatches = min(2, count($volunteerScores)); // Max 2 inscriptions per activity
+            for ($j = 0; $j < $maxMatches; $j++) {
+                $volunteer = $volunteerScores[$j]['volunteer'];
+                
+                // Check if inscription already exists
+                $existingInscription = $manager->getRepository(Inscripcion::class)->findOneBy([
+                    'voluntario' => $volunteer,
+                    'actividad' => $activity
+                ]);
+                
+                if (!$existingInscription) {
+                    $inscription = new Inscripcion();
+                    $inscription->setVoluntario($volunteer);
+                    $inscription->setActividad($activity);
+                    $inscription->setEstado(InscriptionStatus::CONFIRMADO);
+                    $inscription->setFechaInscripcion(new \DateTime());
+                    $manager->persist($inscription);
+                    
+                    echo "  ✨ Created Inscripción: {$volunteer->getNombre()} → {$activity->getNombre()} (Score: {$volunteerScores[$j]['score']})\n";
+                }
+            }
+        }
+
+        $manager->flush();
         echo "✅ Fixtures loaded successfully with Firebase sync!\n";
+    }
+
+    private function createNecessity(string $nombre, ObjectManager $manager): Necesidad
+    {
+        $necessity = new Necesidad();
+        $necessity->setNombre($nombre);
+        $manager->persist($necessity);
+        $manager->flush();
+        return $necessity;
     }
 
     private function upsertFirebaseUser(string $email, string $password, string $displayName, array $claims): void

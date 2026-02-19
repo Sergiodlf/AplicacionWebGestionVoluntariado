@@ -32,6 +32,8 @@ export class MatchesComponent implements OnInit {
   showCreateModal = false;
   searchTerm: string = ''; // Added search term
   isLoading = true;
+  isFiltering = false;
+  loadingMatchId: number | null = null;
 
   ngOnInit() {
     this.loadMatches();
@@ -57,6 +59,7 @@ export class MatchesComponent implements OnInit {
   loadMatches(forceReload: boolean = false) {
     this.voluntariadoService.getAllInscripciones(forceReload).subscribe({
       next: (data) => {
+        console.log('📊 Raw API Response:', data);
         this.matches = data.map(item => ({
           id: item.id_inscripcion,
           volunteer: {
@@ -76,7 +79,9 @@ export class MatchesComponent implements OnInit {
           },
           status: item.status || item.estado
         }));
+        console.log('✅ Processed Matches:', this.matches);
         this.applyFilters();
+        console.log('🎯 Filtered Matches:', this.filteredMatches);
         this.isLoading = false;
       },
       error: (err: any) => {
@@ -89,31 +94,35 @@ export class MatchesComponent implements OnInit {
   filteredMatches: any[] = [];
 
   applyFilters() {
-    let list = this.matches;
-    // 0. Filter out expired activities (endDate < now)
-    list = list.filter(m => this.isMatchActive(m));
+    this.isFiltering = true;
+    setTimeout(() => {
+      let list = this.matches;
+      // 0. Filter out expired activities (endDate < now)
+      list = list.filter(m => this.isMatchActive(m));
 
-    // First filter by status
-    switch (this.activeTab) {
-      case 'left':
-        list = list.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE');
-        break;
-      case 'middle':
-        list = list.filter(m => ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'].includes((m.status || '').toUpperCase()));
-        break;
-    }
+      // First filter by status
+      switch (this.activeTab) {
+        case 'left':
+          list = list.filter(m => (m.status || '').toUpperCase() === 'PENDIENTE');
+          break;
+        case 'middle':
+          list = list.filter(m => ['CONFIRMADA', 'ACEPTADA', 'ACEPTADO', 'CONFIRMADO'].includes((m.status || '').toUpperCase()));
+          break;
+      }
 
-    // Then filter by search term (Logical AND)
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      list = list.filter(m =>
-        m.volunteer.nombre.toLowerCase().includes(term) ||
-        m.organization.nombre.toLowerCase().includes(term) ||
-        m.volunteer.email.toLowerCase().includes(term)
-      );
-    }
+      // Then filter by search term (Logical AND)
+      if (this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        list = list.filter(m =>
+          m.volunteer.nombre.toLowerCase().includes(term) ||
+          m.organization.nombre.toLowerCase().includes(term) ||
+          m.volunteer.email.toLowerCase().includes(term)
+        );
+      }
 
-    this.filteredMatches = list;
+      this.filteredMatches = list;
+      this.isFiltering = false;
+    }, 100);
   }
 
   isMatchActive(m: any): boolean {
@@ -141,13 +150,16 @@ export class MatchesComponent implements OnInit {
   }
 
   onAccept(match: any) {
+    this.loadingMatchId = match.id;
     this.voluntariadoService.updateInscripcionStatus(match.id, 'CONFIRMADO').subscribe({
       next: () => {
         this.notificationService.showSuccess('Match aceptado correctamente');
+        this.loadingMatchId = null;
         this.loadMatches(true);
       },
       error: (err: any) => {
         console.error('Error accepting match', err);
+        this.loadingMatchId = null;
         this.notificationService.showError('Error al aceptar el match');
       }
     });
@@ -157,13 +169,16 @@ export class MatchesComponent implements OnInit {
     this.notificationService.showConfirmation('¿Estás seguro?', 'Vas a rechazar este match. esta acción no se puede deshacer.')
       .then((confirmed) => {
         if (confirmed) {
+          this.loadingMatchId = match.id;
           this.voluntariadoService.updateInscripcionStatus(match.id, 'RECHAZADO').subscribe({
             next: () => {
               this.notificationService.showSuccess('Match rechazado correctamente');
+              this.loadingMatchId = null;
               this.loadMatches(true);
             },
             error: (err: any) => {
               console.error('Error rejecting match', err);
+              this.loadingMatchId = null;
               this.notificationService.showError('Error al rechazar el match');
             }
           });
@@ -172,13 +187,16 @@ export class MatchesComponent implements OnInit {
   }
 
   onComplete(match: any) {
+    this.loadingMatchId = match.id;
     this.voluntariadoService.updateInscripcionStatus(match.id, 'COMPLETADA').subscribe({
       next: () => {
         this.notificationService.showSuccess('Match completado correctamente');
+        this.loadingMatchId = null;
         this.loadMatches(true);
       },
       error: (err: any) => {
         console.error('Error completing match', err);
+        this.loadingMatchId = null;
         this.notificationService.showError('Error al completar el match');
       }
     });

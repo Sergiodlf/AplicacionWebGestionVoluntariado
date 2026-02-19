@@ -35,6 +35,8 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   private refresh$ = new BehaviorSubject<boolean>(false);
 
   isLoading = true;
+  isFiltering = false;
+  loadingVolunteerId: string | null = null;
 
   // Filter Criteria Subject
   private filterCriteria$ = new BehaviorSubject<any>({
@@ -263,17 +265,31 @@ export class VolunteersComponent implements OnInit, OnDestroy {
 
   onAccept(volunteer: any) {
     if (!volunteer.dni) return console.error('Missing DNI');
+    this.loadingVolunteerId = volunteer.dni;
     this.volunteerService.updateStatus(volunteer.dni, 'ACEPTADO').subscribe({
-      next: () => this.refresh$.next(true),
-      error: (err: any) => console.error('Error updating status:', err),
+      next: () => {
+        this.loadingVolunteerId = null;
+        this.refresh$.next(true);
+      },
+      error: (err: any) => {
+        console.error('Error updating status:', err);
+        this.loadingVolunteerId = null;
+      },
     });
   }
 
   onReject(volunteer: any) {
     if (!volunteer.dni) return console.error('Missing DNI');
+    this.loadingVolunteerId = volunteer.dni;
     this.volunteerService.updateStatus(volunteer.dni, 'RECHAZADO').subscribe({
-      next: () => this.refresh$.next(true),
-      error: (err: any) => console.error('Error updating status:', err),
+      next: () => {
+        this.loadingVolunteerId = null;
+        this.refresh$.next(true);
+      },
+      error: (err: any) => {
+        console.error('Error updating status:', err);
+        this.loadingVolunteerId = null;
+      },
     });
   }
 
