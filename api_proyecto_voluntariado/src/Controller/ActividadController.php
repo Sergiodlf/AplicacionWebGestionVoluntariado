@@ -158,7 +158,10 @@ class ActividadController extends AbstractController
         $filters = [];
         
         // Filtro por Estado de Aprobación
-        $filters['estadoAprobacion'] = $request->query->get('estadoAprobacion') ?? 'ACEPTADA';
+        $estadoParam = $request->query->get('estadoAprobacion');
+        if ($estadoParam && strtoupper($estadoParam) !== 'ALL') {
+            $filters['estadoAprobacion'] = $estadoParam;
+        }
 
         // Filtro por Estado de Ejecución
         $filters['estado'] = $request->query->get('estado') ?? 'NOT_CANCELLED';
