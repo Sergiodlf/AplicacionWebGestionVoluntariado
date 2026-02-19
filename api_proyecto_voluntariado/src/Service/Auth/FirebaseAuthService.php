@@ -76,4 +76,26 @@ class FirebaseAuthService implements AuthServiceInterface
     {
         return $this->firebaseService->getPasswordResetLink($email);
     }
+
+    public function changePassword(string $email, string $oldPassword, string $newPassword): void
+    {
+        // 1. Verify old password by signing in
+        $authResult = $this->signIn($email, $oldPassword);
+        $idToken = $authResult->idToken;
+
+        // 2. Update password
+        $apiKey = $_ENV['FIREBASE_API_KEY'] ?? $_SERVER['FIREBASE_API_KEY'] ?? getenv('FIREBASE_API_KEY');
+        
+        $response = $this->httpClient->request('POST', 'https://identitytoolkit.googleapis.com/v1/accounts:update?key=' . $apiKey, [
+            'json' => [
+                'idToken' => $idToken,
+                'password' => $newPassword,
+                'returnSecureToken' => false
+            ]
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \Exception('Failed to update password in Firebase.');
+        }
+    }
 }

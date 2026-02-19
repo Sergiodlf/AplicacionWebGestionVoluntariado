@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\NotificationService;
+use App\Service\NotificationManagerInterface;
 use App\Entity\Voluntario;
 use App\Entity\Organizacion;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

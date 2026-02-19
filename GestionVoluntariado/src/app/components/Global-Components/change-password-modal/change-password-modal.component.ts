@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
@@ -11,11 +11,12 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './change-password-modal.component.css'
 })
 export class ChangePasswordModalComponent {
+  @Input() email?: string;
   @Output() close = new EventEmitter<void>();
-  
+
   fb = inject(FormBuilder);
   authService = inject(AuthService);
-  
+
   form: FormGroup;
   loading = false;
   errorMessage = '';
@@ -44,7 +45,7 @@ export class ChangePasswordModalComponent {
 
     const { oldPassword, newPassword } = this.form.value;
 
-    this.authService.changePassword(oldPassword, newPassword).subscribe({
+    this.authService.changePassword(oldPassword, newPassword, this.email).subscribe({
       next: () => {
         this.loading = false;
         this.successMessage = 'Contraseña actualizada con éxito.';

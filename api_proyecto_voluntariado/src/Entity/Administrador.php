@@ -1,6 +1,15 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\AdministradorRepository;
+use Doctrine\ORM\Mapping as ORM;
+use App\Security\Loginable;
+use App\Security\Notifiable;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AdministradorRepository::class)]
+#[ORM\Table(name: 'ADMINISTRADORES')]
 class Administrador implements Loginable, Notifiable
 {
     #[ORM\Id]

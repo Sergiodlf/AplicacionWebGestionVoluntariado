@@ -16,7 +16,9 @@ interface VolunteerServiceInterface
     public function getById(string $dni): ?Voluntario;
     public function getByEmail(string $email): ?Voluntario;
     public function getAll(array $criteria = []): array;
-    public function updateProfile(Voluntario $voluntario, array $data): void;
-    public function updateState(string $dni, \App\Enum\VolunteerStatus $status): ?Voluntario;
-    public function countByStatus(\App\Enum\VolunteerStatus $status): int;
+    
+    public function updateProfile(Voluntario $voluntario, array $data): Voluntario;
+    public function updateStatus(Voluntario $voluntario, string|\App\Enum\VolunteerStatus $status): void;
+    
+    public function countByStatus(string|\App\Enum\VolunteerStatus $status): int;
 }

@@ -12,16 +12,23 @@ use App\Enum\InscriptionStatus;
  */
 interface InscripcionServiceInterface
 {
-    public function createInscription(Actividad $actividad, Voluntario $voluntario, ?Inscripcion $existing = null): Inscripcion;
-    public function updateStatus(int $id, InscriptionStatus $status): ?Inscripcion;
-    public function deleteInscription(int $id): bool;
+    public function getAll(?string $estado = null): array;
+    public function getById(int $id): ?Inscripcion;
+    
+    public function countActiveInscriptions(Actividad $actividad): int;
     public function isVolunteerInscribed(Actividad $actividad, Voluntario $voluntario): ?Inscripcion;
-    public function countByActivity(Actividad $actividad): int;
-    public function getByVolunteer(string $dni): array;
-    public function getByOrganization(string $cif): array;
+    
+    public function createInscription(Actividad $actividad, Voluntario $voluntario, ?Inscripcion $existing = null, bool $autoAccept = false): Inscripcion;
+    
+    public function updateStatus(Inscripcion $inscripcion, string|InscriptionStatus $nuevoEstado): Inscripcion;
+    
+    public function delete(Inscripcion $inscripcion): void;
+    
+    public function getByVoluntario(Voluntario $voluntario, ?string $estado = null): array;
+    public function getByOrganizacion(string $cif, ?string $estado = null): array;
 
     /**
-     * @param InscriptionStatus|InscriptionStatus[] $statuses
+     * @param InscriptionStatus|array|string $status
      */
-    public function countByStatus(InscriptionStatus|array $statuses): int;
+    public function countByStatus($status): int;
 }

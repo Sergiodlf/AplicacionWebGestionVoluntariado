@@ -9,4 +9,5 @@ import { CommonModule } from '@angular/common';
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.css']
 })
-export class LandingPageComponent {}
+export class LandingPageComponent {
+}

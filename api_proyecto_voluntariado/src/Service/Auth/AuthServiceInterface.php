@@ -26,4 +26,11 @@ interface AuthServiceInterface
      * @throws \Exception If the user is not found or service fails.
      */
     public function getPasswordResetLink(string $email): string;
+
+    /**
+     * Changes the password for a user.
+     * 
+     * @throws \Exception If authentication fails or update fails.
+     */
+    public function changePassword(string $email, string $oldPassword, string $newPassword): void;
 }

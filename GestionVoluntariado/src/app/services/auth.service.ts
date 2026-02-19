@@ -29,23 +29,23 @@ export class AuthService {
   // User State
   private userRoleSubject = new BehaviorSubject<string | null>(localStorage.getItem('user_role'));
   private userProfileSubject = new BehaviorSubject<ProfileResponse | null>(null);
-  
+
   // Public Observables
   userProfile$ = this.userProfileSubject.asObservable();
   userRole$ = this.userRoleSubject.asObservable();
-  
+
   // Mocking user$ for compatibility (creates a partial User object based on state)
   // implementing a basic observable that emits if we have a token
   user$ = new BehaviorSubject<any>(this.hasToken() ? { emailVerified: true } : null);
 
   private voluntariadoService = inject(VoluntariadoService);
 
-  constructor(private http: HttpClient) { 
+  constructor(private http: HttpClient) {
     // Initialize state if token exists
     if (this.hasToken()) {
-       this.loadProfile().subscribe({
-         error: () => this.logout() // Auto-logout if token is invalid/profile load fails
-       });
+      this.loadProfile().subscribe({
+        error: () => this.logout() // Auto-logout if token is invalid/profile load fails
+      });
     }
   }
 
@@ -73,12 +73,12 @@ export class AuthService {
     localStorage.setItem('user_token', authResult.token);
     localStorage.setItem('user_role', authResult.rol);
     localStorage.setItem('user_email', authResult.email);
-    
+
     // Update State
     this.userRoleSubject.next(authResult.rol);
     // Emulate Firebase User object for components checking emailVerified
-    this.user$.next({ 
-      email: authResult.email, 
+    this.user$.next({
+      email: authResult.email,
       emailVerified: authResult.emailVerified,
       uid: authResult.localId
     });
@@ -94,8 +94,8 @@ export class AuthService {
 
   // Keeping register for compatibility, though components use Backend Services directly now
   register(email: string, pass: string): Promise<void> {
-      // Logic moved to components/services utilizing backend endpoints
-      return Promise.reject('Use specific register methods.');
+    // Logic moved to components/services utilizing backend endpoints
+    return Promise.reject('Use specific register methods.');
   }
 
   async saveUserRole(uid: string, email: string, role: string): Promise<void> {
@@ -117,7 +117,7 @@ export class AuthService {
     this.user$.next(null);
 
     this.voluntariadoService.clearState();
-    
+
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_role');
@@ -125,7 +125,7 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_dni');
     localStorage.removeItem('user_cif');
-    
+
     return signOut(this.auth); // Cleanup Firebase SDK state too
   }
 
@@ -187,7 +187,7 @@ export class AuthService {
     return this.userProfileSubject.value;
   }
 
-  changePassword(oldPass: string, newPass: string): Observable<any> {
-    return this.http.post('/api/auth/changePassword', { oldPassword: oldPass, newPassword: newPass });
+  changePassword(oldPass: string, newPass: string, email?: string): Observable<any> {
+    return this.http.post('/api/auth/changePassword', { oldPassword: oldPass, newPassword: newPass, email: email });
   }
 }

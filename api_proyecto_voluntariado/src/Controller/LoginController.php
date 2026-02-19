@@ -168,6 +168,34 @@ class LoginController extends AbstractController
         }
     }
 
+    #[Route('/change-password', name: 'change_password', methods: ['POST'])]
+    public function changePassword(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $oldPassword = $data['oldPassword'] ?? null;
+        $newPassword = $data['newPassword'] ?? null;
+
+        // Si no envía email, intentar obtenerlo del usuario autenticado (si hay token)
+        if (!$email) {
+            $user = $this->getUser();
+            if ($user instanceof \App\Security\User\User) {
+                $email = $user->getEmail();
+            }
+        }
+
+        if (!$email || !$oldPassword || !$newPassword) {
+            return $this->errorResponse('Email, contraseña actual y nueva contraseña son obligatorios.', 400);
+        }
+
+        try {
+            $this->authService->changePassword($email, $oldPassword, $newPassword);
+            return $this->json(['message' => 'Contraseña actualizada correctamente.']);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al cambiar la contraseña: ' . $e->getMessage(), 400);
+        }
+    }
+
     private function getUserRole($user): string
     {
         if ($user instanceof \App\Entity\Administrador) return 'admin';

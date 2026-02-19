@@ -4,6 +4,8 @@ namespace App\DataFixtures;
 
 use App\Enum\VolunteerStatus;
 use App\Enum\OrganizationStatus;
+use App\Enum\ActivityStatus;
+use App\Enum\ActivityApproval;
 use App\Entity\Ciclo;
 use App\Entity\Organizacion;
 use App\Entity\Voluntario;
@@ -32,6 +34,9 @@ class AppFixtures extends Fixture
         $habilidadesData = ['Programación', 'Diseño Gráfico', 'Redes Sociales', 'Gestión de Eventos', 'Docencia', 'Primeros Auxilios', 'Cocina', 'Idiomas'];
         $interesesData = ['Medio Ambiente', 'Educación', 'Salud', 'Animales', 'Cultura', 'Tecnología', 'Derechos Humanos'];
         $ciudades = ['Pamplona', 'Madrid', 'Barcelona', 'Sevilla', 'Valencia'];
+        $idiomasList = ['Inglés', 'Francés', 'Alemán', 'Euskera', 'Italiano'];
+        $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        $turnos = ['Mañana', 'Tarde', 'Noche'];
 
         // 2. SEED BASIC ENTITIES (Habilidades, Intereses, ODS, Ciclos) - IDEMPOTENT
         echo "🌱 Seeding basic entities...\n";
@@ -122,10 +127,12 @@ class AppFixtures extends Fixture
             $testVol->setFechaNacimiento(new \DateTime('1995-01-01'));
             $testVol->setExperiencia('Usuario de prueba documentado en el README.');
             $testVol->setCoche(true);
-            $testVol->setEstadoVoluntario(VolunteerStatus::LIBRE);
-            $testVol->setCiclo($ciclos[0]); // DAM
+            $testVol->setEstadoVoluntario(VolunteerStatus::ACEPTADO);
+            $testVol->setCiclo($ciclos[0]);
             $testVol->addHabilidad($habilidades[0]);
             $testVol->addInterese($intereses[0]);
+            $testVol->setIdiomas(['Inglés', 'Euskera']);
+            $testVol->setDisponibilidad(['Lunes Mañana', 'Miércoles Tarde']);
             
             $manager->persist($testVol);
             echo "  ✨ Created TEST Voluntario: $testVolEmail\n";
@@ -194,6 +201,19 @@ class AppFixtures extends Fixture
             $vol->setCiclo($ciclos[array_rand($ciclos)]);
             $vol->addHabilidad($habilidades[array_rand($habilidades)]);
             $vol->addInterese($intereses[array_rand($intereses)]);
+            
+            // Random languages (1 or 2)
+            $numIdiomas = rand(1, 2);
+            $volIdiomas = [];
+            for($j=0; $j<$numIdiomas; $j++) {
+                $volIdiomas[] = $idiomasList[array_rand($idiomasList)];
+            }
+            $vol->setIdiomas(array_unique($volIdiomas));
+
+            // Random availability
+            $dia = $diasSemana[array_rand($diasSemana)];
+            $turno = $turnos[array_rand($turnos)];
+            $vol->setDisponibilidad(["$dia $turno"]);
 
             $manager->persist($vol);
             echo "  ✨ Created Voluntario: $email\n";
@@ -277,8 +297,8 @@ class AppFixtures extends Fixture
             $act->setFechaInicio(new \DateTime('+1 month'));
             $act->setFechaFin(new \DateTime('+1 month + 4 hours'));
             $act->setMaxParticipantes(10);
-            $act->setEstado('ABIERTA');
-            $act->setEstadoAprobacion('ACEPTADO');
+            $act->setEstado(ActivityStatus::EN_CURSO);
+            $act->setEstadoAprobacion(ActivityApproval::ACEPTADA);
             $act->setOrganizacion($orgs[$i % count($orgs)]);
             $act->addOd($odsEntities[array_rand($odsEntities)]);
             $act->setSector($sectores[array_rand($sectores)]);

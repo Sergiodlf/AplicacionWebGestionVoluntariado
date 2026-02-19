@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Security;
 
 /**
  * Interfaz para entidades que pueden recibir notificaciones.
