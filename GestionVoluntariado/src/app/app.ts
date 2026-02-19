@@ -1,6 +1,7 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd, Event } from '@angular/router';
 import { Navbar } from './components/Global-Components/navbar/navbar';
+import { ToastComponent } from './components/Global-Components/toast/toast.component';
 import { AuthService } from './services/auth.service';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -8,7 +9,7 @@ import { filter } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, Navbar],
+  imports: [CommonModule, RouterOutlet, Navbar, ToastComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

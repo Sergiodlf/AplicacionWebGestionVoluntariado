@@ -4,11 +4,12 @@ import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
+import { ChangePasswordModalComponent } from '../../../components/Global-Components/change-password-modal/change-password-modal.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, HttpClientModule],
+  imports: [CommonModule, RouterLink, FormsModule, HttpClientModule, ChangePasswordModalComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -17,6 +18,7 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
   isLoading = false;
+  showChangePasswordModal = false;
 
   constructor(private router: Router, private http: HttpClient, private authService: AuthService) { }
 
@@ -27,7 +29,7 @@ export class LoginComponent {
     }
 
     this.isLoading = true;
-    this.errorMessage = ''; 
+    this.errorMessage = '';
 
     this.authService.login(this.email, this.password)
       .then(() => {
@@ -36,16 +38,16 @@ export class LoginComponent {
       .catch((error: any) => {
         console.error('Login error:', error);
         this.isLoading = false;
-        
+
         // Handle API errors
         if (error.status === 401) {
-             this.errorMessage = 'Credenciales incorrectas (Email o contraseña).';
+          this.errorMessage = 'Credenciales incorrectas (Email o contraseña).';
         } else if (error.status === 403) {
-             this.errorMessage = error.error?.message || 'Acceso denegado due to status/verification.';
+          this.errorMessage = error.error?.message || 'Acceso denegado due to status/verification.';
         } else if (error.status === 429) {
-             this.errorMessage = 'Demasiados intentos. Inténtalo más tarde.';
+          this.errorMessage = 'Demasiados intentos. Inténtalo más tarde.';
         } else {
-             this.errorMessage = error.error?.error || 'Error al iniciar sesión.';
+          this.errorMessage = error.error?.error || 'Error al iniciar sesión.';
         }
       });
   }

@@ -31,7 +31,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   organizations = signal<Organization[]>([]);
   private organizationsSubscription: Subscription | undefined;
   private updateSubscription: Subscription | undefined; // Suscripción para notificaciones del servicio
-  currentTab: 'pending' | 'approved' = 'pending';
+  currentTab: 'PENDIENTE' | 'APROBADO' = 'PENDIENTE';
   showModal = signal(false);
   pendingCount = signal(0);
   approvedCount = signal(0);
@@ -109,8 +109,8 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
         this.filterAndSetOrganizations(); // Apply filters
 
-        const pending = data.filter((org) => org.estado?.toLowerCase() === 'pendiente');
-        const approved = data.filter((org) => org.estado?.toLowerCase() === 'aprobado');
+        const pending = data.filter((org) => org.estado?.toLowerCase() === 'PENDIENTE');
+        const approved = data.filter((org) => org.estado?.toLowerCase() === 'APROBADO');
         this.pendingCount.set(pending.length);
         this.approvedCount.set(approved.length);
         this.isLoading = false;
@@ -137,7 +137,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     const filtered = this.allOrganizations.filter((org) => {
       // 1. Status Filter (Tab)
       const status = org.estado?.trim().toLowerCase();
-      const target = this.currentTab === 'pending' ? 'pendiente' : 'aprobado';
+      const target = this.currentTab === 'PENDIENTE' ? 'PENDIENTE' : 'APROBADO';
       if (status !== target) return false;
 
       // 2. Attribute Filters
@@ -164,10 +164,10 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
     // Map status-toggle options to our currentTab ('pending' | 'approved')
     if (tab === 'right') {
-      this.currentTab = 'approved';
+      this.currentTab = 'APROBADO';
     } else {
       // treat 'left' and 'middle' as pending for this page
-      this.currentTab = 'pending';
+      this.currentTab = 'PENDIENTE';
     }
     this.filterAndSetOrganizations(); // Re-filter based on new tab
   }

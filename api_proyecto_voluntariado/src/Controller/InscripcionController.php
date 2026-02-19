@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 use App\Service\InscripcionService;
-use App\Service\NotificationService;
+use App\Service\NotificationManagerInterface;
 use App\Service\ActivityService;
 use App\Service\VolunteerService;
 use App\Service\OrganizationService;
@@ -22,20 +22,20 @@ class InscripcionController extends AbstractController
     use ApiErrorTrait;
 
     private $inscripcionService;
-    private $notificationService;
+    private $notificationManager;
     private $activityService;
     private $volunteerService;
     private $organizationService;
 
     public function __construct(
         InscripcionService $inscripcionService, 
-        NotificationService $notificationService,
+        NotificationManagerInterface $notificationManager,
         ActivityService $activityService,
         VolunteerService $volunteerService,
         OrganizationService $organizationService
     ) {
         $this->inscripcionService = $inscripcionService;
-        $this->notificationService = $notificationService;
+        $this->notificationManager = $notificationManager;
         $this->activityService = $activityService;
         $this->volunteerService = $volunteerService;
         $this->organizationService = $organizationService;

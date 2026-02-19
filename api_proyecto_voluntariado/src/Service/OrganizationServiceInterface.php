@@ -17,9 +17,9 @@ interface OrganizationServiceInterface
     public function getByCif(string $cif): ?Organizacion;
     public function getByEmail(string $email): ?Organizacion;
     public function getAll(array $criteria = []): array;
-    public function updateState(string $cif, OrganizationStatus $status): ?Organizacion;
+    public function updateState(string $cif, string|OrganizationStatus $status): ?Organizacion;
     public function updateOrganization(string $cif, array $data): ?Organizacion;
-    public function updateProfile(Organizacion $org, array $data): void;
+    public function updateProfile(Organizacion $org, array $data): Organizacion;
     public function deleteOrganization(string $cif): bool;
-    public function countByStatus(OrganizationStatus $status): int;
+    public function countByStatus(string|OrganizationStatus $status): int;
 }

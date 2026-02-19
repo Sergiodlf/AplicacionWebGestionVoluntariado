@@ -28,9 +28,19 @@
         <span *ngIf="isLoading">Cargando...</span>
       </button>
 
-      <div class="text-center">
-        <a routerLink="/register" class="text-custom-blue text-decoration-underline">¿Todavía no estás registrado?</a>
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <a routerLink="/register" class="text-custom-blue text-decoration-underline">
+          Crear cuenta nueva
+        </a>
+        <button type="button" class="btn btn-link text-custom-blue text-decoration-underline p-0 border-0"
+          (click)="showChangePasswordModal = true">
+          ¿Cambiar contraseña?
+        </button>
       </div>
     </form>
+
+    <app-change-password-modal *ngIf="showChangePasswordModal" [email]="email"
+      (close)="showChangePasswordModal = false">
+    </app-change-password-modal>
   </div>
 </div>

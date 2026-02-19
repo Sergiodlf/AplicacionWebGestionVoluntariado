@@ -13,28 +13,28 @@ use App\Entity\Necesidad;
 interface CategoryServiceInterface
 {
     public function getAllODS(): array;
-    public function getODSById(int $id): ?ODS;
+    // public function getODSById(int $id): ?ODS; // Not implemented
     
     public function getAllHabilidades(): array;
-    public function getHabilidadById(int $id): ?Habilidad;
+    // public function getHabilidadById(int $id): ?Habilidad; // Not implemented
     
     public function getAllIntereses(): array;
-    public function getInteresById(int $id): ?Interes;
+    // public function getInteresById(int $id): ?Interes; // Not implemented
     
     public function getAllNecesidades(): array;
-    public function getNecesidadById(int $id): ?Necesidad;
+    // public function getNecesidadById(int $id): ?Necesidad; // Not implemented
     
     public function getAllCiclos(): array;
 
-    public function createODS(string $nombre): ODS;
-    public function deleteODS(int $id): bool;
+    // public function createODS(string $nombre): ODS; // Not implemented
+    // public function deleteODS(int $id): bool; // Not implemented
     
-    public function createHabilidad(string $nombre): Habilidad;
+    public function createHabilidad(string $nombre): int;
     public function deleteHabilidad(int $id): bool;
     
-    public function createInteres(string $nombre): Interes;
+    public function createInteres(string $nombre): int;
     public function deleteInteres(int $id): bool;
     
-    public function createNecesidad(string $nombre): Necesidad;
-    public function deleteNecesidad(int $id): bool;
+    // public function createNecesidad(string $nombre): Necesidad; // Not implemented
+    // public function deleteNecesidad(int $id): bool; // Not implemented
 }
