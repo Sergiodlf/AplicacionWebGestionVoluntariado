@@ -9,6 +9,7 @@ import { OrganizationFormComponent } from '../../../components/Global-Components
 import { OrganizationService } from '../../../services/organization.service';
 import { Organization } from '../../../models/organizationModel';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-organizations',
@@ -25,7 +26,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './organizations.css',
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
-  constructor(private organizationService: OrganizationService) { }
+  constructor(private organizationService: OrganizationService, private authService: AuthService) { }
   activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aceptados)
 
   organizations = signal<Organization[]>([]);
@@ -227,5 +228,60 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
     this.showActivityModal.set(false);
     this.selectedActivity = null;
     this.setBodyScroll(false);
+  }
+
+  // Edit methods
+  selectedOrganizationForEdit: any = null;
+  openEditModal(org: any) {
+    this.selectedOrganizationForEdit = org;
+    this.setBodyScroll(true);
+  }
+
+  closeEditModal() {
+    this.selectedOrganizationForEdit = null;
+    this.setBodyScroll(false);
+  }
+
+  handleEditSubmit(updatedData: any) {
+    this.loadOrganizations(true);
+    this.closeEditModal();
+    alert('Organización actualizada con éxito');
+  }
+
+  // Password methods
+  selectedOrganizationForPassword: any = null;
+  newPasswordValue: string = '';
+  showPasswordModal = signal(false);
+
+  openPasswordModal(org: any) {
+    this.selectedOrganizationForPassword = org;
+    this.newPasswordValue = '';
+    this.showPasswordModal.set(true);
+    this.setBodyScroll(true);
+  }
+
+  closePasswordModal() {
+    this.selectedOrganizationForPassword = null;
+    this.newPasswordValue = '';
+    this.showPasswordModal.set(false);
+    this.setBodyScroll(false);
+  }
+
+  submitPasswordChange() {
+    if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    this.authService.adminChangePassword(this.selectedOrganizationForPassword.email, this.newPasswordValue).subscribe({
+      next: () => {
+        this.closePasswordModal();
+        alert('Contraseña actualizada correctamente.');
+      },
+      error: (err: any) => {
+        console.error('Error updating password', err);
+        alert('Error al actualizar la contraseña.');
+      }
+    });
   }
 }

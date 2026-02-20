@@ -36,6 +36,8 @@ export class OrganizationCardComponent {
   }
 
   @Output() onActivityClick = new EventEmitter<any>();
+  @Output() onEdit = new EventEmitter<void>();
+  @Output() onChangePassword = new EventEmitter<void>();
 
   onAcceptClick(): void {
     // EL HIJO llama al servicio para ACEPTAR

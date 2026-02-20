@@ -52,7 +52,7 @@ interface FirebaseServiceInterface
     /**
      * Verifica un ID Token y retorna los claims.
      */
-    public function verifyIdToken(string $token): array;
+    public function verifyIdToken(string $token, int $leewaySeconds = 300): array;
 
     /**
      * Comprueba si el email del usuario está verificado.
@@ -63,6 +63,11 @@ interface FirebaseServiceInterface
      * Marca manualmente el email de un usuario como verificado.
      */
     public function verifyEmail(string $uid): void;
+
+    /**
+     * Change a user password explicitly by an Admin using their email.
+     */
+    public function adminChangePassword(string $email, string $newPassword): void;
 
     /**
      * Crea o actualiza un usuario (pensado para fixtures).

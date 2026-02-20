@@ -28,6 +28,7 @@ security:
         - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/forgot-password, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/refresh-token, roles: PUBLIC_ACCESS }
         - { path: ^/api/actividades, roles: PUBLIC_ACCESS }
         - { path: ^/api/stats, roles: PUBLIC_ACCESS }
         - { path: ^/api/categories, roles: PUBLIC_ACCESS }
