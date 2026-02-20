@@ -226,6 +226,20 @@
 .premium-style-input:focus {
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    background: white;
+}
+
+.field-label-small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+    display: block;
+}
+
+.animate-text {
+    animation: fadeIn 0.3s ease-out;
 }
 
 .readonly-input {

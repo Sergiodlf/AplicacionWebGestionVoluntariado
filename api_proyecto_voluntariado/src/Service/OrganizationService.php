@@ -142,7 +142,7 @@ class OrganizationService implements OrganizationServiceInterface
 
     public function getByCif(string $cif): ?Organizacion
     {
-        return $this->entityManager->getRepository(Organizacion::class)->find($cif);
+        return $this->entityManager->getRepository(Organizacion::class)->find(trim($cif));
     }
 
     public function getByEmail(string $email): ?Organizacion

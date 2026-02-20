@@ -102,8 +102,8 @@
                     <label class="premium-label"><i class="bi bi-map"></i>Zona</label>
                     <select class="form-select premium-input shadow-none" formControlName="localidad"
                         [ngClass]="{'is-invalid': f['localidad'].invalid && f['localidad'].touched}">
-                        <option value="Pamplona">Pamplona</option>
-                        <option value="Tudela">Tudela</option>
+                        <option value="" disabled>Selecciona una zona...</option>
+                        <option *ngFor="let zone of availableZones" [value]="zone">{{ zone }}</option>
                     </select>
                     @if (f['localidad'].errors?.['required'] && f['localidad'].touched) {
                     <div class="invalid-feedback"><span>Debe seleccionar una zona.</span></div>
@@ -136,10 +136,8 @@
                     <label class="premium-label"><i class="bi bi-grid"></i>Sector</label>
                     <select class="form-select premium-input shadow-none" formControlName="sector"
                         [ngClass]="{'is-invalid': f['sector'].invalid && f['sector'].touched}">
-                        <option value="Educación">Educación</option>
-                        <option value="Salud">Salud</option>
-                        <option value="Medio Ambiente">Medio Ambiente</option>
-                        <option value="Comunitario">Comunitario</option>
+                        <option value="" disabled>Selecciona un sector...</option>
+                        <option *ngFor="let sector of availableSectors" [value]="sector">{{ sector }}</option>
                     </select>
                     @if (f['sector'].errors?.['required'] && f['sector'].touched) {
                     <div class="invalid-feedback"><span>Debe seleccionar un sector.</span></div>

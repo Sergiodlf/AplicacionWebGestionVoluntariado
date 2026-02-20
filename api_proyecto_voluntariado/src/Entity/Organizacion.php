@@ -29,13 +29,13 @@ class Organizacion implements Loginable, Notifiable
     private ?string $cif = null; 
 
     #[ORM\Column(name: 'NOMBRE', length: 40)]
-    #[Groups(['org:read', 'org:write'])]
+    #[Groups(['org:read', 'org:write', 'user:read'])]
     #[Assert\NotBlank]
     private ?string $nombre = null;
 
     // VARCHAR explícito para evitar migraciones a NVARCHAR en SQL Server
     #[ORM\Column(name: 'EMAIL', length: 100, unique: true, columnDefinition: 'VARCHAR(100) NOT NULL UNIQUE')]
-    #[Groups(['org:read', 'org:write'])]
+    #[Groups(['org:read', 'org:write', 'user:read'])]
     #[Assert\NotBlank]
     #[Assert\Email]
     private ?string $email = null;

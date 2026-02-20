@@ -6,6 +6,7 @@ import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angula
 import { OrganizationService } from '../../../services/organization.service';
 import { Organization } from '../../../models/organizationModel';
 import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
     selector: 'app-organization-form',
@@ -17,11 +18,12 @@ import { HttpClientModule } from '@angular/common/http';
 export class OrganizationFormComponent implements OnInit {
 
     private organizationService = inject(OrganizationService);
+    private authService = inject(AuthService);
 
     @Input() submitLabel: string = 'Registrarme';
     @Input() isModal: boolean = true;
     @Input() isEdit: boolean = false;
-    @Input() initialData: Organization | null = null;
+    @Input() initialData: any | null = null;
     @Input() hideSubmitButton: boolean = false;
 
     // Emite el objeto Organization que devuelve la API (sin password)
@@ -29,6 +31,19 @@ export class OrganizationFormComponent implements OnInit {
 
     organizationForm!: FormGroup;
     errorMessage: string = '';
+
+    availableSectors: string[] = [
+        'Educación', 'Salud', 'Social', 'Medio Ambiente',
+        'Comunitario', 'Cultura', 'Deportes', 'Internacional',
+        'Derechos Humanos', 'Protección Animal', 'Tecnología'
+    ];
+
+    availableZones: string[] = [
+        'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
+        'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
+        'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
+        'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva', 'Pamplona (Otros)', 'Tudela', 'Estella', 'Olite', 'Tafalla'
+    ];
 
     ngOnInit(): void {
         const cifNifPattern = /^[A-HJNPQRSUVW]{1}[0-9]{7}([A-Z]|[0-9]){1}$/i;
@@ -92,9 +107,10 @@ export class OrganizationFormComponent implements OnInit {
                 // Remove password if empty during edit
                 if (!formData.password) delete formData.password;
 
-                this.organizationService.updateProfile(this.initialData.cif, formData).subscribe({
+                // Use AuthService helper for global reactive sync
+                this.authService.updateProfile(formData).subscribe({
                     next: (response) => {
-                        this.onSubmit.emit(response);
+                        this.onSubmit.emit(response.datos || response);
                     },
                     error: (err: any) => {
                         this.errorMessage = 'Error al actualizar la organización. Por favor, intente de nuevo.';
