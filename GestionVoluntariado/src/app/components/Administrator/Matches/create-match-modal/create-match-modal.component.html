@@ -17,12 +17,13 @@
                         <i class="bi bi-magic me-1"></i> Ordenados por afinidad con la actividad
                     </div>
                     }
-                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI" [disabled]="!!preselectedVolunteer" >
+                    <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedVolunteerDnI"
+                        [disabled]="!!preselectedVolunteer">
                         <option value="" disabled selected>Selecciona un voluntario</option>
                         @for (vol of volunteers; track vol.dni) {
                         <option [value]="vol.dni" [style.fontWeight]="vol.matchScore > 50 ? 'bold' : 'normal'"
                             [class.text-success]="vol.matchScore > 70">
-                            {{ vol.matchScore !== undefined ? vol.matchScore + '% | ' : '' }} {{ vol.nombre }} {{
+                            {{ vol.matchScore !== undefined ? '-' + vol.matchScore + '% | ' : '' }} {{ vol.nombre }} {{
                             vol.apellido1 }} - {{ vol.email }}
                         </option>
                         }
@@ -34,8 +35,8 @@
                     <select class="form-select bg-light border-0 py-3" [(ngModel)]="selectedActivityId"
                         [disabled]="!!preselectedActivityId" (change)="onActivityChange()">
                         <option [ngValue]="null" disabled selected>Selecciona una actividad</option>
-                        @for (act of activities; track act.codActividad) {
-                        <option [value]="act.codActividad">
+                        @for (act of activities; track act.codActividad || act.id) {
+                        <option [value]="act.codActividad || act.id">
                             {{ act.nombre }}
                         </option>
                         }

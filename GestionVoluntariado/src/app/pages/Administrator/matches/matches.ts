@@ -52,8 +52,17 @@ export class MatchesComponent implements OnInit {
         } catch { }
       }
       return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      return [value];
     }
     return [value];
+  }
+
+  private getDayName(dateStr: string): string {
+    try {
+      const date = new Date(dateStr);
+      const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      return days[date.getDay()];
+    } catch { return ''; }
   }
 
   loadMatches(forceReload: boolean = false) {
@@ -74,7 +83,9 @@ export class MatchesComponent implements OnInit {
             email: item.email_organizacion || 'org@example.com',
             description: item.descripcion_actividad || '',
             schedule: item.horario || 'No especificado',
-            needs: this.parseList(item.habilidades_actividad),
+            needs: this.parseList(item.necesidades_actividad),
+            startDate: item.fecha_inicio_actividad,
+            formattedDate: item.fecha_inicio_actividad ? `${this.getDayName(item.fecha_inicio_actividad)}, ${item.horario}` : '',
             endDate: item.fecha_fin_actividad ? new Date(item.fecha_fin_actividad) : null
           },
           status: item.status || item.estado

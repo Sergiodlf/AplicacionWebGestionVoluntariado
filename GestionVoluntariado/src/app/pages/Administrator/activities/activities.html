@@ -123,29 +123,54 @@
                                 específicas, el impacto esperado y los requisitos adicionales.</p>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-3 bg-light rounded-3 h-100">
                             <small class="text-uppercase text-muted fw-bold"
                                 style="font-size: 0.7rem;">Ubicación</small>
                             <p class="mb-0 fw-medium">Madrid, Centro</p>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-3 bg-light rounded-3 h-100">
-                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fecha</small>
-                            <p class="mb-0 fw-medium">{{ selectedVolunteering.date }}</p>
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Inicio</small>
+                            <p class="mb-0 fw-medium">{{ selectedVolunteering.fechaInicio }}</p>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="p-3 bg-light rounded-3">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fin</small>
+                            <p class="mb-0 fw-medium">{{ selectedVolunteering.fechaFin }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
                             <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">ODS
                                 Relacionados</small>
                             <div class="mt-2 d-flex gap-2 flex-wrap">
                                 <span *ngFor="let item of selectedVolunteering.ods"
-                                    class="badge text-white px-3 py-2 rounded-pill"
-                                    [style.backgroundColor]="item.color">
+                                    class="badge text-white px-3 py-1 rounded-pill" [style.backgroundColor]="item.color"
+                                    style="font-size: 0.7rem;">
                                     {{ item.nombre }}
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Voluntarios
+                                Inscritos</small>
+                            <div class="mt-2 d-flex flex-column gap-1" style="max-height: 120px; overflow-y: auto;">
+                                <div *ngFor="let ins of selectedEnrolledVolunteers" class="small">
+                                    <a [href]="'mailto:' + ins.email_voluntario"
+                                        class="text-custom-blue text-decoration-none fw-medium" title="Enviar correo">
+                                        <i class="bi bi-envelope-at me-1"></i>{{ ins.nombre_voluntario }}
+                                    </a>
+                                    <div class="text-muted" style="font-size: 0.75rem; margin-left: 1.2rem;">
+                                        {{ ins.curso_voluntario }}º {{ ins.nombre_ciclo_voluntario }}
+                                    </div>
+                                </div>
+                                <small *ngIf="selectedEnrolledVolunteers.length === 0" class="text-muted fst-italic">No
+                                    hay voluntarios asignados aún</small>
                             </div>
                         </div>
                     </div>
