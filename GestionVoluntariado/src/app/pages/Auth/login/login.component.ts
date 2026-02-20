@@ -59,20 +59,10 @@ export class LoginComponent {
 
         // Redirect based on role from profile
         if (profile.tipo === 'voluntario') {
-          if (user && !user.emailVerified) {
-            alert('Debes verificar tu correo antes de entrar como voluntario.');
-            this.authService.logout();
-            this.isLoading = false;
-            return;
-          }
+          // Email Verification Check bypassed: Se crea como verificado automáticamente
           this.router.navigate(['/volunteer/voluntariados']);
         } else if (profile.tipo === 'organizacion') {
-          if (user && !user.emailVerified) {
-            alert('Debes verificar tu correo antes de entrar como organización.');
-            this.authService.logout();
-            this.isLoading = false;
-            return;
-          }
+          // Email Verification Check bypassed: Se crea como verificado automáticamente
           this.router.navigate(['/organization/mis-voluntariados-organizacion']);
         } else {
           // Fallback, maybe admin?

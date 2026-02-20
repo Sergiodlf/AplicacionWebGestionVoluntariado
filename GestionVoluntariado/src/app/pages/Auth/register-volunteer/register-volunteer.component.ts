@@ -48,7 +48,7 @@ export class RegisterVolunteerComponent {
       next: () => {
         this.notificationService.showSuccessPopup(
           'Registro completado',
-          'Tu cuenta ha sido creada con éxito. Se ha enviado un correo de verificación.'
+          'Tu cuenta ha sido creada con éxito. Ya puedes iniciar sesión.'
         ).then(() => {
           this.authService.isRegistrationInProgress = false;
           this.router.navigate(['/login']);
