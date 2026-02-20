@@ -246,6 +246,58 @@
 .premium-style-input:focus {
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    background: white;
+}
+
+.field-label-small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+    display: block;
+}
+
+.min-width-200 {
+    min-width: 200px;
+}
+
+.edit-pill {
+    display: flex;
+    align-items: center;
+    background: #eff6ff !important;
+    color: var(--primary-blue) !important;
+    border: 1px solid #bfdbfe !important;
+}
+
+.remove-icon {
+    cursor: pointer;
+    color: #ef4444;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.remove-icon:hover {
+    color: #dc2626;
+    transform: scale(1.2);
+}
+
+.add-tag-box {
+    margin-top: 0.5rem;
+    display: flex;
+}
+
+.select-small {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    max-width: 220px;
+    background-color: white;
+}
+
+.animate-text {
+    animation: fadeIn 0.3s ease-out;
 }
 
 .readonly-input {

@@ -94,6 +94,12 @@ class ProfileController extends AbstractController
             return $this->errorResponse('Error al actualizar perfil', 500, $e->getMessage());
         }
 
-        return $this->json(['message' => 'Perfil actualizado correctamente']);
+        // Return updated profile data for immediate frontend sync
+        $groups = $userWrapper->getSerializationGroups();
+        return $this->json([
+            'message' => 'Perfil actualizado correctamente',
+            'tipo' => $type,
+            'datos' => $userManaged ?: $orgManaged
+        ], 200, [], ['groups' => $groups]);
     }
 }

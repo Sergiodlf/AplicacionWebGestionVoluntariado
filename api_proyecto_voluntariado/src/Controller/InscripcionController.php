@@ -210,11 +210,15 @@ class InscripcionController extends AbstractController
         $inscripcion = $this->inscripcionService->getById($id);
 
         if (!$inscripcion) {
-            return $this->errorResponse('Inscripción no encontrada', 404);
+            return $this->errorResponse('Inscripcion no encontrada', 404);
         }
 
         // SEGURIDAD: Verificar que el usuario sea el dueño de la inscripción o un Admin
         $user = $this->getUser();
+        if (method_exists($user, 'getDomainUser')) {
+            $user = $user->getDomainUser();
+        }
+
         if ($user instanceof Voluntario) {
             if ($inscripcion->getVoluntario()->getDni() !== $user->getDni()) {
                  return $this->errorResponse('No tienes permiso para eliminar esta inscripción', 403);
@@ -289,6 +293,9 @@ class InscripcionController extends AbstractController
     public function getMyInscriptions(Request $request): JsonResponse
     {
         $user = $this->getUser();
+        if ($user && method_exists($user, 'getDomainUser')) {
+            $user = $user->getDomainUser();
+        }
 
         if (!$user || !($user instanceof Voluntario)) {
             return $this->errorResponse('Acceso denegado. Debes ser un voluntario.', 403);
