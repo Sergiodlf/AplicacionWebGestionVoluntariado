@@ -10,6 +10,7 @@ import { OrganizationService } from '../../../services/organization.service';
 import { Organization } from '../../../models/organizationModel';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
+import { VoluntariadoService } from '../../../services/voluntariado-service';
 
 @Component({
   selector: 'app-organizations',
@@ -26,7 +27,7 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './organizations.css',
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
-  constructor(private organizationService: OrganizationService, private authService: AuthService) { }
+  constructor(private organizationService: OrganizationService, private authService: AuthService, private voluntariadoService: VoluntariadoService) { }
   activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aceptados)
 
   organizations = signal<Organization[]>([]);
@@ -219,14 +220,43 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   }
 
   openActivityModal(activity: any) {
-    this.selectedActivity = activity;
+    // Robust ID detection
+    const activityId = activity.id || activity.codAct || activity.codActividad || activity.cod_actividad;
+
+    // Map activity for consistent display in the modal
+    this.selectedActivity = {
+      ...activity,
+      id: activityId,
+      nombre: activity.nombre || activity.title || 'Sin Título',
+      fechaInicio: activity.fechaInicio || activity.fecha_inicio,
+      fechaFin: activity.fechaFin || activity.fecha_fin,
+      direccion: activity.direccion || activity.localidad || '-',
+      ods: activity.ods || []
+    };
+
+    this.selectedEnrolledVolunteers = [];
+
+    if (activityId) {
+      this.voluntariadoService.getAllInscripciones(true).subscribe({
+        next: (allInscripciones) => {
+          this.selectedEnrolledVolunteers = allInscripciones.filter((ins: any) =>
+            Number(ins.codActividad) === Number(activityId)
+          );
+        },
+        error: (err) => console.error('Error fetching inscriptions for details', err)
+      });
+    }
+
     this.showActivityModal.set(true);
     this.setBodyScroll(true);
   }
 
+  selectedEnrolledVolunteers: any[] = [];
+
   closeActivityModal() {
     this.showActivityModal.set(false);
     this.selectedActivity = null;
+    this.selectedEnrolledVolunteers = [];
     this.setBodyScroll(false);
   }
 

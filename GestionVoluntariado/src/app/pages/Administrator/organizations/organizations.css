@@ -2,16 +2,48 @@
 /* Estilos Botones */
 .btn-custom-blue {
     /* Asegúrate de que el color de fondo sea visible */
-     background-color: #004085; /* Color azul estándar de ejemplo */
-     border-color: #004085;
+    background-color: #004085;
+    /* Color azul estándar de ejemplo */
+    border-color: #004085;
     /* Sobrescribe el color del texto si lo necesitas, aunque 'text-white' ya lo hace */
-    color: white; 
+    color: white;
 }
+
 .btn-custom-blue:hover {
-    background-color: #003366; /* Color azul más oscuro para el hover */
+    background-color: #003366;
+    /* Color azul más oscuro para el hover */
     border-color: #003366;
 }
 
 .modal-content {
-    z-index: 1070 !important; 
+    z-index: 1070 !important;
+}
+
+/* Hide scrollbar arrows and style thin scrollbar */
+.edit-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.edit-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.edit-modal-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+
+.edit-modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.edit-modal-body::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+}
+
+.edit-modal-body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }

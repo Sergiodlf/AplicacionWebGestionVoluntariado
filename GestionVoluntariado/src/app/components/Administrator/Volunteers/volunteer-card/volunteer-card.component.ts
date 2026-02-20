@@ -41,4 +41,10 @@ export class VolunteerCardComponent {
       return [value];
     }
   }
+
+  getTextList(value: any, hasNombre: boolean): string {
+    const list = this.parseList(value);
+    if (!list || list.length === 0) return '';
+    return list.map(item => hasNombre ? (item.nombre || item) : item).join(', ');
+  }
 }

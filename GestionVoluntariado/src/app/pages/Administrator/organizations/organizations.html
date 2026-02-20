@@ -158,9 +158,7 @@
                             <i class="bi bi-building fs-1"></i>
                         </div>
                         <h4 class="fw-bold text-custom-blue mb-1">{{ selectedActivity.nombre }}</h4>
-                        <p class="text-muted mb-0">Organizado por {{ selectedActivity.organizationName || 'La
-                            Organización'
-                            }}</p>
+                        <p class="text-muted mb-0">{{ selectedActivity.organizationName || 'La Organización' }}</p>
                     </div>
 
                     <div class="row g-3">
@@ -168,21 +166,63 @@
                             <div class="p-3 bg-light rounded-3">
                                 <small class="text-uppercase text-muted fw-bold"
                                     style="font-size: 0.7rem;">Descripción</small>
-                                <p class="mb-0 fw-medium">Descripción detallada de la actividad voluntaria.</p>
+                                <p class="mb-0 fw-medium">{{ selectedActivity.descripcion || 'Descripción detallada de
+                                    la actividad voluntaria.' }}</p>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <small class="text-uppercase text-muted fw-bold"
                                     style="font-size: 0.7rem;">Ubicación</small>
-                                <p class="mb-0 fw-medium">{{ selectedActivity.direccion }}</p>
+                                <p class="mb-0 fw-medium">{{ selectedActivity.direccion || selectedActivity.localidad ||
+                                    '-' }}</p>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <small class="text-uppercase text-muted fw-bold"
-                                    style="font-size: 0.7rem;">Fecha</small>
-                                <p class="mb-0 fw-medium">{{ selectedActivity.fechaInicio | date:'mediumDate' }}</p>
+                                    style="font-size: 0.7rem;">Inicio</small>
+                                <p class="mb-0 fw-medium">{{ selectedActivity.fechaInicio | date:'d/M/yyyy' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fin</small>
+                                <p class="mb-0 fw-medium">{{ selectedActivity.fechaFin | date:'d/M/yyyy' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6" *ngIf="selectedActivity.ods && selectedActivity.ods.length > 0">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">ODS
+                                    Relacionados</small>
+                                <div class="mt-2 d-flex gap-2 flex-wrap">
+                                    <span *ngFor="let item of selectedActivity.ods"
+                                        class="badge text-white px-3 py-1 rounded-pill"
+                                        [style.backgroundColor]="item.color" style="font-size: 0.7rem;">
+                                        {{ item.nombre }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div [class]="selectedActivity.ods && selectedActivity.ods.length > 0 ? 'col-6' : 'col-12'">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Voluntarios
+                                    Inscritos</small>
+                                <div class="mt-2 d-flex flex-column gap-1" style="max-height: 120px; overflow-y: auto;">
+                                    <div *ngFor="let ins of selectedEnrolledVolunteers" class="small">
+                                        <a [href]="'mailto:' + ins.email_voluntario"
+                                            class="text-custom-blue text-decoration-none fw-medium"
+                                            title="Enviar correo">
+                                            <i class="bi bi-envelope-at me-1"></i>{{ ins.nombre_voluntario }}
+                                        </a>
+                                        <div class="text-muted" style="font-size: 0.75rem; margin-left: 1.2rem;">
+                                            {{ ins.curso_voluntario }}º {{ ins.nombre_ciclo_voluntario }}
+                                        </div>
+                                    </div>
+                                    <small *ngIf="selectedEnrolledVolunteers.length === 0"
+                                        class="text-muted fst-italic">No
+                                        hay voluntarios asignados aún</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -222,17 +262,26 @@
     <div class="modal fade show d-block" role="dialog" aria-modal="true">
         <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeEditModal()"></div>
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header border-0">
-                    <button class="btn-close" (click)="closeEditModal()"></button>
-                </div>
-                <div class="modal-body px-5 pb-5">
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-custom-blue">Editar Organización</h2>
+            <div class="modal-content rounded-4 border-0 shadow-lg"
+                style="max-height: 90vh; display: flex; flex-direction: column;">
+                <div class="modal-header border-0 flex-shrink-0">
+                    <div class="text-center w-100">
+                        <h2 class="fw-bold text-custom-blue mb-0">Editar Organización</h2>
                     </div>
+                    <button class="btn-close position-absolute" style="right: 1rem; top: 1rem;"
+                        (click)="closeEditModal()"></button>
+                </div>
+                <div class="modal-body px-5 overflow-auto edit-modal-body">
                     <app-organization-form submitLabel="Guardar Cambios" [isEdit]="true"
-                        [initialData]="selectedOrganizationForEdit" (onSubmit)="handleEditSubmit($event)">
+                        [initialData]="selectedOrganizationForEdit" [hideSubmitButton]="true" [isModal]="false"
+                        (onSubmit)="handleEditSubmit($event)" #editOrgForm>
                     </app-organization-form>
+                </div>
+                <div class="modal-footer border-top justify-content-center py-3 flex-shrink-0">
+                    <button type="button" class="btn btn-custom-blue px-5 py-2 rounded-pill text-white shadow"
+                        (click)="editOrgForm.submit()">
+                        <i class="bi bi-check-lg me-2"></i> Guardar Cambios
+                    </button>
                 </div>
             </div>
         </div>
