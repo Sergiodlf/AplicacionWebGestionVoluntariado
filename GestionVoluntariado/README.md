@@ -41,15 +41,28 @@ La aplicación estará disponible en `http://localhost:4200/`.
 ### Error de dependencias
 Si `npm install` falla, prueba borrar `node_modules` y `package-lock.json` y reinstalar.
 
-### Problemas de CORS
-Actualmente en desarrollo (`ng serve`), las peticiones a la API pueden sufrir bloqueos por CORS (Cross-Origin Resource Sharing) ya que el frontend corre en el puerto `4200` y el backend en el `8000`.
+### Resolución Definitiva de CORS (Estrategia sin Proxy)
 
-**Solución Actual (Desarrollo):**
-Usamos un proxy interno de Angular configurado en `proxy.conf.json`.
-- Todas las peticiones a `/api` se redirigen automáticamente a `http://127.0.0.1:8000`.
-- Esto "engaña" al navegador haciéndole creer que frontend y backend están en el mismo origen.
+**El Problema:**
+Al tener el frontend en Angular (puerto `4200`) y el backend en Symfony (puerto `8000` o en la nube), se producen bloqueos de CORS (Cross-Origin Resource Sharing) por seguridad del navegador al ser dominios/puertos distintos. Inicialmente se usaba el `proxy.conf.json` de Angular para enmascararlo, pero esto **no es válido ni escalable para entornos de producción** (AWS, Docker, Nginx).
 
-**Opciones a Futuro (Producción):**
-El proxy de Angular **NO** funciona en producción. Para el despliegue real, se debe optar por una de estas estrategias:
-1.  **Habilitar CORS en el Backend:** Configurar Symfony (por ejemplo usando `NelmioCorsBundle`) para que acepte explícitamente peticiones desde el dominio del frontend.
-2.  **Servir desde el mismo Origen (Recomendado):** Configurar el servidor web (Nginx/Apache) para que sirva tanto los ficheros estáticos de Angular como la API bajo el mismo dominio (ej: `miweb.com` y `miweb.com/api`). Esto elimina completamente la necesidad de CORS.
+**La Estrategia a Futuro (Adoptada):**
+Se ha decidido **eliminar por completo la dependencia del proxy de Angular (`proxy.conf.json`)**. La comunicación entre frontend y backend será Cross-Origin directa en todos los entornos.
+
+La solución definitiva se divide en dos frentes obligatorios:
+
+1. **En el Backend (Symfony): Configuración de NelmioCorsBundle**
+   * Configurar `nelmio/cors-bundle` de manera global.
+   * En `nelmio_cors.yaml`, definir la variable de entorno `CORS_ALLOW_ORIGIN` autorizando explícitamente las URLs del frontend (`http://localhost:4200` en desarrollo y el dominio real de AWS en producción).
+   * Permitir los métodos HTTP pertinentes (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`) y las cabeceras (`Authorization`, `Content-Type`).
+
+2. **En el Frontend (Angular): Variables de Entorno (`environment`)**
+   * Se descartan las peticiones relativas tipo `this.http.get('/api/algo')`.
+   * Toda petición a la API debe construirse usando la URL del backend definida en:
+     * `environment.development.ts -> apiUrl: 'http://127.0.0.1:8000/api'`
+     * `environment.ts (Producción) -> apiUrl: 'https://mi-api-en-aws.com/api'`
+   * Ejemplo en servicios: `this.http.get(`${environment.apiUrl}/organizaciones`)`.
+
+**Ventajas de esta Arquitectura:**
+* Garantiza una **paridad absoluta** entre los entornos de desarrollo y producción (ambos usan la misma filosofía de conexión).
+* Mejora la seguridad, dejando el control estricto de quién accede a los recursos en manos del backend a través de la "Allow-List" de Nelmio.
