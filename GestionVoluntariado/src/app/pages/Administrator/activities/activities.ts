@@ -299,15 +299,29 @@ export class ActivitiesComponent implements OnInit {
 
   showInfoModal = false;
   selectedVolunteering: any = null;
+  selectedEnrolledVolunteers: any[] = [];
 
   openInfoModal(item: any) {
     this.selectedVolunteering = item;
+    this.selectedEnrolledVolunteers = [];
+
+    this.voluntariadoService.getAllInscripciones(true).subscribe({
+      next: (allInscripciones) => {
+        // Filter by codActividad. The component uses item.id which maps to codActividad.
+        this.selectedEnrolledVolunteers = allInscripciones.filter((ins: any) =>
+          Number(ins.codActividad) === Number(item.id)
+        );
+      },
+      error: (err) => console.error('Error fetching inscriptions for details', err)
+    });
+
     this.showInfoModal = true;
   }
 
   closeInfoModal() {
     this.showInfoModal = false;
     this.selectedVolunteering = null;
+    this.selectedEnrolledVolunteers = [];
   }
 
   // Modal crear actividad

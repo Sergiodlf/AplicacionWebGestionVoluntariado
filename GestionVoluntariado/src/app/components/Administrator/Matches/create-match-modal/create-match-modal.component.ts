@@ -5,6 +5,7 @@ import { VolunteerService } from '../../../../services/volunteer.service';
 import { ActividadService } from '../../../../services/actividad';
 import { VoluntariadoService } from '../../../../services/voluntariado-service';
 import { NotificationService } from '../../../../services/notification.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
     selector: 'app-create-match-modal',
@@ -43,24 +44,30 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
     }
 
     loadData() {
-        this.volunteerService.getVolunteers().subscribe({
-            next: (data) => this.volunteers = data,
-            error: (err) => console.error('Error loading volunteers', err)
-        });
-
-        this.actividadService.getActividades().subscribe({
-            next: (data) => {
-                // Filter only active activities (Case Insensitive)
-                this.activities = data.filter(a => {
-                    const st = a.estado?.toUpperCase();
-                    return st === 'ABIERTA' || st === 'ACEPTADA' || st === 'EN CURSO';
+        this.isLoading = true;
+        forkJoin({
+            volunteers: this.volunteerService.getVolunteers(),
+            activities: this.actividadService.getActividades()
+        }).subscribe({
+            next: (result: { volunteers: any[], activities: any[] }) => {
+                this.volunteers = result.volunteers;
+                this.activities = result.activities.filter((a: any) => {
+                    const st = (a.estado || '').toUpperCase();
+                    // We allow Pending (execution), Open, Accepted or In-course.
+                    // Basically just not wanting Cancelled or Rejected (if those are states).
+                    return st !== 'CANCELADA' && st !== 'RECHAZADA';
                 });
 
                 if (this.selectedActivityId) {
+                    this.selectedActivityId = Number(this.selectedActivityId);
                     this.sortVolunteers();
                 }
+                this.isLoading = false;
             },
-            error: (err) => console.error('Error loading activities', err)
+            error: (err: any) => {
+                console.error('Error loading data for modal', err);
+                this.isLoading = false;
+            }
         });
     }
 
@@ -69,7 +76,7 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
     }
 
     get selectedActivity() {
-        return this.activities.find(a => a.codActividad == this.selectedActivityId);
+        return this.activities.find(a => (a.codActividad || a.id) == this.selectedActivityId);
     }
 
     onSubmit() {
