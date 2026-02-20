@@ -8,6 +8,8 @@ export interface DashboardMetrics {
     matchesPending: number;
     matchesCompleted: number;
     activitiesActive: number;
+    activitiesAccepted: number;
+    activitiesEnCurso: number;
     activitiesPending: number;
     activitiesCompleted: number;
     acceptanceRate: number;

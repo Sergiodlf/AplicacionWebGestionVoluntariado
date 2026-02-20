@@ -91,6 +91,15 @@ export class DashboardService {
         };
         const activitiesCompleted = activities.filter(checkCompleted).length;
 
+        const activitiesAccepted = activities.filter((a: any) =>
+            normalize(a.estadoAprobacion) === 'ACEPTADA'
+        ).length;
+
+        const activitiesEnCurso = activities.filter((a: any) =>
+            normalize(a.estadoAprobacion) === 'ACEPTADA' &&
+            ['EN CURSO', 'EN_CURSO'].includes(normalize(a.estado))
+        ).length;
+
         // 5. Rates
         let acceptanceRate = 0;
         if (matchesTotal > 0) {
@@ -107,6 +116,7 @@ export class DashboardService {
             organizationsTotal, organizationsPending,
             matchesTotal, matchesAccepted, matchesPending, matchesCompleted,
             activitiesActive, activitiesPending, activitiesCompleted,
+            activitiesAccepted, activitiesEnCurso,
             acceptanceRate, completionRate
         };
     }
