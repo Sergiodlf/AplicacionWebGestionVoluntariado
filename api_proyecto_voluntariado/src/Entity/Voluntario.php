@@ -19,9 +19,11 @@ class Voluntario implements Loginable, Notifiable
 {
     #[ORM\Id]
     #[ORM\Column(name: 'DNI', type: Types::STRING, length: 9, options: ['fixed' => true])]
+    #[Groups(['voluntario:read'])]
     private ?string $dni = null;
 
     #[ORM\Column(name: 'NOMBRE', length: 100)]
+    #[Groups(['voluntario:read', 'user:read'])]
     private ?string $nombre = null;
 
     #[ORM\Column(name: 'APELLIDO1', length: 100)]
@@ -39,6 +41,7 @@ class Voluntario implements Loginable, Notifiable
 
 
     #[ORM\Column(name: 'ZONA', length: 100, nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?string $zona = null;
 
     #[ORM\Column(name: 'FECHA_NACIMIENTO', type: Types::DATETIME_MUTABLE)]
@@ -56,18 +59,21 @@ class Voluntario implements Loginable, Notifiable
     #[ORM\ManyToOne(targetEntity: Ciclo::class)]
     #[ORM\JoinColumn(name: 'CURSO_CICLOS', referencedColumnName: 'CURSO', nullable: true)]
     #[ORM\JoinColumn(name: 'NOMBRE_CICLOS', referencedColumnName: 'NOMBRE', nullable: true)]
+    #[Groups(['voluntario:read'])]
     private ?Ciclo $ciclo = null;
 
     #[ORM\ManyToMany(targetEntity: Habilidad::class, inversedBy: 'voluntarios')]
     #[ORM\JoinTable(name: 'VOLUNTARIOS_HABILIDADES')]
     #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
     #[ORM\InverseJoinColumn(name: 'HABILIDAD_ID', referencedColumnName: 'id')]
+    #[Groups(['voluntario:read'])]
     private Collection $habilidades;
 
     #[ORM\ManyToMany(targetEntity: Interes::class, inversedBy: 'voluntarios')]
     #[ORM\JoinTable(name: 'VOLUNTARIOS_INTERESES')]
     #[ORM\JoinColumn(name: 'DNI', referencedColumnName: 'DNI')]
     #[ORM\InverseJoinColumn(name: 'INTERES_ID', referencedColumnName: 'id')]
+    #[Groups(['voluntario:read'])]
     private Collection $intereses;
 
     #[ORM\Column(name: 'DISPONIBILIDAD', type: Types::TEXT, nullable: true)]

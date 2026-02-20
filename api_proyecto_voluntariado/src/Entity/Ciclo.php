@@ -12,12 +12,12 @@ class Ciclo
 {
     #[ORM\Id]
     #[ORM\Column(name: 'CURSO', type: Types::SMALLINT)]
-    #[Groups(['ciclo:read'])]
+    #[Groups(['ciclo:read', 'voluntario:read'])]
     private ?int $curso = null;
 
     #[ORM\Id]
     #[ORM\Column(name: 'NOMBRE', type: Types::STRING, length: 100)]
-    #[Groups(['ciclo:read'])]
+    #[Groups(['ciclo:read', 'voluntario:read'])]
     private ?string $nombre = null;
 
     public function getCurso(): ?int

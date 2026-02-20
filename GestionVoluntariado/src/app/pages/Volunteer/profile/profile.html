@@ -10,7 +10,7 @@
             <button (click)="goBack()" class="btn-back-link">
                 <i class="bi bi-arrow-left"></i> Volver
             </button>
-            <h1 class="mb-0">{{ editMode ? 'Editar Perfil' : 'Mi Perfil' }}</h1>
+            <h1 class="mb-0">{{ editMode ? 'Editando mis Datos' : 'Mi Perfil' }}</h1>
         </div>
         <div class="header-actions">
             <button *ngIf="!editMode" (click)="toggleEdit()" class="btn-edit-toggle">
@@ -18,7 +18,7 @@
             </button>
             <button *ngIf="editMode" (click)="submitProfile()"
                 class="btn btn-custom-blue rounded-pill px-4 text-white shadow-sm">
-                Guardar Cambios
+                Guardar Datos
             </button>
         </div>
     </div>
@@ -32,70 +32,145 @@
     <!-- Profile Content -->
     <div *ngIf="!loading" class="profile-content-card shadow-sm border-0 rounded-4 overflow-hidden">
 
-        <!-- VIEW MODE -->
-        <div *ngIf="!editMode" class="view-mode p-4 p-md-5">
+        <!-- PROFILE GRID (Both View and Edit) -->
+        <div class="view-mode p-4 p-md-5" [formGroup]="profileForm" *ngIf="volunteer">
             <div class="user-summary">
-                <div class="avatar-large" (click)="toggleEdit()">
+                <div class="avatar-large">
                     <i class="bi bi-person-circle"></i>
-                    <span class="edit-overlay"><i class="bi bi-camera"></i></span>
                 </div>
                 <div class="user-info-main">
-                    <h2>{{ volunteer?.nombre }} {{ volunteer?.apellido1 }}</h2>
-                    <p class="user-email">{{ volunteer?.email }}</p>
+                    <div *ngIf="!editMode">
+                        <h2>{{ volunteer?.nombre }} {{ volunteer?.apellido1 }}</h2>
+                        <p class="user-email">{{ volunteer?.correo || volunteer?.email }}</p>
+                    </div>
+                    <div *ngIf="editMode" class="d-flex gap-2 mb-3 flex-wrap">
+                        <div class="flex-grow-1 min-width-200">
+                            <label class="field-label-small">Nombre</label>
+                            <input type="text" formControlName="nombre" class="premium-style-input w-100">
+                        </div>
+                        <div class="flex-grow-1 min-width-200">
+                            <label class="field-label-small">Apellido</label>
+                            <input type="text" formControlName="apellido1" class="premium-style-input w-100">
+                        </div>
+                    </div>
                     <span class="badge-status">Voluntario</span>
                 </div>
             </div>
 
-            <div class="info-grid">
+            <div class="info-grid mt-4">
+                <!-- Zona -->
                 <div class="info-item">
                     <label><i class="bi bi-geo-alt"></i> Zona</label>
-                    <p>{{ volunteer?.zona || 'No especificada' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ volunteer?.zona || 'No especificada' }}</p>
+                    <select *ngIf="editMode" formControlName="zona" class="premium-style-input w-100">
+                        <option value="">Selecciona una zona...</option>
+                        <option *ngFor="let z of availableZones" [value]="z">{{ z }}</option>
+                    </select>
                 </div>
+
+                <!-- Experiencia -->
                 <div class="info-item">
                     <label><i class="bi bi-briefcase"></i> Experiencia</label>
-                    <p>{{ volunteer?.experiencia || volunteer?.experience || 'Sin especificar' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ volunteer?.experiencia || volunteer?.experience || 'Sin
+                        especificar' }}</p>
+                    <textarea *ngIf="editMode" formControlName="experiencia" class="premium-style-input w-100" rows="1"
+                        placeholder="Describe tu experiencia..."></textarea>
                 </div>
+
+                <!-- Vehículo -->
                 <div class="info-item">
                     <label><i class="bi bi-car-front"></i> Vehículo</label>
-                    <p>{{ (volunteer?.coche || volunteer?.hasCar) ? 'Dispone de coche propio' : 'No dispone de coche' }}
-                    </p>
+                    <p *ngIf="!editMode" class="animate-text">{{ (volunteer?.coche || volunteer?.hasCar) ? 'Dispone de
+                        coche propio' : 'No dispone de coche' }}</p>
+                    <select *ngIf="editMode" formControlName="coche" class="premium-style-input w-100">
+                        <option [value]="true">Dispone de coche propio</option>
+                        <option [value]="false">No dispone de coche</option>
+                    </select>
                 </div>
+
+                <!-- Ciclo -->
+                <div class="info-item">
+                    <label><i class="bi bi-mortarboard"></i> Ciclo Formativo</label>
+                    <p *ngIf="!editMode" class="animate-text">{{ volunteer?.ciclo || 'No especificado' }}</p>
+                    <select *ngIf="editMode" formControlName="ciclo" class="premium-style-input w-100">
+                        <option value="">Selecciona tu ciclo...</option>
+                        <option *ngFor="let c of availableCiclos" [value]="c.nombre + ' (' + c.curso + 'º)'">
+                            {{ c.nombre }} ({{ c.curso }}º)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Habilidades -->
                 <div class="info-item full-width">
                     <label><i class="bi bi-star"></i> Habilidades</label>
                     <div class="pill-container">
-                        <span *ngFor="let h of volunteer?.habilidades" class="info-pill">{{ h.nombre || h }}</span>
-                        <span *ngIf="!volunteer?.habilidades?.length" class="empty-text">Sin habilidades
-                            registradas</span>
+                        <ng-container *ngIf="!editMode">
+                            <span *ngFor="let h of volunteer?.habilidades" class="info-pill">{{ h.nombre || h }}</span>
+                            <span *ngIf="!volunteer?.habilidades?.length" class="empty-text">Sin habilidades
+                                registradas</span>
+                        </ng-container>
+                        <ng-container *ngIf="editMode">
+                            <span *ngFor="let h of tempSkills" class="info-pill edit-pill">
+                                {{ h.nombre || h }}
+                                <i class="bi bi-x ms-2 remove-icon" (click)="removeItem(tempSkills, h)"></i>
+                            </span>
+                            <div class="add-tag-box w-100">
+                                <select (change)="addSkill($event)" class="premium-style-input select-small">
+                                    <option value="">+ Añadir habilidad...</option>
+                                    <option *ngFor="let s of availableSkills" [value]="s.id">{{ s.nombre }}</option>
+                                </select>
+                            </div>
+                        </ng-container>
                     </div>
                 </div>
+
+                <!-- Intereses -->
                 <div class="info-item full-width">
                     <label><i class="bi bi-heart"></i> Intereses</label>
                     <div class="pill-container">
-                        <span *ngFor="let i of volunteer?.intereses" class="info-pill">{{ i.nombre || i }}</span>
-                        <span *ngIf="!volunteer?.intereses?.length" class="empty-text">Sin intereses registrados</span>
+                        <ng-container *ngIf="!editMode">
+                            <span *ngFor="let i of volunteer?.intereses" class="info-pill">{{ i.nombre || i }}</span>
+                            <span *ngIf="!volunteer?.intereses?.length" class="empty-text">Sin intereses
+                                registrados</span>
+                        </ng-container>
+                        <ng-container *ngIf="editMode">
+                            <span *ngFor="let i of tempInterests" class="info-pill edit-pill">
+                                {{ i.nombre || i }}
+                                <i class="bi bi-x ms-2 remove-icon" (click)="removeItem(tempInterests, i)"></i>
+                            </span>
+                            <div class="add-tag-box w-100">
+                                <select (change)="addInterest($event)" class="premium-style-input select-small">
+                                    <option value="">+ Añadir interés...</option>
+                                    <option *ngFor="let int of availableInterests" [value]="int.id">{{ int.nombre }}
+                                    </option>
+                                </select>
+                            </div>
+                        </ng-container>
                     </div>
                 </div>
+
+                <!-- Disponibilidad -->
                 <div class="info-item full-width">
                     <label><i class="bi bi-clock"></i> Disponibilidad</label>
                     <div class="pill-container">
-                        <span *ngFor="let d of volunteer?.disponibilidad" class="info-pill">{{ d }}</span>
-                        <span *ngIf="!volunteer?.disponibilidad?.length" class="empty-text">No especificada</span>
+                        <ng-container *ngIf="!editMode">
+                            <span *ngFor="let d of volunteer?.disponibilidad" class="info-pill">{{ d }}</span>
+                            <span *ngIf="!volunteer?.disponibilidad?.length" class="empty-text">No especificada</span>
+                        </ng-container>
+                        <ng-container *ngIf="editMode">
+                            <span *ngFor="let d of tempAvailability" class="info-pill edit-pill">
+                                {{ d }}
+                                <i class="bi bi-x ms-2 remove-icon" (click)="removeItem(tempAvailability, d)"></i>
+                            </span>
+                            <div class="add-tag-box w-100">
+                                <select (change)="addAvailability($event)" class="premium-style-input select-small">
+                                    <option value="">+ Añadir horario...</option>
+                                    <option *ngFor="let a of availableAvailability" [value]="a">{{ a }}</option>
+                                </select>
+                            </div>
+                        </ng-container>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- EDIT MODE (Integrated Shared Form) -->
-        <div *ngIf="editMode" class="integrated-editor">
-            <!-- Parent feedback at the top -->
-
-
-            <!-- Editor Body (Scrollable) -->
-            <div class="editor-scroll-body p-4 bg-light bg-opacity-10">
-                <app-volunteer-form submitLabel="Guardar Cambios" [isModal]="false" [isEdit]="true"
-                    [hideSubmitButton]="true" [disableAutoUpdate]="true" [initialData]="volunteer"
-                    (onSubmit)="handleFormSubmit($event)">
-                </app-volunteer-form>
             </div>
         </div>
     </div>

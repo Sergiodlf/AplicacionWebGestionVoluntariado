@@ -178,11 +178,22 @@ export class AuthService {
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.put('/api/auth/profile', data).pipe(
-      tap(() => {
-        const current = this.userProfileSubject.value;
-        if (current) {
-          this.loadProfile().subscribe();
+    return this.http.put<ProfileResponse>('/api/auth/profile', data).pipe(
+      tap(response => {
+        // Update subject with the data returned from update (already in ProfileResponse format)
+        if (response && response.datos) {
+          const profile = response;
+          this.userProfileSubject.next(profile);
+
+          // Persist changed data
+          if (profile.datos.nombre) {
+            localStorage.setItem('user_name', profile.datos.nombre);
+          }
+          if (profile.tipo === 'organizacion' && profile.datos.cif) {
+            localStorage.setItem('user_cif', profile.datos.cif);
+          } else if (profile.tipo === 'voluntario' && profile.datos.dni) {
+            localStorage.setItem('user_dni', profile.datos.dni);
+          }
         }
       })
     );
