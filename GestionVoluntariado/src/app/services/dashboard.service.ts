@@ -33,7 +33,7 @@ export class DashboardService {
             volunteers: this.volunteerService.getVolunteers(),
             organizations: this.organizationService.getOrganizations(),
             matches: this.voluntariadoService.getAllInscripciones(),
-            activities: this.voluntariadoService.getAllVoluntariados(),
+            activities: this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL', history: true }),
             habilidades: this.categoryService.getHabilidades(),
             intereses: this.categoryService.getIntereses()
         }).pipe(
@@ -75,9 +75,21 @@ export class DashboardService {
             normalize(a.estadoAprobacion) === 'PENDIENTE'
         ).length;
 
-        const activitiesCompleted = activities.filter((a: any) =>
-            ['CERRADA', 'FINALIZADA', 'CANCELADO'].includes(normalize(a.estado))
-        ).length;
+        const checkCompleted = (a: any) => {
+            const rawStatus = normalize(a.estado);
+            const rawApproval = normalize(a.estadoAprobacion);
+            if (rawApproval !== 'ACEPTADA') return false; // Must be accepted first
+
+            if (['CERRADA', 'FINALIZADA', 'COMPLETADA', 'COMPLETADO'].includes(rawStatus)) return true;
+
+            // Fallback for dates
+            if (a.fechaFin) {
+                const end = new Date(a.fechaFin);
+                if (new Date() > end) return true;
+            }
+            return false;
+        };
+        const activitiesCompleted = activities.filter(checkCompleted).length;
 
         // 5. Rates
         let acceptanceRate = 0;
