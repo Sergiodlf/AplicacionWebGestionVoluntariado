@@ -116,10 +116,10 @@ class FirebaseService implements FirebaseServiceInterface
         }
     }
 
-    public function verifyIdToken(string $token): array
+    public function verifyIdToken(string $token, int $leewaySeconds = 300): array
     {
         try {
-            $verifiedIdToken = $this->auth->verifyIdToken($token);
+            $verifiedIdToken = $this->auth->verifyIdToken($token, false, $leewaySeconds);
             return $verifiedIdToken->claims()->all();
         } catch (\Throwable $e) {
             throw new \RuntimeException('Token de Firebase inválido: ' . $e->getMessage());
@@ -142,6 +142,17 @@ class FirebaseService implements FirebaseServiceInterface
             $this->auth->updateUser($uid, ['emailVerified' => true]);
         } catch (\Throwable $e) {
             throw new \RuntimeException('No se pudo verificar el email: ' . $e->getMessage());
+        }
+    }
+
+    public function adminChangePassword(string $email, string $newPassword): void
+    {
+        try {
+            $user = $this->auth->getUserByEmail($email);
+            $this->auth->changeUserPassword($user->uid, $newPassword);
+        } catch (\Throwable $e) {
+            $this->logger->error('FirebaseService: Error changing password explicitly.', ['error' => $e->getMessage(), 'email' => $email]);
+            throw new \RuntimeException('Error al cambiar la contraseña: ' . $e->getMessage());
         }
     }
 

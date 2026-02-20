@@ -8,7 +8,7 @@
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
                     <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="Por Empezar"
-                        middleLabel="En Curso" rightLabel="Completadas" [leftCount]="pendingOpportunities.length"
+                        middleLabel="En Curso" rightLabel="Completados" [leftCount]="pendingOpportunities.length"
                         [secondCount]="porEmpezarOpportunities.length" [middleCount]="enCursoOpportunities.length"
                         [rightCount]="completedOpportunities.length" (optionChanged)="onTabChange($event)">
                     </app-status-toggle-voluntariado>
@@ -85,6 +85,7 @@
                         <div class="col-12 d-flex flex-column align-items-center justify-content-center py-5">
                             <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
                             <h5 class="text-muted mt-3">No hay voluntariados para mostrar</h5>
+                            <p class="text-muted small">{{ activeTab === 'left' ? 'Todos los voluntariados pendientes han sido revisados' : 'No hay voluntariados aceptados' }}</p>
                         </div>
                         }
                         }

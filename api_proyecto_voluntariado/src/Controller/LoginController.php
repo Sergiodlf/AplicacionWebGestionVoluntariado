@@ -196,6 +196,54 @@ class LoginController extends AbstractController
         }
     }
 
+    #[Route('/admin/change-password', name: 'admin_change_password', methods: ['POST'])]
+    public function adminChangePassword(Request $request, \App\Service\FirebaseServiceInterface $firebaseService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $newPassword = $data['newPassword'] ?? null;
+
+        // VERIFICAR QUE EL USUARIO ACTUAL ES ADMIN
+        $user = $this->getUser();
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return $this->errorResponse('No tienes permisos (Admin) para realizar esta acción.', 403);
+        }
+
+        if (!$email || !$newPassword) {
+            return $this->errorResponse('Email y nueva contraseña son obligatorios.', 400);
+        }
+
+        try {
+            $firebaseService->adminChangePassword($email, $newPassword);
+            return $this->json(['message' => 'Contraseña actualizada correctamente para el usuario.']);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Error al cambiar la contraseña: ' . $e->getMessage(), 400);
+        }
+    }
+
+    #[Route('/refresh-token', name: 'refresh_token', methods: ['POST'])]
+    public function refreshToken(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data['refreshToken'] ?? null;
+
+        if (!$refreshToken) {
+            return $this->errorResponse('Refresh token es obligatorio.', 400);
+        }
+
+        try {
+            $authResult = $this->authService->refreshIdToken($refreshToken);
+
+            return $this->json([
+                'token' => $authResult->idToken,
+                'refreshToken' => $authResult->refreshToken,
+                'expiresIn' => $authResult->expiresIn,
+            ]);
+        } catch (\Exception $e) {
+            return $this->errorResponse('No se pudo renovar el token: ' . $e->getMessage(), 401);
+        }
+    }
+
     private function getUserRole($user): string
     {
         if ($user instanceof \App\Entity\Administrador) return 'admin';

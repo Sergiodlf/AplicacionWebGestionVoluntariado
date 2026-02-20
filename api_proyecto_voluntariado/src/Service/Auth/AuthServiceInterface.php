@@ -33,4 +33,11 @@ interface AuthServiceInterface
      * @throws \Exception If authentication fails or update fails.
      */
     public function changePassword(string $email, string $oldPassword, string $newPassword): void;
+
+    /**
+     * Refreshes an ID token using a refresh token.
+     * 
+     * @throws \Exception If the refresh token is invalid or expired.
+     */
+    public function refreshIdToken(string $refreshToken): AuthResultDTO;
 }

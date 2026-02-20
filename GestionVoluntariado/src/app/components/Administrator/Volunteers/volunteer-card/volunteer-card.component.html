@@ -19,6 +19,18 @@
     </div>
     <div class="d-flex gap-2">
 
+      <ng-container *ngIf="status() === 'ACEPTADO'">
+        <button
+          class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center me-1"
+          style="width: 32px; height: 32px;" title="Editar Perfil" (click)="onEdit.emit()">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button
+          class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center me-1"
+          style="width: 32px; height: 32px;" title="Cambiar Contraseña" (click)="onChangePassword.emit()">
+          <i class="bi bi-key"></i>
+        </button>
+      </ng-container>
 
       <ng-container *ngIf="status() !== 'ACEPTADO'; else acceptedBadge">
         <button class="btn btn-custom-blue text-white btn-sm px-3 rounded-pill d-flex align-items-center"

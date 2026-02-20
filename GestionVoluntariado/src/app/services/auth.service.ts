@@ -23,6 +23,7 @@ export interface LoginResponse {
 })
 export class AuthService {
   isRegistrationInProgress = false;
+  private isRefreshing = false;
   private auth: Auth = inject(Auth); // Keep for signOut cleanup if needed
   private firestore: Firestore = inject(Firestore); // Keep for legacy saves if needed
 
@@ -73,6 +74,9 @@ export class AuthService {
     localStorage.setItem('user_token', authResult.token);
     localStorage.setItem('user_role', authResult.rol);
     localStorage.setItem('user_email', authResult.email);
+    if (authResult.refreshToken) {
+      localStorage.setItem('user_refresh_token', authResult.refreshToken);
+    }
 
     // Update State
     this.userRoleSubject.next(authResult.rol);
@@ -125,6 +129,7 @@ export class AuthService {
     localStorage.removeItem('user_email');
     localStorage.removeItem('user_dni');
     localStorage.removeItem('user_cif');
+    localStorage.removeItem('user_refresh_token');
 
     return signOut(this.auth); // Cleanup Firebase SDK state too
   }
@@ -188,6 +193,37 @@ export class AuthService {
   }
 
   changePassword(oldPass: string, newPass: string, email?: string): Observable<any> {
-    return this.http.post('/api/auth/changePassword', { oldPassword: oldPass, newPassword: newPass, email: email });
+    return this.http.post('/api/auth/change-password', { oldPassword: oldPass, newPassword: newPass, email: email });
+  }
+
+  adminChangePassword(email: string, newPassword: string): Observable<any> {
+    return this.http.post('/api/auth/admin/change-password', { email: email, newPassword: newPassword });
+  }
+
+  async refreshToken(): Promise<void> {
+    if (this.isRefreshing) {
+      // Wait for the current refresh to finish
+      return new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    this.isRefreshing = true;
+    const refreshToken = localStorage.getItem('user_refresh_token');
+    if (!refreshToken) {
+      this.isRefreshing = false;
+      throw new Error('No refresh token stored');
+    }
+
+    try {
+      const result: any = await this.http
+        .post('/api/auth/refresh-token', { refreshToken })
+        .toPromise();
+
+      localStorage.setItem('user_token', result.token);
+      if (result.refreshToken) {
+        localStorage.setItem('user_refresh_token', result.refreshToken);
+      }
+    } finally {
+      this.isRefreshing = false;
+    }
   }
 }

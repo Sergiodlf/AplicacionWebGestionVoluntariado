@@ -12,6 +12,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { CreateMatchModalComponent } from '../../../components/Administrator/Matches/create-match-modal/create-match-modal.component';
 import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-volunteers',
@@ -171,6 +172,12 @@ export class VolunteersComponent implements OnInit, OnDestroy {
   showCreateMatchModal = false;
   selectedVolunteerForMatch: any = null;
 
+  // New states for editing and password change
+  selectedVolunteerForEdit: any = null;
+  selectedVolunteerForPassword: any = null;
+  newPasswordValue: string = '';
+  showPasswordModal: boolean = false;
+  private authService = inject(AuthService);
 
   ngOnInit() {
     this.categoryService.getHabilidades().subscribe((data) => (this.availableSkills = data));
@@ -204,6 +211,14 @@ export class VolunteersComponent implements OnInit, OnDestroy {
       text: this.searchTerm,
     });
     this.closeModal('filter');
+  }
+
+  onSearchInput() {
+    const current = this.filterCriteria$.value;
+    this.filterCriteria$.next({
+      ...current,
+      text: this.searchTerm,
+    });
   }
 
   resetFilters() {
@@ -322,6 +337,64 @@ export class VolunteersComponent implements OnInit, OnDestroy {
         const errorMessage = error.error?.message || error.error?.error || error.message || 'Error al crear voluntario';
         this.notificationService.showError('Error: ' + errorMessage);
       },
+    });
+  }
+
+  // Edit methods
+  openEditModal(volunteer: any) {
+    this.selectedVolunteerForEdit = volunteer;
+    this.lockBody();
+  }
+
+  closeEditModal() {
+    this.selectedVolunteerForEdit = null;
+    this.unlockBody();
+  }
+
+  handleEditSubmit(updatedData: any) {
+    this.volunteerService.updateProfile(this.selectedVolunteerForEdit.dni, updatedData).subscribe({
+      next: () => {
+        this.refresh$.next(true);
+        this.closeEditModal();
+        this.notificationService.showSuccess('Voluntario actualizado con éxito');
+      },
+      error: (error: any) => {
+        console.error('Error updating volunteer', error);
+        this.notificationService.showError('Error al actualizar voluntario');
+      }
+    });
+  }
+
+  // Password methods
+  openPasswordModal(volunteer: any) {
+    this.selectedVolunteerForPassword = volunteer;
+    this.newPasswordValue = '';
+    this.showPasswordModal = true;
+    this.lockBody();
+  }
+
+  closePasswordModal() {
+    this.selectedVolunteerForPassword = null;
+    this.newPasswordValue = '';
+    this.showPasswordModal = false;
+    this.unlockBody();
+  }
+
+  submitPasswordChange() {
+    if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
+      this.notificationService.showError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    this.authService.adminChangePassword(this.selectedVolunteerForPassword.email, this.newPasswordValue).subscribe({
+      next: () => {
+        this.closePasswordModal();
+        this.notificationService.showSuccess('Contraseña actualizada correctamente.');
+      },
+      error: (err: any) => {
+        console.error('Error updating password', err);
+        this.notificationService.showError('Error al actualizar la contraseña.');
+      }
     });
   }
 }

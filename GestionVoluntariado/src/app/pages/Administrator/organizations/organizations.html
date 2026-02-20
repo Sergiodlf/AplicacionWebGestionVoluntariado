@@ -13,9 +13,6 @@
                     <app-status-toggle leftLabel="Pendientes" rightLabel="Aceptadas" [leftCount]="pendingCount()"
                         [rightCount]="approvedCount()" [activeOption]="activeTab" (optionChanged)="onTabChange($event)">
                     </app-status-toggle>
-
-                    <!-- Search Bar (Centered below tabs) -->
-                    <!-- Search Bar Removed -->
                 </div>
 
                 <!-- Subheader Actions Row -->
@@ -44,7 +41,7 @@
                                 <input type="text"
                                     class="form-control bg-transparent border-0 shadow-none ps-2 text-dark"
                                     placeholder="Buscar Organización..." [(ngModel)]="searchTerm"
-                                    (input)="applyFilters()">
+                                    (input)="filterAndSetOrganizations()" autocomplete="off">
                                 <span class="input-group-text bg-transparent border-0 text-muted"><i
                                         class="bi bi-search"></i></span>
                             </div>
@@ -75,15 +72,18 @@
 
                         @for (org of organizations(); track org.cif) {
                         <div class="col-12 col-md-6 col-lg-6">
-                            <app-organization-card [organization]="org"
-                                (onActivityClick)="openActivityModal($event)"></app-organization-card>
+                            <app-organization-card [organization]="org" (onActivityClick)="openActivityModal($event)"
+                                (onEdit)="openEditModal(org)" (onChangePassword)="openPasswordModal(org)">
+                            </app-organization-card>
                         </div>
                         }
 
                         @empty {
                         <div class="col-12 d-flex flex-column align-items-center justify-content-center py-5">
                             <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                            <h5 class="text-muted mt-3">No hay voluntarios para mostrar</h5>
+                            <h5 class="text-muted mt-3">No hay organizaciones para mostrar</h5>
+                            <p class="text-muted small">{{ activeTab === 'left' ? 'Todas las organizaciones pendientes
+                                han sido revisadas' : 'No hay organizaciones aceptadas' }}</p>
                         </div>
                         }
                     </div>
@@ -216,3 +216,60 @@
         </div>
     </div>
     }
+
+    <!-- Edit Organization Modal -->
+    @if (selectedOrganizationForEdit) {
+    <div class="modal fade show d-block" role="dialog" aria-modal="true">
+        <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closeEditModal()"></div>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0">
+                    <button class="btn-close" (click)="closeEditModal()"></button>
+                </div>
+                <div class="modal-body px-5 pb-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-custom-blue">Editar Organización</h2>
+                    </div>
+                    <app-organization-form submitLabel="Guardar Cambios" [isEdit]="true"
+                        [initialData]="selectedOrganizationForEdit" (onSubmit)="handleEditSubmit($event)">
+                    </app-organization-form>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Change Password Modal -->
+    @if (showPasswordModal()) {
+    <div class="modal fade show d-block" role="dialog" aria-modal="true">
+        <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closePasswordModal()"></div>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0">
+                    <h3 class="modal-title fw-bold text-custom-blue">Cambiar Contraseña</h3>
+                    <button class="btn-close" (click)="closePasswordModal()"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted">Ingresa la nueva contraseña para <strong>{{
+                            selectedOrganizationForPassword?.nombre || selectedOrganizationForPassword?.email
+                            }}</strong>:</p>
+                    <form autocomplete="off" (submit)="$event.preventDefault()">
+                        <div class="form-group mb-4">
+                            <input type="password" class="form-control rounded-pill px-4 py-3"
+                                placeholder="Nueva contraseña (mínimo 6 caracteres)" [(ngModel)]="newPasswordValue"
+                                [ngModelOptions]="{standalone: true}" autocomplete="new-password">
+                        </div>
+                    </form>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-danger px-4 rounded-pill"
+                            (click)="closePasswordModal()">Cancelar</button>
+                        <button type="button" class="btn btn-custom-blue text-white px-4 rounded-pill"
+                            (click)="submitPasswordChange()">Guardar Contraseña</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+</div>

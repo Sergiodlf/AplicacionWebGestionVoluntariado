@@ -20,6 +20,8 @@ export class VolunteerCardComponent {
   @Output() onAccept = new EventEmitter<void>();
   @Output() onReject = new EventEmitter<void>();
   @Output() onAssign = new EventEmitter<void>();
+  @Output() onEdit = new EventEmitter<void>();
+  @Output() onChangePassword = new EventEmitter<void>();
 
   status = input<string>('PENDIENTE');
   parseList(value: any): any[] {

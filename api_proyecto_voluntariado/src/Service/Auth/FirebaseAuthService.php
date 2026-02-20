@@ -98,4 +98,31 @@ class FirebaseAuthService implements AuthServiceInterface
             throw new \Exception('Failed to update password in Firebase.');
         }
     }
+
+    public function refreshIdToken(string $refreshToken): AuthResultDTO
+    {
+        $apiKey = $_ENV['FIREBASE_API_KEY'] ?? $_SERVER['FIREBASE_API_KEY'] ?? getenv('FIREBASE_API_KEY');
+
+        if (!$apiKey) {
+            throw new \RuntimeException('Error de configuración en servidor: Falta FIREBASE_API_KEY');
+        }
+
+        $response = $this->httpClient->request('POST', 'https://securetoken.googleapis.com/v1/token?key=' . $apiKey, [
+            'body' => [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ],
+        ]);
+
+        $data = $response->toArray();
+
+        return new AuthResultDTO(
+            idToken: $data['id_token'],
+            refreshToken: $data['refresh_token'] ?? null,
+            expiresIn: $data['expires_in'],
+            localId: $data['user_id'],
+            email: $data['email'] ?? '',
+            emailVerified: true
+        );
+    }
 }
