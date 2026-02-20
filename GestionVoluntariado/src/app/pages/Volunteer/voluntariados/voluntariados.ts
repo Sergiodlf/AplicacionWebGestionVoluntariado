@@ -35,11 +35,11 @@ export class Voluntariados implements OnInit {
   showFilterModal = signal(false);
   tempFilters = {
     localidad: '',
-    sector: ''
+    sector: '',
   };
   filterCriteria = {
     localidad: '',
-    sector: ''
+    sector: '',
   };
   availableLocations: string[] = [];
   availableSectors: string[] = [];
@@ -52,28 +52,33 @@ export class Voluntariados implements OnInit {
 
   loadData() {
     // 1. Get all available activities
-    this.voluntariadoService.getAllVoluntariados(true).subscribe({
-      next: (data) => {
-        this.allVoluntariados = data.map((v: any) => {
-          return {
-            ...v,
-            codAct: v.codActividad, // Map ID
-            title: v.nombre,
-            organization: v.nombre_organizacion, // Map Organization Name
-            skills: v.habilidades || [],
-            date: v.fechaInicio,
-            ods: v.ods || []
-          } as Voluntariado;
-        });
-        this.extractFilterOptions();
-        this.filterData();
-        this.isLoading = false;
-      },
-      error: (err: any) => {
-        console.error('Error fetching voluntariados', err);
-        this.isLoading = false;
-      }
-    });
+    this.voluntariadoService
+      .getAllVoluntariados(true, {
+        estadoAprobacion: 'ALL',
+        history: true,
+      })
+      .subscribe({
+        next: (data) => {
+          this.allVoluntariados = data.map((v: any) => {
+            return {
+              ...v,
+              codAct: v.codActividad, // Map ID
+              title: v.nombre,
+              organization: v.nombre_organizacion, // Map Organization Name
+              skills: v.habilidades || [],
+              date: v.fechaInicio,
+              ods: v.ods || [],
+            } as Voluntariado;
+          });
+          this.extractFilterOptions();
+          this.filterData();
+          this.isLoading = false;
+        },
+        error: (err: any) => {
+          console.error('Error fetching voluntariados', err);
+          this.isLoading = false;
+        },
+      });
 
     // 2. Get my inscriptions (pending matches)
     // FIX: Fetch ALL inscriptions to ensure duplicate check works for Confirmed/Accepted too.
@@ -87,7 +92,7 @@ export class Voluntariados implements OnInit {
         // Fallback or empty if 404
         this.myInscripciones = [];
         this.filterData();
-      }
+      },
     });
   }
 
@@ -104,17 +109,47 @@ export class Voluntariados implements OnInit {
   }
 
   filterData() {
-    this.displayedVoluntariados = this.allVoluntariados.filter(v => {
-      // 1. Search Term
-      const title = v.title || '';
-      if (this.searchTerm && !title.toLowerCase().includes(this.searchTerm.toLowerCase())) return false;
+    const inscIds = new Set(
+      (this.myInscripciones || [])
+        .map((i) => i.codActividad ?? i.id_actividad ?? i.codActividadInscrita)
+        .filter((x: any) => x !== undefined && x !== null)
+        .map((x: any) => String(x)),
+    );
 
-      // 2. Attribute Filters
-      // Note: we need to ensure 'direccion' and 'sector' are on the object.
-      // If strict typing blocks this, we might need to cast 'v' to any or update interface.
+    const inscNames = new Set(
+      (this.myInscripciones || [])
+        .map((i) => i.actividad ?? i.nombre ?? i.title)
+        .filter(Boolean)
+        .map((x: string) => x.trim().toLowerCase()),
+    );
+
+    this.displayedVoluntariados = this.allVoluntariados.filter((v) => {
+      // 0) Excluir si ya estoy inscrito
+      const vId = v.codAct != null ? String(v.codAct) : '';
+      const vName = (v.title || '').trim().toLowerCase();
+      if ((vId && inscIds.has(vId)) || (vName && inscNames.has(vName)))
+        return false;
+
+      // 1) Search
+      const title = v.title || '';
+      if (
+        this.searchTerm &&
+        !title.toLowerCase().includes(this.searchTerm.toLowerCase())
+      )
+        return false;
+
+      // 2) Filters
       const item = v as any;
-      if (this.filterCriteria.localidad && item.direccion !== this.filterCriteria.localidad) return false;
-      if (this.filterCriteria.sector && item.sector !== this.filterCriteria.sector) return false;
+      if (
+        this.filterCriteria.localidad &&
+        item.direccion !== this.filterCriteria.localidad
+      )
+        return false;
+      if (
+        this.filterCriteria.sector &&
+        item.sector !== this.filterCriteria.sector
+      )
+        return false;
 
       return true;
     });
@@ -161,32 +196,45 @@ export class Voluntariados implements OnInit {
     // 0. Pre-check: Check if already signed up locally
     // We check against 'myInscripciones'. The API might return 'actividad' (name) or 'id_actividad'/'codActividad'.
 
-    const alreadySignedUp = this.myInscripciones.some(i => {
-      const matchId = (i.codActividad && i.codActividad === item.codAct) || (i.id_actividad && i.id_actividad === item.codAct);
-      const matchName = (i.actividad && i.actividad === item.title) || (i.nombre && i.nombre === item.title);
+    const alreadySignedUp = this.myInscripciones.some((i) => {
+      const matchId =
+        (i.codActividad && i.codActividad === item.codAct) ||
+        (i.id_actividad && i.id_actividad === item.codAct);
+      const matchName =
+        (i.actividad && i.actividad === item.title) ||
+        (i.nombre && i.nombre === item.title);
       return matchId || matchName;
     });
 
     if (alreadySignedUp) {
-      this.notificationService.showWarning('Ya estás inscrito en el voluntariado: ' + item.title);
+      this.notificationService.showWarning(
+        'Ya estás inscrito en el voluntariado: ' + item.title,
+      );
       return;
     }
 
-    this.voluntariadoService.inscribirVoluntario(this.currentDNI, item.codAct).subscribe({
-      next: (res) => {
-        this.notificationService.showSuccess('Te has apuntado correctamente!');
-        // Refresh data to update "status" and clear cache
-        this.voluntariadoService.getMyInscripciones(this.currentDNI, true).subscribe(() => {
-          this.loadData();
-        });
-      },
-      error: (err: any) => {
-        console.error('Error al inscribirse', err);
-        // Try to show more specific error from backend if available
-        const serverMsg = err.error?.message || err.error?.error || '';
-        this.notificationService.showError(`Error al apuntarse. ${serverMsg} Verifica que no estés ya inscrito.`);
-      }
-    });
+    this.voluntariadoService
+      .inscribirVoluntario(this.currentDNI, item.codAct)
+      .subscribe({
+        next: (res) => {
+          this.notificationService.showSuccess(
+            'Te has apuntado correctamente!',
+          );
+          // Refresh data to update "status" and clear cache
+          this.voluntariadoService
+            .getMyInscripciones(this.currentDNI, true)
+            .subscribe(() => {
+              this.loadData();
+            });
+        },
+        error: (err: any) => {
+          console.error('Error al inscribirse', err);
+          // Try to show more specific error from backend if available
+          const serverMsg = err.error?.message || err.error?.error || '';
+          this.notificationService.showError(
+            `Error al apuntarse. ${serverMsg} Verifica que no estés ya inscrito.`,
+          );
+        },
+      });
   }
-
 }

@@ -19,8 +19,7 @@ export class VoluntariadoService {
 
   private myInscripcionesSubject = new BehaviorSubject<any[] | null>(null);
 
-
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   clearState() {
     this.inscripcionesSubject.next(null);
@@ -28,22 +27,27 @@ export class VoluntariadoService {
     this.myInscripcionesSubject.next(null);
   }
 
-  getAllVoluntariados(forceReload: boolean = false, filter?: { estadoAprobacion: string }): Observable<Voluntariado[]> {
+  getAllVoluntariados(
+    forceReload: boolean = false,
+    filter?: { estadoAprobacion?: string; history?: boolean; estado?: string },
+  ): Observable<Voluntariado[]> {
     if (this.actividadesSubject.value && !forceReload && !filter) {
       return of(this.actividadesSubject.value);
     }
     return this.loadVoluntariados(filter);
   }
 
-  getAllVoluntariadosFiltered(estadoAprobacion?: string): Observable<Voluntariado[]> {
-    let params = new HttpParams();
-    if (estadoAprobacion) {
-      params = params.set('estadoAprobacion', estadoAprobacion);
-    }
-    return this.http.get<Voluntariado[]>(this.apiUrl, { params });
+  getAllVoluntariadosFiltered(
+    estadoAprobacion?: string,
+  ): Observable<Voluntariado[]> {
+    return this.loadVoluntariados({ estadoAprobacion });
   }
 
-  loadVoluntariados(filter?: { estadoAprobacion: string, history?: boolean }): Observable<Voluntariado[]> {
+  loadVoluntariados(filter?: {
+    estadoAprobacion?: string;
+    history?: boolean;
+    estado?: string;
+  }): Observable<Voluntariado[]> {
     // Cache busting
     const timestamp = new Date().getTime();
     let params = new HttpParams().set('t', timestamp.toString());
@@ -56,15 +60,24 @@ export class VoluntariadoService {
       params = params.set('history', filter.history.toString());
     }
 
+    if (filter?.estado) {
+      params = params.set('estado', filter.estado);
+    }
+
     return this.http.get<Voluntariado[]>(this.apiUrl, { params }).pipe(
-      tap(data => {
-        if (!filter || (!filter.estadoAprobacion && filter.history === undefined)) {
+      tap((data) => {
+        // Solo cacheamos cuando no hay filtros
+        if (
+          !filter ||
+          (!filter.estadoAprobacion &&
+            filter.history === undefined &&
+            !filter.estado)
+        ) {
           this.actividadesSubject.next(data);
         }
-      })
+      }),
     );
   }
-
 
   getAllInscripciones(forceReload: boolean = false): Observable<any[]> {
     if (this.inscripcionesSubject.value && !forceReload) {
@@ -74,21 +87,29 @@ export class VoluntariadoService {
   }
 
   loadInscripciones(): Observable<any[]> {
-    return this.http.get<any[]>(this.inscripcionesUrl).pipe(
-      tap(data => this.inscripcionesSubject.next(data))
-    );
+    return this.http
+      .get<any[]>(this.inscripcionesUrl)
+      .pipe(tap((data) => this.inscripcionesSubject.next(data)));
   }
 
-  inscribirVoluntario(dniVoluntario: string, idActividad: number): Observable<any> {
+  inscribirVoluntario(
+    dniVoluntario: string,
+    idActividad: number,
+  ): Observable<any> {
     const url = `${this.apiUrl}/${idActividad}/inscribir`;
-    return this.http.post(url, {
-      dni: dniVoluntario
-    }).pipe(
-      tap(() => this.myInscripcionesSubject.next(null)) // Invalidate cache
-    );
+    return this.http
+      .post(url, {
+        dni: dniVoluntario,
+      })
+      .pipe(
+        tap(() => this.myInscripcionesSubject.next(null)), // Invalidate cache
+      );
   }
 
-  updateInscripcionStatus(idInscripcion: number, estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE' | 'COMPLETADA'): Observable<any> {
+  updateInscripcionStatus(
+    idInscripcion: number,
+    estado: 'CONFIRMADO' | 'RECHAZADO' | 'PENDIENTE' | 'COMPLETADA',
+  ): Observable<any> {
     const url = `${this.inscripcionesUrl}/${idInscripcion}`;
     return this.http.patch(url, { estado: estado });
   }
@@ -107,18 +128,26 @@ export class VoluntariadoService {
     return this.http.get<any[]>(fullUrl, { params });
   }
 
-  getMyInscripciones(dni?: string, forceReload: boolean = false): Observable<any[]> {
+  getMyInscripciones(
+    dni?: string,
+    forceReload: boolean = false,
+  ): Observable<any[]> {
     if (this.myInscripcionesSubject.value && !forceReload) {
       return of(this.myInscripcionesSubject.value);
     }
     // Updated to use the new "smart" endpoint
     const url = `${this.inscripcionesUrl}/me`;
-    return this.http.get<any[]>(url).pipe(
-      tap(data => this.myInscripcionesSubject.next(data))
-    );
+    return this.http
+      .get<any[]>(url)
+      .pipe(tap((data) => this.myInscripcionesSubject.next(data)));
   }
 
-  getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA', history: boolean = true): Observable<any[]> {
+  getActivitiesByOrganization(
+    cif: string,
+    estado?: string,
+    estadoAprobacion: string = 'ACEPTADA',
+    history: boolean = true,
+  ): Observable<any[]> {
     let params = new HttpParams()
       .set('estadoAprobacion', estadoAprobacion)
       .set('history', history.toString());
@@ -126,7 +155,9 @@ export class VoluntariadoService {
     if (estado) {
       params = params.set('estado', estado);
     }
-    return this.http.get<any[]>(`${this.apiUrl}/organizacion/${cif}`, { params });
+    return this.http.get<any[]>(`${this.apiUrl}/organizacion/${cif}`, {
+      params,
+    });
   }
 
   crearActividad(actividad: any): Observable<any> {
@@ -140,5 +171,4 @@ export class VoluntariadoService {
   updateActivity(id: number, actividad: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}/editar`, actividad);
   }
-
 }
