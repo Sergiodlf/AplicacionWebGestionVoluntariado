@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Service\ActivityService;
 use App\Service\InscripcionService;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Repository\VoluntarioRepository;
 
 #[Route('/api/actividades', name: 'api_actividades_')]
 class ActividadController extends AbstractController
@@ -21,15 +22,18 @@ class ActividadController extends AbstractController
     private $activityService;
     private $inscripcionService;
     private $organizationService;
+    private $voluntarioRepository;
 
     public function __construct(
-        ActivityService $activityService, 
+        ActivityService $activityService,
         InscripcionService $inscripcionService,
-        \App\Service\OrganizationService $organizationService
+        \App\Service\OrganizationService $organizationService,
+        VoluntarioRepository $voluntarioRepository
     ) {
         $this->activityService = $activityService;
         $this->inscripcionService = $inscripcionService;
         $this->organizationService = $organizationService;
+        $this->voluntarioRepository = $voluntarioRepository;
     }
     // CREAR ACTIVIDAD
 
@@ -37,8 +41,7 @@ class ActividadController extends AbstractController
     public function create(
         Request $request,
         SerializerInterface $serializer
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $json = $request->getContent();
 
         try {
@@ -51,10 +54,10 @@ class ActividadController extends AbstractController
         // 1. Validar Organización
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
-        
+
         $organizacion = ($user instanceof Organizacion) ? $user : null;
         if (!$organizacion && !empty($dto->cifOrganizacion)) {
-             $organizacion = $this->organizationService->getByCif($dto->cifOrganizacion);
+            $organizacion = $this->organizationService->getByCif($dto->cifOrganizacion);
         }
 
         if (!$organizacion) {
@@ -68,22 +71,22 @@ class ActividadController extends AbstractController
 
         try {
             // S-3: Delegate creation to service (L-2 Enums handled internally)
-            $estadoAprobacion = (($user instanceof \App\Entity\Administrador) || 
-                                ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles()))) 
-                                ? \App\Enum\ActivityApproval::ACEPTADA 
-                                : \App\Enum\ActivityApproval::PENDIENTE;
+            $estadoAprobacion = (($user instanceof \App\Entity\Administrador) ||
+                ($securityUser && in_array('ROLE_ADMIN', $securityUser->getRoles())))
+                ? \App\Enum\ActivityApproval::ACEPTADA
+                : \App\Enum\ActivityApproval::PENDIENTE;
 
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
-                'descripcion'      => $dto->descripcion, 
+                'descripcion'      => $dto->descripcion,
                 'estado'           => \App\Enum\ActivityStatus::PENDIENTE,
-                'estadoAprobacion' => $estadoAprobacion, 
-                'fechaInicio'      => $dto->fechaInicio,   
-                'fechaFin'         => $dto->fechaFin,      
+                'estadoAprobacion' => $estadoAprobacion,
+                'fechaInicio'      => $dto->fechaInicio,
+                'fechaFin'         => $dto->fechaFin,
                 'maxParticipantes' => $dto->maxParticipantes,
                 'direccion'        => $dto->direccion,
                 'sector'           => $dto->sector,
-                'odsIds'           => $dto->ods, 
+                'odsIds'           => $dto->ods,
                 'habilidadIds'    => $dto->habilidades,
             ], $organizacion);
 
@@ -114,7 +117,7 @@ class ActividadController extends AbstractController
         if (!$user) {
             return $this->errorResponse('No autorizado', 401);
         }
-        
+
         if ($user instanceof Organizacion && $actividad->getOrganizacion() !== $user) {
             return $this->errorResponse('No tienes permiso para editar esta actividad', 403);
         }
@@ -124,7 +127,7 @@ class ActividadController extends AbstractController
             /** @var CrearActividadDTO $dto */
             $dto = $serializer->deserialize($json, CrearActividadDTO::class, 'json');
         } catch (\Exception $e) {
-             return $this->errorResponse('JSON inválido', 400);
+            return $this->errorResponse('JSON inválido', 400);
         }
 
         try {
@@ -137,14 +140,13 @@ class ActividadController extends AbstractController
                 'maxParticipantes' => $dto->maxParticipantes,
                 'direccion'        => $dto->direccion,
                 'sector'           => $dto->sector,
-                'odsIds'           => $dto->ods, 
+                'odsIds'           => $dto->ods,
                 'habilidadIds'    => $dto->habilidades,
             ]);
 
             // Recalcular estado
             $this->activityService->checkAndUpdateStatus($actividad);
             $this->activityService->flush();
-
         } catch (\Exception $e) {
             return $this->errorResponse('Error actualizando actividad: ' . $e->getMessage(), 400);
         }
@@ -157,7 +159,7 @@ class ActividadController extends AbstractController
     public function list(Request $request): JsonResponse
     {
         $filters = [];
-        
+
         // Filtro por Estado de Aprobación
         $estadoParam = $request->query->get('estadoAprobacion');
         if ($estadoParam && strtoupper($estadoParam) !== 'ALL') {
@@ -174,14 +176,14 @@ class ActividadController extends AbstractController
         if ($user instanceof \App\Entity\Voluntario) {
             $filters['exclude_volunteer_dni'] = $user->getDni();
         } elseif ($excludeDni = $request->query->get('exclude_volunteer_dni')) {
-             $filters['exclude_volunteer_dni'] = $excludeDni;
+            $filters['exclude_volunteer_dni'] = $excludeDni;
         }
 
         // Filtro Histórico
         $filters['history'] = $request->query->getBoolean('history', false);
 
         $actividades = $this->activityService->getActivitiesByFilters($filters);
-        
+
         // Actualizar estados
         $modificado = false;
         foreach ($actividades as $actividad) {
@@ -222,9 +224,9 @@ class ActividadController extends AbstractController
         if ($estado) {
             if (strtolower($estado) === 'pendiente') {
                 $filters['estadoAprobacion'] = 'PENDIENTE';
-                $filters['estado'] = 'NOT_CANCELLED'; 
+                $filters['estado'] = 'NOT_CANCELLED';
             } else {
-                 $filters['estado'] = $estado;
+                $filters['estado'] = $estado;
             }
         } else {
             $filters['estado'] = 'NOT_CANCELLED';
@@ -272,7 +274,7 @@ class ActividadController extends AbstractController
             // Actualizar estados
             $modificado = false;
             foreach ($actividades as $actividad) {
-                 if ($this->activityService->checkAndUpdateStatus($actividad)) {
+                if ($this->activityService->checkAndUpdateStatus($actividad)) {
                     $modificado = true;
                 }
             }
@@ -285,7 +287,7 @@ class ActividadController extends AbstractController
             return $this->errorResponse($e->getMessage(), 500);
         }
     }
-    
+
     // INSCRIBIRSE EN ACTIVIDAD
     #[Route('/{id}/inscribir', name: 'inscribir', methods: ['POST', 'DELETE'])]
     public function inscribir(int $id, Request $request): JsonResponse
@@ -293,8 +295,11 @@ class ActividadController extends AbstractController
         $securityUser = $this->getUser();
         $user = $securityUser?->getDomainUser();
 
-        if (!$user || !($user instanceof \App\Entity\Voluntario)) {
-            return $this->errorResponse('Acceso denegado. Solo voluntarios.', 403);
+        if (
+            !$user ||
+            (!($user instanceof \App\Entity\Voluntario) && !($user instanceof \App\Entity\Administrador))
+        ) {
+            return $this->errorResponse('Acceso denegado. Solo voluntarios o administradores.', 403);
         }
 
         $actividad = $this->activityService->getActivityById($id);
@@ -302,13 +307,38 @@ class ActividadController extends AbstractController
             return $this->errorResponse('Actividad no encontrada', 404);
         }
 
+        // === NUEVO: Determinar el voluntario objetivo ===
+        $targetVoluntario = null;
+
+        if ($user instanceof \App\Entity\Voluntario) {
+            // Voluntario: se inscribe a sí mismo
+            $targetVoluntario = $user;
+        } else {
+            // Administrador: necesita dni en el body
+            $data = json_decode($request->getContent() ?: '{}', true);
+            $dni = $data['dni'] ?? null;
+
+            if (!$dni) {
+                return $this->errorResponse('Falta el DNI del voluntario', 400);
+            }
+
+            // Buscar voluntario por DNI
+            $targetVoluntario = $this->voluntarioRepository->findOneBy(['dni' => $dni]);
+
+            if (!$targetVoluntario) {
+                return $this->errorResponse('Voluntario no encontrado', 404);
+            }
+        }
+
+        // ==========================
         // Desinscribir (DELETE)
+        // ==========================
         if ($request->getMethod() === 'DELETE') {
-            $inscripcion = $this->inscripcionService->isVolunteerInscribed($actividad, $user);
+            $inscripcion = $this->inscripcionService->isVolunteerInscribed($actividad, $targetVoluntario);
             if (!$inscripcion) {
                 return $this->errorResponse('No estás inscrito en esta actividad', 404);
             }
-            
+
             try {
                 $this->inscripcionService->delete($inscripcion);
                 return $this->json(['message' => 'Te has desinscrito correctamente'], 200);
@@ -317,18 +347,24 @@ class ActividadController extends AbstractController
             }
         }
 
+        // ==========================
         // Inscripción (POST) - Validar duplicidad
-        $existing = $this->inscripcionService->isVolunteerInscribed($actividad, $user);
+        // ==========================
+        $existing = $this->inscripcionService->isVolunteerInscribed($actividad, $targetVoluntario);
         if ($existing) {
-             $estado = $existing->getEstado();
-             if ($estado !== \App\Enum\InscriptionStatus::CANCELADA && 
-                 $estado !== \App\Enum\InscriptionStatus::RECHAZADO &&
-                 $estado !== \App\Enum\InscriptionStatus::FINALIZADO) {
-                 return $this->errorResponse('Ya estás inscrito en esta actividad', 409);
-             }
+            $estado = $existing->getEstado();
+            if (
+                $estado !== \App\Enum\InscriptionStatus::CANCELADA &&
+                $estado !== \App\Enum\InscriptionStatus::RECHAZADO &&
+                $estado !== \App\Enum\InscriptionStatus::FINALIZADO
+            ) {
+                return $this->errorResponse('Ya estás inscrito en esta actividad', 409);
+            }
         }
 
+        // ==========================
         // Validar Cupo
+        // ==========================
         if (!$existing || $existing->getEstado() === \App\Enum\InscriptionStatus::CANCELADA) {
             $ocupadas = $this->inscripcionService->countActiveInscriptions($actividad);
             if ($ocupadas >= $actividad->getMaxParticipantes()) {
@@ -338,14 +374,18 @@ class ActividadController extends AbstractController
 
         try {
             $autoAccept = false;
-            $inscripcion = $this->inscripcionService->createInscription($actividad, $user, $existing, $autoAccept);
+            $inscripcion = $this->inscripcionService->createInscription(
+                $actividad,
+                $targetVoluntario,
+                $existing,
+                $autoAccept
+            );
 
             return $this->json([
                 'message' => 'Inscripción realizada con éxito',
                 'estado' => $inscripcion->getEstado()->value,
                 'id_inscripcion' => $inscripcion->getId()
             ], 201);
-
         } catch (\Exception $e) {
             return $this->errorResponse('Error al realizar la inscripción: ' . $e->getMessage(), 500);
         }
@@ -393,7 +433,7 @@ class ActividadController extends AbstractController
 
         try {
             $result = $this->activityService->updateActivityStatus($id, $nuevoEstado, $tipo);
-            
+
             $jsonResponse = [
                 'message' => 'Estado actualizado correctamente',
                 'campo_actualizado' => $result['campo_actualizado'],
@@ -401,7 +441,6 @@ class ActividadController extends AbstractController
             ];
 
             return $this->json($jsonResponse);
-
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
@@ -419,18 +458,17 @@ class ActividadController extends AbstractController
     {
         try {
             $action = $this->activityService->deleteActivity($id);
-            
-            $message = ($action === 'cancelled') 
+
+            $message = ($action === 'cancelled')
                 ? 'Actividad cancelada porque tenía inscripciones.'
                 : 'Actividad eliminada permanentemente.';
-            
+
             $jsonResponse = [
                 'message' => $message,
                 'action' => $action
             ];
-            
-            return $this->json($jsonResponse, 200);
 
+            return $this->json($jsonResponse, 200);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }
