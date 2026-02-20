@@ -29,7 +29,7 @@ export class RegisterOrganizationComponent {
         // DIRECT BACKEND REGISTRATION (Thin Client)
         this.organizationService.createOrganization(org).subscribe({
             next: () => {
-                alert('Organización registrada con éxito. Se ha enviado un correo de verificación.');
+                alert('Organización registrada con éxito. Ya puedes iniciar sesión.');
                 this.authService.isRegistrationInProgress = false;
                 this.router.navigate(['/login']);
             },

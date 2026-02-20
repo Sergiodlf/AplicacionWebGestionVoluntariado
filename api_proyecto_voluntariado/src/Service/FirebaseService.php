@@ -25,7 +25,7 @@ class FirebaseService implements FirebaseServiceInterface
         try {
             $user = $this->auth->createUser([
                 'email' => $email,
-                'emailVerified' => false,
+                'emailVerified' => true,
                 'password' => $password,
                 'displayName' => $displayName,
                 'disabled' => false,
