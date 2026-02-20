@@ -35,18 +35,21 @@
       <i class="bi bi-gear text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Necesidades:</span>
       <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let skill of skills" class="badge bg-light text-custom-blue border">
-          {{ skill.nombre || skill }}
+        <span *ngFor="let n of necesidades" class="badge bg-light text-custom-blue border">
+          {{ n.nombre || n }}
         </span>
       </div>
     </div>
   </div>
 
-  <div class="mb-2">
+  <div class="mb-2" *ngIf="fechaInicio || fechaFin">
     <div class="d-flex align-items-center">
       <i class="bi bi-calendar3 text-custom-blue me-2"></i>
-      <span class="fw-bold text-custom-blue me-2">Fecha:</span>
-      <span class="text-muted">{{ date }}</span>
+      <span class="fw-bold text-custom-blue me-2">Fechas:</span>
+      <span class="text-muted small">
+        <span *ngIf="fechaInicio" class="me-2">Inicio: {{ fechaInicio }}</span>
+        <span *ngIf="fechaFin">Fin: {{ fechaFin }}</span>
+      </span>
     </div>
   </div>
 
@@ -63,10 +66,9 @@
     </div>
   </div>
 
-  <div class="status-pill" [ngClass]="{
-      'sin-comenzar': status === 'Sin comenzar',
-      'en-curso': status === 'En curso',
-      'completado': status === 'Completado',
+  <div class="status-pill" *ngIf="status !== 'Por Empezar'" [ngClass]="{
+      'en-curso': status === 'En Curso',
+      'completado': status === 'Completadas' || status === 'Completada',
       'pendiente': status === 'Pendiente'
     }">
     {{ status }}

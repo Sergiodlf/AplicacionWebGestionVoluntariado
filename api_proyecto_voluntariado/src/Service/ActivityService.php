@@ -347,7 +347,7 @@ class ActivityService implements ActivityServiceInterface
             ->andWhere('a.estado != :cancelado')
             ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
             ->setParameter('aceptada', 'ACEPTADA')
-            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('cancelado', 'CANCELADA')
             ->setParameter('now', $now)
             ->getQuery()
             ->getSingleScalarResult();
@@ -362,7 +362,7 @@ class ActivityService implements ActivityServiceInterface
             ->andWhere('a.estado != :cancelado')
             ->andWhere('a.fechaFin >= :now OR a.fechaFin IS NULL')
             ->setParameter('pendiente', 'PENDIENTE')
-            ->setParameter('cancelado', 'CANCELADO')
+            ->setParameter('cancelado', 'CANCELADA')
             ->setParameter('now', $now)
             ->getQuery()
             ->getSingleScalarResult();

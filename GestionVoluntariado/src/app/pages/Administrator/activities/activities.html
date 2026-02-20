@@ -7,10 +7,11 @@
                 <!-- Header Section -->
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
-                    <app-status-toggle leftLabel="Pendientes" rightLabel="Aceptados"
-                        [leftCount]="pendingOpportunities.length" [rightCount]="acceptedOpportunities.length"
-                        (optionChanged)="onTabChange($event)">
-                    </app-status-toggle>
+                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="Por Empezar"
+                        middleLabel="En Curso" rightLabel="Completadas" [leftCount]="pendingOpportunities.length"
+                        [secondCount]="porEmpezarOpportunities.length" [middleCount]="enCursoOpportunities.length"
+                        [rightCount]="completedOpportunities.length" (optionChanged)="onTabChange($event)">
+                    </app-status-toggle-voluntariado>
 
                     <!-- Search Bar (Centered below tabs) -->
                     <!-- Search Bar Removed -->
@@ -21,7 +22,10 @@
                     <div class="d-flex align-items-center flex-wrap gap-3">
                         <div class="d-flex align-items-center text-custom-blue">
                             <i class="bi bi-people me-2 fs-4"></i>
-                            <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Pendientes' : 'Aceptados'
+                            <h4 class="fw-bold mb-0">Voluntariados {{
+                                activeTab === 'left' ? 'Pendientes' :
+                                activeTab === 'second' ? 'Por Empezar' :
+                                activeTab === 'middle' ? 'En Curso' : 'Completadas'
                                 }}</h4>
                         </div>
 
@@ -71,7 +75,8 @@
                         } @else {
                         <div class="col-md-6" *ngFor="let item of filteredOpportunities">
                             <app-volunteering-card [title]="item.title" [organization]="item.organization"
-                                [skills]="item.skills" [date]="item.date" [ods]="item.ods" [status]="item.estado"
+                                [skills]="item.skills" [necesidades]="item.necesidades" [fechaInicio]="item.fechaInicio"
+                                [fechaFin]="item.fechaFin" [ods]="item.ods" [status]="item.estadoDisplay || item.estado"
                                 (onAction)="onAction(item)" (onInfo)="openInfoModal(item)"
                                 (onAssign)="openAssignModal(item)">
                             </app-volunteering-card>

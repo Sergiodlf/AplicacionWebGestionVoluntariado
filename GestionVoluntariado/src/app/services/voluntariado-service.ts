@@ -43,7 +43,7 @@ export class VoluntariadoService {
     return this.http.get<Voluntariado[]>(this.apiUrl, { params });
   }
 
-  loadVoluntariados(filter?: { estadoAprobacion: string }): Observable<Voluntariado[]> {
+  loadVoluntariados(filter?: { estadoAprobacion: string, history?: boolean }): Observable<Voluntariado[]> {
     // Cache busting
     const timestamp = new Date().getTime();
     let params = new HttpParams().set('t', timestamp.toString());
@@ -52,9 +52,13 @@ export class VoluntariadoService {
       params = params.set('estadoAprobacion', filter.estadoAprobacion);
     }
 
+    if (filter?.history !== undefined) {
+      params = params.set('history', filter.history.toString());
+    }
+
     return this.http.get<Voluntariado[]>(this.apiUrl, { params }).pipe(
       tap(data => {
-        if (!filter) { // Only update cache if it's a full standard load
+        if (!filter || (!filter.estadoAprobacion && filter.history === undefined)) {
           this.actividadesSubject.next(data);
         }
       })
@@ -114,9 +118,10 @@ export class VoluntariadoService {
     );
   }
 
-  getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA'): Observable<any[]> {
+  getActivitiesByOrganization(cif: string, estado?: string, estadoAprobacion: string = 'ACEPTADA', history: boolean = true): Observable<any[]> {
     let params = new HttpParams()
-      .set('estadoAprobacion', estadoAprobacion);
+      .set('estadoAprobacion', estadoAprobacion)
+      .set('history', history.toString());
 
     if (estado) {
       params = params.set('estado', estado);
