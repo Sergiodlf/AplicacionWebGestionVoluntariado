@@ -348,7 +348,7 @@ class AppFixtures extends Fixture
             $completedAct->addOd($odsEntities[0]);
             $completedAct->setSector($sectores[0]);
             $completedAct->setDescripcion("Esta actividad ya ha finalizado.");
-            $completedAct->addNecesidad($necesidades[0]);
+            if (isset($necesidades[0])) { $completedAct->addNecesidad($necesidades[0]); }
             $manager->persist($completedAct);
             echo "  ✨ Created Completed Actividad: $completedActName\n";
 
@@ -361,7 +361,37 @@ class AppFixtures extends Fixture
             $inscription->setFechaInscripcion(new \DateTime('-1 month'));
             $manager->persist($inscription);
             echo "  ✨ Created Completed Inscripción: {$completedVol->getNombre()} → $completedActName\n";
-            $manager->flush();
+        }
+
+        // Add an EN_CURSO activity for testing
+        $enCursoActName = "Actividad En Curso para Pruebas";
+        $existingEnCurso = $manager->getRepository(Actividad::class)->findOneBy(['nombre' => $enCursoActName]);
+        if (!$existingEnCurso && count($allVolunteers) > 1) {
+            $enCursoAct = new Actividad();
+            $enCursoAct->setNombre($enCursoActName);
+            $enCursoAct->setDireccion("Centro de Ayuda Activa");
+            $enCursoAct->setFechaInicio(new \DateTime('-1 day'));
+            $enCursoAct->setFechaFin(new \DateTime('+1 month')); // Keeps it in progress
+            $enCursoAct->setMaxParticipantes(10);
+            $enCursoAct->setEstado(ActivityStatus::EN_CURSO);
+            $enCursoAct->setEstadoAprobacion(ActivityApproval::ACEPTADA);
+            $enCursoAct->setOrganizacion($orgs[1]);
+            $enCursoAct->addOd($odsEntities[1]);
+            $enCursoAct->setSector($sectores[1]);
+            $enCursoAct->setDescripcion("Esta actividad está actualmente en curso.");
+            if (isset($necesidades[1])) { $enCursoAct->addNecesidad($necesidades[1]); }
+            $manager->persist($enCursoAct);
+            echo "  ✨ Created En Curso Actividad: $enCursoActName\n";
+
+            // Add an inscription for this en curso activity
+            $enCursoVol = $allVolunteers[1];
+            $inscription2 = new Inscripcion();
+            $inscription2->setVoluntario($enCursoVol);
+            $inscription2->setActividad($enCursoAct);
+            $inscription2->setEstado(InscriptionStatus::CONFIRMADO);
+            $inscription2->setFechaInscripcion(new \DateTime('-2 days'));
+            $manager->persist($inscription2);
+            echo "  ✨ Created En Curso Inscripción: {$enCursoVol->getNombre()} → $enCursoActName\n";
         }
         
         foreach ($allActivities as $activity) {

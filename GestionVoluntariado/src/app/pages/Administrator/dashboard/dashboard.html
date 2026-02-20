@@ -1,14 +1,4 @@
 <div class="d-flex flex-column min-vh-100 bg-light position-relative">
-  <!-- Loading Overlay -->
-  <div *ngIf="showLoading"
-    class="position-absolute top-0 start-0 w-100 h-100 bg-white d-flex flex-column justify-content-center align-items-center z-3"
-    style="z-index: 1050;">
-    <div class="mb-3">
-      <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 10rem;">
-    </div>
-    <h5 class="text-custom-blue fw-light">Cargando...</h5>
-  </div>
-
 
   <div class="d-flex flex-grow-1 overflow-hidden">
     <app-sidebar></app-sidebar>
@@ -19,6 +9,14 @@
 
         </div>
 
+        @if(showLoading) {
+        <div class="d-flex flex-column align-items-center justify-content-center py-5 mt-5">
+          <div class="mb-3">
+            <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
+          </div>
+          <h5 class="text-custom-blue fw-light mt-3">Cargando métricas del dashboard...</h5>
+        </div>
+        } @else {
         <!-- Top Cards Row 1: Entities & Active -->
         <div class="row g-4 mb-4">
           <!-- Volunteers -->
@@ -32,9 +30,9 @@
             <app-stat-card title="MATCHES ACTIVOS" [value]="matchesAccepted"
               [subtext]="'+' + matchesPending + ' Pendientes'" icon="bi-link" iconBgColor="bg-primary"></app-stat-card>
           </div>
-          <!-- Activities (Active + Pending) -->
+          <!-- Activities (Accepted + Pending) -->
           <div class="col-md-4">
-            <app-stat-card title="VOLUNTARIADOS ACTIVOS" [value]="activitiesActive"
+            <app-stat-card title="VOLUNTARIADOS ACEPTADOS" [value]="activitiesAccepted"
               [subtext]="'+' + activitiesPending + ' Pendientes'" icon="bi-heart"
               iconBgColor="bg-primary"></app-stat-card>
           </div>
@@ -48,15 +46,15 @@
               [subtext]="'+' + organizationsPending + ' Pendientes'" icon="bi-building"
               iconBgColor="bg-primary"></app-stat-card>
           </div>
-          <!-- Completed Matches -->
+          <!-- En Curso Activities -->
           <div class="col-md-4">
-            <app-stat-card title="MATCHES COMPLETADOS" [value]="matchesCompleted"
-              icon="bi-check-circle" iconBgColor="bg-primary"></app-stat-card>
+            <app-stat-card title="VOLUNTARIADOS EN CURSO" [value]="activitiesEnCurso" icon="bi-play-circle"
+              iconBgColor="bg-primary"></app-stat-card>
           </div>
           <!-- Completed Activities -->
           <div class="col-md-4">
-            <app-stat-card title="VOLUNTARIADOS COMPLETADOS" [value]="activitiesCompleted"
-            icon="bi-archive" iconBgColor="bg-primary"></app-stat-card>
+            <app-stat-card title="VOLUNTARIADOS COMPLETADOS" [value]="activitiesCompleted" icon="bi-archive"
+              iconBgColor="bg-primary"></app-stat-card>
           </div>
         </div>
 
@@ -131,6 +129,7 @@
             </div>
           </div>
         </div>
+        }
       </div>
     </div>
   </div>

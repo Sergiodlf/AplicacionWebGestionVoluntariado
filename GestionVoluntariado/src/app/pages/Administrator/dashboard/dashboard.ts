@@ -54,8 +54,11 @@ export class DashboardComponent implements OnInit {
   get matchesCompleted() {
     return this.metrics?.matchesCompleted || 0;
   }
-  get activitiesActive() {
-    return this.metrics?.activitiesActive || 0;
+  get activitiesAccepted() {
+    return this.metrics?.activitiesAccepted || 0;
+  }
+  get activitiesEnCurso() {
+    return this.metrics?.activitiesEnCurso || 0;
   }
   get activitiesPending() {
     return this.metrics?.activitiesPending || 0;
