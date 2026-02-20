@@ -21,14 +21,12 @@ export class DashboardComponent implements OnInit {
   showLoading = false;
 
   ngOnInit() {
-    this.dashboardService.loadDashboardData().subscribe();
+    this.showLoading = true;
+    this.dashboardService.loadDashboardData().subscribe({
+      next: () => (this.showLoading = false),
+      error: () => (this.showLoading = false)
+    });
     this.dashboardService.metrics$.subscribe((m) => (this.metrics = m));
-    const fromLogin = history.state?.fromLogin;
-
-    if (fromLogin) {
-      this.showLoading = true;
-      setTimeout(() => (this.showLoading = false), 2000);
-    }
   }
 
   // Getters for template compatibility
