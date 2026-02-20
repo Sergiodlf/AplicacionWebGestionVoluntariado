@@ -76,6 +76,7 @@ class ActividadController extends AbstractController
             $created = $this->activityService->createActivity([
                 'nombre'           => $dto->nombre,
                 'descripcion'      => $dto->descripcion, 
+                'estado'           => \App\Enum\ActivityStatus::PENDIENTE,
                 'estadoAprobacion' => $estadoAprobacion, 
                 'fechaInicio'      => $dto->fechaInicio,   
                 'fechaFin'         => $dto->fechaFin,      
