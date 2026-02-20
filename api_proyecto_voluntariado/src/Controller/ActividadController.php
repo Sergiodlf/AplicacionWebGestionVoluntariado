@@ -263,6 +263,9 @@ class ActividadController extends AbstractController
                 $filters['estado'] = $estado;
             }
 
+            // Historial (Crucial para ver actividades finalizadas)
+            $filters['history'] = $request->query->getBoolean('history', false);
+
             $actividades = $this->activityService->getActivitiesByFilters($filters);
 
             // Actualizar estados

@@ -12,13 +12,15 @@ import { CategoryService } from '../../../services/category.service';
 import { NotificationService } from '../../../services/notification.service';
 import { Category } from '../../../models/Category';
 
+import { StatusToggleVoluntariado } from '../../../components/Volunteer/status-toggle-voluntariado/status-toggle-voluntariado';
+
 @Component({
   selector: 'app-activities',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    StatusToggleComponent,
+    StatusToggleVoluntariado,
     VolunteeringCardComponent,
     SidebarComponent,
     CrearVoluntariadoModal,
@@ -31,14 +33,17 @@ export class ActivitiesComponent implements OnInit {
   private voluntariadoService = inject(VoluntariadoService);
   private categoryService = inject(CategoryService);
   private notificationService = inject(NotificationService);
-  activeTab: 'left' | 'middle' | 'right' = 'left';
+  activeTab: 'left' | 'second' | 'middle' | 'right' = 'left';
 
   volunteeringOpportunities: any[] = [];
   filteredOpportunities: any[] = [];
 
   // Filtered lists for counts
   pendingOpportunities: any[] = [];
-  acceptedOpportunities: any[] = [];
+  porEmpezarOpportunities: any[] = [];
+  enCursoOpportunities: any[] = [];
+  completedOpportunities: any[] = [];
+  acceptedOpportunities: any[] = []; // For compatibility/counting
 
   // Filter State
   showFilterModal = false;
@@ -75,58 +80,69 @@ export class ActivitiesComponent implements OnInit {
 
     this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL' }).subscribe({
       next: (allData) => {
-        // Helper to safely check status handling property variations
+        const normalize = (s: any) => String(s || '').toUpperCase().trim();
         const checkApproval = (item: any, expected: string) => {
-          const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+          const val = normalize(item.estadoAprobacion || item.estado_aprobacion || item.status || '');
+          if (expected === 'ACEPTADA') {
+            return val === 'ACEPTADA' || val === 'ACEPTADO' || val === 'CONFIRMADA' || val === 'CONFIRMADO' || val === 'APROBADA';
+          }
           return val === expected;
         };
 
         const mapActivity = (item: any) => {
-          // Check approval status first
-          const approvalStatus = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
-
-          // Date-based status calculation
-          let computedStatus = 'En curso';
-          const now = new Date();
-          const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
-          const end = item.fechaFin ? new Date(item.fechaFin) : null;
-
-          if (start && now < start) {
-            computedStatus = 'Sin comenzar';
-          } else if (end && now > end) {
-            computedStatus = 'Completado';
-          }
-
-          // FORCE 'PENDIENTE' status for UI if approval is pending
-          // Otherwise use the computed date-based status
-          const finalStatus = approvalStatus === 'PENDIENTE' ? 'Pendiente' : computedStatus;
+          const parseDateStr = (d: any) => {
+            if (!d) return '';
+            const date = new Date(d);
+            return isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+          };
 
           return {
             ...item,
-            id: item.codActividad || item.id,
-            title: item.nombre,
-            organization: item.nombre_organizacion || item.nombreOrganizacion || 'Organización',
+            id: item.codActividad || item.id || Math.random(),
+            title: item.nombre || item.title || 'Sin Título',
+            organization: item.nombreOrganizacion || item.nombre_organizacion || item.organizacion || 'Organización',
             skills: item.habilidades || [],
-            date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'N/A',
+            fechaInicio: parseDateStr(item.fechaInicio || item.fecha_inicio),
+            fechaFin: parseDateStr(item.fechaFin || item.fecha_fin),
+            fechaInicioRaw: item.fechaInicio || item.fecha_inicio,
+            fechaFinRaw: item.fechaFin || item.fecha_fin,
             ods: item.ods || [],
-            estado: finalStatus
+            date: parseDateStr(item.fechaInicio || item.fecha_inicio),
+            necesidades: this.parseJson(item.necesidades || item.skills),
+            estado: normalize(item.estadoAprobacion || item.estado_aprobacion || 'PENDIENTE') === 'PENDIENTE' ? 'Pendiente' : 'Aceptada'
           };
         };
 
-        // Robust client-side filtering from the SINGLE cached list
+        const now = new Date();
+
         this.pendingOpportunities = allData
           .filter(i => checkApproval(i, 'PENDIENTE'))
           .map(mapActivity);
 
-        this.acceptedOpportunities = allData
-          .filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'))
+        const acceptedAll = allData
+          .filter(i => checkApproval(i, 'ACEPTADA'))
           .map(mapActivity);
 
+        acceptedAll.forEach(i => {
+          const start = i.fechaInicioRaw ? new Date(i.fechaInicioRaw) : null;
+          const end = i.fechaFinRaw ? new Date(i.fechaFinRaw) : null;
 
-        // Populate common list for filtering
+          if (end && now > end) {
+            i.estadoDisplay = 'Completadas'; // Changed to plural to match tab
+          } else if (start && now < start) {
+            i.estadoDisplay = 'Por Empezar';
+          } else {
+            i.estadoDisplay = 'En Curso';
+          }
+
+          if (i.estadoDisplay === 'Completadas') this.completedOpportunities.push(i);
+          else if (i.estadoDisplay === 'Por Empezar') this.porEmpezarOpportunities.push(i);
+          else this.enCursoOpportunities.push(i);
+        });
+
+        this.acceptedOpportunities = [...this.porEmpezarOpportunities, ...this.enCursoOpportunities, ...this.completedOpportunities];
         this.volunteeringOpportunities = [...this.pendingOpportunities, ...this.acceptedOpportunities];
 
-        // Extract Options for filters (from ALL loaded data)
         const orgs = new Set<string>();
         this.volunteeringOpportunities.forEach(op => {
           if (op.organization) orgs.add(op.organization);
@@ -143,7 +159,7 @@ export class ActivitiesComponent implements OnInit {
     });
   }
 
-  onTabChange(tab: 'left' | 'middle' | 'right') {
+  onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
     this.activeTab = tab;
     this.applyFilters();
   }
@@ -164,7 +180,13 @@ export class ActivitiesComponent implements OnInit {
       this.filters = { ...this.tempFilters, ods: [...this.tempFilters.ods], skills: [...this.tempFilters.skills] };
     }
 
-    const sourceList = this.activeTab === 'left' ? this.pendingOpportunities : this.acceptedOpportunities;
+    let sourceList: any[] = [];
+    switch (this.activeTab) {
+      case 'left': sourceList = this.pendingOpportunities; break;
+      case 'second': sourceList = this.porEmpezarOpportunities; break;
+      case 'middle': sourceList = this.enCursoOpportunities; break;
+      case 'right': sourceList = this.completedOpportunities; break;
+    }
 
     this.filteredOpportunities = sourceList.filter(item => {
       let matchesDate = true;
@@ -175,7 +197,7 @@ export class ActivitiesComponent implements OnInit {
 
       // Filter by Date
       if (this.filters.date) {
-        const itemDate = new Date(item.fechaInicio).toDateString();
+        const itemDate = new Date(item.fechaInicioRaw || item.fechaInicio).toDateString();
         const filterDate = new Date(this.filters.date).toDateString();
         matchesDate = itemDate === filterDate;
       }

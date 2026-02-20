@@ -13,11 +13,15 @@ export class VoluntariadoCard {
   @Input() organization: string = '';
   @Input() skills: any[] = [];
   @Input() date: string = '';
+  @Input() fechaInicio: string = '';
+  @Input() fechaFin: string = '';
+  @Input() instituciones?: string = '';
   @Input() ciclo: string = '';
   @Input() ods: { id: number; nombre: string; color: string }[] = [];
   @Input() status: string = '';
   @Input() isOrganization: boolean = false;
   @Input() buttonText: string = '';
+  @Input() necesidades: any[] = [];
   @Input() editButton: boolean = false;
 
   @Output() onAction = new EventEmitter<void>();

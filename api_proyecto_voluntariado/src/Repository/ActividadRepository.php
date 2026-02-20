@@ -30,7 +30,7 @@ class ActividadRepository extends ServiceEntityRepository
              // Handle "NOT CANCELLED" logic (implicit if not requesting specific state)
             if ($filters['estado'] === 'NOT_CANCELLED') {
                  $qb->andWhere('a.estado != :estadoCancelado')
-                   ->setParameter('estadoCancelado', 'CANCELADO');
+                   ->setParameter('estadoCancelado', 'CANCELADA');
             } else {
                  $qb->andWhere('a.estado = :estado')
                    ->setParameter('estado', $filters['estado']);
