@@ -31,6 +31,8 @@ export class MisVoluntariados implements OnInit {
   // Dynamic counts
   countPending = 0;
   countAccepted = 0;
+  countOngoing = 0;
+  countCompleted = 0;
 
   showFilterModal = signal(false);
   tempFilters = {
@@ -69,10 +71,9 @@ export class MisVoluntariados implements OnInit {
         const completed = allData.filter(v => ['COMPLETADA', 'FINALIZADO'].includes(v.estado_inscripcion || v.estado));
 
         this.countPending = pending.length;
-        this.countAccepted = accepted.length; // Will be merged display but tracked? 
-        // Actually we merge accepted, ongoing, completed into "Accepted/Second tab" usually
-        const acceptedGroup = [...accepted, ...ongoing, ...completed];
-        this.countAccepted = acceptedGroup.length;
+        this.countAccepted = accepted.length;
+        this.countOngoing = ongoing.length;
+        this.countCompleted = completed.length;
 
         const mapItem = (v: any) => {
           let statusLabel = v.estado_inscripcion || v.estado;
@@ -102,12 +103,16 @@ export class MisVoluntariados implements OnInit {
 
         this.allVolunteeringData = [
           ...pending.map(v => ({ ...mapItem(v), category: 'left' })),
-          ...acceptedGroup.map(v => ({ ...mapItem(v), category: 'second' }))
+          ...accepted.map(v => ({ ...mapItem(v), category: 'second' })),
+          ...ongoing.map(v => ({ ...mapItem(v), category: 'middle' })),
+          ...completed.map(v => ({ ...mapItem(v), category: 'right' }))
         ];
 
         // Recalculate counts based on merged categories
         this.countPending = this.allVolunteeringData.filter(v => v.category === 'left').length;
         this.countAccepted = this.allVolunteeringData.filter(v => v.category === 'second').length;
+        this.countOngoing = this.allVolunteeringData.filter(v => v.category === 'middle').length;
+        this.countCompleted = this.allVolunteeringData.filter(v => v.category === 'right').length;
 
         this.extractFilterOptions();
         this.applyFilters();
@@ -198,7 +203,8 @@ export class MisVoluntariados implements OnInit {
 
     if (tab === 'left') this.tabLabel = 'Pendientes';
     if (tab === 'second') this.tabLabel = 'Aceptadas';
-    // Removed middle/right labels logic as they are now merged
+    if (tab === 'middle') this.tabLabel = 'En curso';
+    if (tab === 'right') this.tabLabel = 'Completadas';
 
     this.applyFilters();
   }

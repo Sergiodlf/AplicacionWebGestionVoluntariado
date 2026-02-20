@@ -78,11 +78,11 @@ export class ActivitiesComponent implements OnInit {
 
   loadActivities() {
 
-    this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL' }).subscribe({
+    this.voluntariadoService.getAllVoluntariados(false, { estadoAprobacion: 'ALL', history: true }).subscribe({
       next: (allData) => {
         const normalize = (s: any) => String(s || '').toUpperCase().trim();
         const checkApproval = (item: any, expected: string) => {
-          const val = normalize(item.estadoAprobacion || item.estado_aprobacion || item.status || '');
+          const val = normalize(item.estadoAprobacion || item.estado_aprobacion || '');
           if (expected === 'ACEPTADA') {
             return val === 'ACEPTADA' || val === 'ACEPTADO' || val === 'CONFIRMADA' || val === 'CONFIRMADO' || val === 'APROBADA';
           }
@@ -109,7 +109,9 @@ export class ActivitiesComponent implements OnInit {
             ods: item.ods || [],
             date: parseDateStr(item.fechaInicio || item.fecha_inicio),
             necesidades: this.parseJson(item.necesidades || item.skills),
-            estado: normalize(item.estadoAprobacion || item.estado_aprobacion || 'PENDIENTE') === 'PENDIENTE' ? 'Pendiente' : 'Aceptada'
+            estado: normalize(item.estadoAprobacion || item.estado_aprobacion || 'PENDIENTE') === 'PENDIENTE' ? 'Pendiente' : 'Aceptada',
+            estadoAprobacionOriginal: normalize(item.estadoAprobacion || item.estado_aprobacion || ''),
+            estadoEjecucion: normalize(item.estado || item.status || '')
           };
         };
 
@@ -126,9 +128,11 @@ export class ActivitiesComponent implements OnInit {
         acceptedAll.forEach(i => {
           const start = i.fechaInicioRaw ? new Date(i.fechaInicioRaw) : null;
           const end = i.fechaFinRaw ? new Date(i.fechaFinRaw) : null;
+          const statusEjecucion = i.estadoEjecucion;
 
-          if (end && now > end) {
-            i.estadoDisplay = 'Completadas'; // Changed to plural to match tab
+          // Some backends might return COMPLETADA via estadoEjecucion.
+          if (statusEjecucion === 'COMPLETADA' || statusEjecucion === 'COMPLETADO' || statusEjecucion === 'FINALIZADO' || (end && now > end)) {
+            i.estadoDisplay = 'Completadas';
           } else if (start && now < start) {
             i.estadoDisplay = 'Por Empezar';
           } else {
@@ -285,7 +289,7 @@ export class ActivitiesComponent implements OnInit {
       this.voluntariadoService.actualizarEstadoActividad(item.id, 'ACEPTADA').subscribe({
         next: () => {
           this.notificationService.showSuccess('Actividad aceptada con éxito');
-          this.voluntariadoService.getAllVoluntariados(true, { estadoAprobacion: 'ALL' }).subscribe(() => this.loadActivities()); // Reload with force refresh
+          this.voluntariadoService.getAllVoluntariados(true, { estadoAprobacion: 'ALL', history: true }).subscribe(() => this.loadActivities()); // Reload with force refresh
         },
         error: (err) => {
           console.error('Error updating activity status:', err);
@@ -333,7 +337,7 @@ export class ActivitiesComponent implements OnInit {
 
   onVoluntariadoCreated(newVoluntariado: any) {
     this.voluntariadoService.crearActividad(newVoluntariado).subscribe(() => {
-      this.voluntariadoService.getAllVoluntariados(true).subscribe(() => this.loadActivities());
+      this.voluntariadoService.getAllVoluntariados(true, { history: true }).subscribe(() => this.loadActivities());
       this.modalCrearActividadOpen = false;
       this.notificationService.showSuccess('Actividad creada con éxito');
     });

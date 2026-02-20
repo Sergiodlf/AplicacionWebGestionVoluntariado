@@ -19,7 +19,7 @@ export class VoluntariadoService {
 
   private myInscripcionesSubject = new BehaviorSubject<any[] | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   clearState() {
     this.inscripcionesSubject.next(null);
