@@ -64,13 +64,14 @@
             <div class="mb-3">
               <img src="logo-spinner.png" alt="Cargando..." class="logo-spin" style="width: 5rem;">
             </div>
-            <h5 class="text-custom-blue fw-light">{{ isLoading ? 'Cargando voluntarios...' : 'Aplicando filtros...' }}</h5>
+            <h5 class="text-custom-blue fw-light">{{ isLoading ? 'Cargando voluntarios...' : 'Aplicando filtros...' }}
+            </h5>
           </div>
           } @else {
           <div class="row g-4">
             @for (volunteer of ((activeTab === 'left' ? pendingVolunteers$ : approvedVolunteers$) | async); track
             volunteer.email) {
-            <div class="col-12 col-md-6" [style.opacity]="loadingVolunteerId === volunteer.dni ? 0.6 : 1" 
+            <div class="col-12 col-md-6" [style.opacity]="loadingVolunteerId === volunteer.dni ? 0.6 : 1"
               [style.pointer-events]="loadingVolunteerId === volunteer.dni ? 'none' : 'auto'">
               @if (loadingVolunteerId === volunteer.dni) {
               <div class="position-absolute top-50 start-50 translate-middle z-5">
@@ -87,17 +88,18 @@
               </app-volunteer-card>
             </div>
             } @empty {
-            <div class="col-12">
-              <p class="text-center text-muted p-5">No hay voluntarios pendientes o aprobados para mostrar.</p>
+            <div class="col-12 d-flex flex-column align-items-center justify-content-center py-5">
+              <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+              <h5 class="text-muted mt-3">No hay voluntarios para mostrar</h5>
             </div>
             }
           </div>
           }
-          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
 
 <!-- Filter Modal -->
