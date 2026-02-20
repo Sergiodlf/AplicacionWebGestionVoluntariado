@@ -322,7 +322,6 @@ class AppFixtures extends Fixture
             $act->addNecesidad($necesidades[$i % count($necesidades)]);
             $act->addNecesidad($necesidades[($i + 1) % count($necesidades)]);
             $manager->persist($act);
-            echo "  ✨ Created Actividad: $activityName\n";
         }
 
         $manager->flush();
@@ -332,6 +331,38 @@ class AppFixtures extends Fixture
         
         $allVolunteers = $manager->getRepository(Voluntario::class)->findAll();
         $allActivities = $manager->getRepository(Actividad::class)->findAll();
+
+        // Add a COMPLETED activity for testing
+        $completedActName = "Actividad Completada para Pruebas";
+        $existingCompleted = $manager->getRepository(Actividad::class)->findOneBy(['nombre' => $completedActName]);
+        if (!$existingCompleted && count($allVolunteers) > 0) {
+            $completedAct = new Actividad();
+            $completedAct->setNombre($completedActName);
+            $completedAct->setDireccion("Centro Solidario");
+            $completedAct->setFechaInicio(new \DateTime('-1 month'));
+            $completedAct->setFechaFin(new \DateTime('-1 month + 2 hours'));
+            $completedAct->setMaxParticipantes(5);
+            $completedAct->setEstado(ActivityStatus::COMPLETADA);
+            $completedAct->setEstadoAprobacion(ActivityApproval::ACEPTADA);
+            $completedAct->setOrganizacion($orgs[0]);
+            $completedAct->addOd($odsEntities[0]);
+            $completedAct->setSector($sectores[0]);
+            $completedAct->setDescripcion("Esta actividad ya ha finalizado.");
+            $completedAct->addNecesidad($necesidades[0]);
+            $manager->persist($completedAct);
+            echo "  ✨ Created Completed Actividad: $completedActName\n";
+
+            // Add an inscription for this completed activity
+            $completedVol = $allVolunteers[0];
+            $inscription = new Inscripcion();
+            $inscription->setVoluntario($completedVol);
+            $inscription->setActividad($completedAct);
+            $inscription->setEstado(InscriptionStatus::COMPLETADA);
+            $inscription->setFechaInscripcion(new \DateTime('-1 month'));
+            $manager->persist($inscription);
+            echo "  ✨ Created Completed Inscripción: {$completedVol->getNombre()} → $completedActName\n";
+            $manager->flush();
+        }
         
         foreach ($allActivities as $activity) {
             // Get activity's needed skills (necesidades)

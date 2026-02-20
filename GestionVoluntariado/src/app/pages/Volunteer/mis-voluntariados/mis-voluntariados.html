@@ -15,7 +15,9 @@
                     <h2 class="text-custom-blue fw-bold mb-4">Mis Voluntariados</h2>
 
                     <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="Aceptadas"
-                        [leftCount]="countPending" [secondCount]="countAccepted" (optionChanged)="onTabChange($event)">
+                        middleLabel="En curso" rightLabel="Completadas" [leftCount]="countPending"
+                        [secondCount]="countAccepted" [middleCount]="countOngoing" [rightCount]="countCompleted"
+                        (optionChanged)="onTabChange($event)">
                     </app-status-toggle-voluntariado>
                 </div>
 

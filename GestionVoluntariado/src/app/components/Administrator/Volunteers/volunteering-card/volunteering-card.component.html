@@ -65,12 +65,4 @@
       </div>
     </div>
   </div>
-
-  <div class="status-pill" *ngIf="status !== 'Por Empezar'" [ngClass]="{
-      'en-curso': status === 'En Curso',
-      'completado': status === 'Completadas' || status === 'Completada',
-      'pendiente': status === 'Pendiente'
-    }">
-    {{ status }}
-  </div>
 </div>
