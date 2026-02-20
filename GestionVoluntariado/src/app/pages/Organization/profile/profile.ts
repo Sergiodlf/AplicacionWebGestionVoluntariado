@@ -10,7 +10,7 @@ import { OrganizationFormComponent } from '../../../components/Global-Components
 @Component({
   selector: 'app-profile-organization',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, OrganizationFormComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -21,7 +21,19 @@ export class ProfileOrganizationComponent implements OnInit {
   message = '';
   isError = false;
   organization: Organization | null = null;
-  @ViewChild(OrganizationFormComponent) formComponent!: OrganizationFormComponent;
+
+  availableSectors: string[] = [
+    'Educación', 'Salud', 'Social', 'Medio Ambiente',
+    'Comunitario', 'Cultura', 'Deportes', 'Internacional',
+    'Derechos Humanos', 'Protección Animal', 'Tecnología'
+  ];
+
+  availableZones: string[] = [
+    'Casco Viejo', 'Ensanche', 'San Juan', 'Iturrama', 'Rochapea',
+    'Txantrea', 'Azpiligaña', 'Milagrosa', 'Buztintxuri', 'Mendillorri',
+    'Sarriguren', 'Barañáin', 'Burlada', 'Villava', 'Uharte',
+    'Berriozar', 'Ansoáin', 'Noáin', 'Zizur Mayor', 'Mutilva', 'Pamplona (Otros)', 'Tudela', 'Estella', 'Olite', 'Tafalla'
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -30,29 +42,67 @@ export class ProfileOrganizationComponent implements OnInit {
     private location: Location
   ) {
     this.profileForm = this.fb.group({
-      nombre: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(40)]],
       email: [{ value: '', disabled: true }],
-      sector: [''],
-      direccion: [''],
-      localidad: [''],
-      descripcion: [''],
-      contacto: ['']
+      cif: [{ value: '', disabled: true }],
+      sector: ['', Validators.required],
+      direccion: ['', [Validators.required, Validators.maxLength(40)]],
+      localidad: ['', Validators.required],
+      cp: ['', [Validators.required, Validators.pattern(/^[0-9]{5}$/)]],
+      descripcion: ['', [Validators.required, Validators.maxLength(200)]],
+      contacto: ['', [Validators.required, Validators.maxLength(40)]]
     });
   }
 
+  private profileSubscription?: any;
+
   ngOnInit(): void {
-    this.loadProfile();
+    this.initProfileSubscription();
+  }
+
+  ngOnDestroy(): void {
+    if (this.profileSubscription) {
+      this.profileSubscription.unsubscribe();
+    }
+  }
+
+  private initProfileSubscription(): void {
+    this.loading = true;
+    this.profileSubscription = this.authService.userProfile$.subscribe({
+      next: (profile) => {
+        if (profile) {
+          if (profile.tipo === 'organizacion') {
+            this.mapProfileToForm(profile);
+            this.loading = false;
+          } else {
+            this.message = 'El perfil no corresponde a una organización.';
+            this.isError = true;
+            this.loading = false;
+          }
+        } else if (this.authService.hasToken() && !profile) {
+          this.authService.loadProfile().subscribe({
+            error: () => this.loading = false
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Error in profile subscription', err);
+        this.loading = false;
+      }
+    });
   }
 
   toggleEdit(): void {
     this.editMode = !this.editMode;
-    if (!this.editMode && this.organization) {
+    if (this.editMode && this.organization) {
       this.profileForm.patchValue({
         nombre: this.organization.nombre,
         email: this.organization.email,
+        cif: this.organization.cif,
         sector: this.organization.sector,
         direccion: this.organization.direccion,
         localidad: this.organization.localidad,
+        cp: this.organization.cp,
         descripcion: this.organization.descripcion,
         contacto: this.organization.contacto || ''
       });
@@ -60,54 +110,40 @@ export class ProfileOrganizationComponent implements OnInit {
   }
 
   submitProfile(): void {
-    if (this.formComponent) {
-      this.formComponent.submit();
+    if (this.profileForm.invalid) {
+      this.message = 'Por favor, rellene los campos obligatorios.';
+      this.isError = true;
+      return;
     }
+
+    this.loading = true;
+    const formValue = this.profileForm.getRawValue();
+
+    this.authService.updateProfile(formValue).subscribe({
+      next: () => {
+        this.message = 'Perfil actualizado con éxito';
+        this.isError = false;
+        this.editMode = false;
+        this.loading = false;
+        setTimeout(() => this.message = '', 3000);
+      },
+      error: (err: any) => {
+        console.error('Error updating profile', err);
+        this.message = err.error?.message || 'Error al actualizar el perfil.';
+        this.isError = true;
+        this.loading = false;
+        setTimeout(() => {
+          this.message = '';
+          this.isError = false;
+        }, 5000);
+      }
+    });
   }
 
-  handleFormSubmit(updatedOrg: Organization): void {
-    this.organization = updatedOrg;
-    this.editMode = false;
-    this.message = 'Perfil actualizado con éxito';
-    this.isError = false;
-    setTimeout(() => this.message = '', 3000);
 
-    if (updatedOrg.nombre) {
-      localStorage.setItem('user_name', updatedOrg.nombre);
-    }
-  }
 
   goBack(): void {
     this.location.back();
-  }
-
-  loadProfile(): void {
-    // Try to get from state first, then load from API
-    const currentProfile = this.authService.getCurrentProfile();
-
-    if (currentProfile && currentProfile.tipo === 'organizacion') {
-      this.mapProfileToForm(currentProfile);
-      this.loading = false;
-    } else {
-      // Fetch fresh
-      this.authService.loadProfile().subscribe({
-        next: (profile: ProfileResponse) => {
-          if (profile.tipo === 'organizacion') {
-            this.mapProfileToForm(profile);
-          } else {
-            this.message = 'El perfil no corresponde a una organización.';
-            this.isError = true;
-          }
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('Error loading profile:', err);
-          this.message = 'Error al cargar el perfil.';
-          this.isError = true;
-          this.loading = false;
-        }
-      });
-    }
   }
 
   private mapProfileToForm(profile: any): void {
@@ -116,9 +152,11 @@ export class ProfileOrganizationComponent implements OnInit {
     this.profileForm.patchValue({
       nombre: data.nombre,
       email: data.email,
+      cif: data.cif,
       sector: data.sector,
       direccion: data.direccion,
       localidad: data.localidad,
+      cp: data.cp,
       descripcion: data.descripcion,
       contacto: data.contacto || ''
     });

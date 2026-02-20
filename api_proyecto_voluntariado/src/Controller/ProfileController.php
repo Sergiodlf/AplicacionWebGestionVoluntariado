@@ -71,6 +71,8 @@ class ProfileController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
+        $userManaged = null;
+        $orgManaged = null;
 
         try {
             $type = $userWrapper->getType();
@@ -90,7 +92,7 @@ class ProfileController extends AbstractController
             else {
                 return $this->errorResponse('Tipo de usuario no soportado para actualización de perfil', 400);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->errorResponse('Error al actualizar perfil', 500, $e->getMessage());
         }
 

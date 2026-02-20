@@ -32,54 +32,84 @@
     <!-- Profile Content -->
     <div *ngIf="!loading" class="profile-content-card shadow-sm border-0 rounded-4 overflow-hidden">
 
-        <!-- VIEW MODE -->
-        <div *ngIf="!editMode" class="view-mode p-4 p-md-5">
+        <!-- PROFILE GRID (Both View and Edit) -->
+        <div class="view-mode p-4 p-md-5" [formGroup]="profileForm">
             <div class="user-summary">
-                <div class="avatar-large" (click)="toggleEdit()">
+                <div class="avatar-large" (click)="!editMode && toggleEdit()">
                     <i class="bi bi-building"></i>
-                    <span class="edit-overlay"><i class="bi bi-camera"></i></span>
+                    <span *ngIf="!editMode" class="edit-overlay"><i class="bi bi-camera"></i></span>
                 </div>
                 <div class="user-info-main">
-                    <h2>{{ organization?.nombre }}</h2>
-                    <p class="user-email">{{ organization?.email }}</p>
+                    <div *ngIf="!editMode">
+                        <h2>{{ organization?.nombre }}</h2>
+                        <p class="user-email">{{ organization?.email }} | CIF: {{ organization?.cif }}</p>
+                    </div>
+                    <div *ngIf="editMode" class="mb-3">
+                        <label class="field-label-small">Nombre de la Organización</label>
+                        <input type="text" formControlName="nombre" class="premium-style-input w-100 mb-2">
+                        <div class="d-flex gap-2">
+                            <p class="user-email mb-0">{{ organization?.email }} (No editable)</p>
+                            <span class="text-muted">|</span>
+                            <p class="user-email mb-0">CIF: {{ organization?.cif }} (No editable)</p>
+                        </div>
+                    </div>
                     <span class="badge-status">Organización</span>
                 </div>
             </div>
 
-            <div class="info-grid">
+            <div class="info-grid mt-4">
+                <!-- Sector -->
                 <div class="info-item">
                     <label><i class="bi bi-grid"></i> Sector</label>
-                    <p>{{ organization?.sector || 'No especificado' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ organization?.sector || 'No especificado' }}</p>
+                    <select *ngIf="editMode" formControlName="sector" class="premium-style-input w-100">
+                        <option value="">Selecciona un sector...</option>
+                        <option *ngFor="let s of availableSectors" [value]="s">{{ s }}</option>
+                    </select>
                 </div>
+
+                <!-- Localidad -->
                 <div class="info-item">
                     <label><i class="bi bi-geo-alt"></i> Localidad</label>
-                    <p>{{ organization?.localidad || 'Sin especificar' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ organization?.localidad || 'Sin especificar' }}</p>
+                    <select *ngIf="editMode" formControlName="localidad" class="premium-style-input w-100">
+                        <option value="">Selecciona una zona...</option>
+                        <option *ngFor="let z of availableZones" [value]="z">{{ z }}</option>
+                    </select>
                 </div>
+
+                <!-- Código Postal -->
+                <div class="info-item">
+                    <label><i class="bi bi-mailbox"></i> Código Postal</label>
+                    <p *ngIf="!editMode" class="animate-text">{{ organization?.cp || 'No especificado' }}</p>
+                    <input *ngIf="editMode" type="text" formControlName="cp" class="premium-style-input w-100"
+                        placeholder="Ej: 31001" maxlength="5">
+                </div>
+
+                <!-- Dirección -->
                 <div class="info-item">
                     <label><i class="bi bi-map"></i> Dirección</label>
-                    <p>{{ organization?.direccion || 'No especificada' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ organization?.direccion || 'No especificada' }}</p>
+                    <input *ngIf="editMode" type="text" formControlName="direccion" class="premium-style-input w-100"
+                        placeholder="Ej: Calle Mayor 12">
                 </div>
+
+                <!-- Contacto -->
+                <div class="info-item">
+                    <label><i class="bi bi-person-badge"></i> Contacto</label>
+                    <p *ngIf="!editMode" class="animate-text">{{ organization?.contacto || 'No especificado' }}</p>
+                    <input *ngIf="editMode" type="text" formControlName="contacto" class="premium-style-input w-100"
+                        placeholder="Nombre o teléfono">
+                </div>
+
+                <!-- Descripción -->
                 <div class="info-item full-width">
                     <label><i class="bi bi-chat-left-text"></i> Descripción</label>
-                    <p class="description-text">{{ organization?.descripcion || 'Sin descripción' }}</p>
+                    <p *ngIf="!editMode" class="description-text animate-text">{{ organization?.descripcion || 'Sin
+                        descripción' }}</p>
+                    <textarea *ngIf="editMode" formControlName="descripcion" class="premium-style-input w-100" rows="4"
+                        placeholder="Describe brevemente tu organización..."></textarea>
                 </div>
-                <div class="info-item full-width">
-                    <label><i class="bi bi-person-badge"></i> Contacto</label>
-                    <p>{{ organization?.contacto || 'No especificado' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- EDIT MODE (Integrated Shared Form) -->
-        <div *ngIf="editMode" class="integrated-editor">
-            <!-- Parent feedback at the top -->
-
-
-            <!-- Editor Body (Scrollable) -->
-            <div class="editor-scroll-body p-4 bg-light bg-opacity-10">
-                <app-organization-form submitLabel="Guardar Cambios" [isModal]="false" [isEdit]="true"
-                    [hideSubmitButton]="true" [initialData]="organization" (onSubmit)="handleFormSubmit($event)">
-                </app-organization-form>
             </div>
         </div>
     </div>
