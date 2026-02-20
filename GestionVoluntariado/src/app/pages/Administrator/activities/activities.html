@@ -7,10 +7,11 @@
                 <!-- Header Section -->
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Voluntariados</h2>
-                    <app-status-toggle leftLabel="Pendientes" rightLabel="Aceptados"
-                        [leftCount]="pendingOpportunities.length" [rightCount]="acceptedOpportunities.length"
-                        (optionChanged)="onTabChange($event)">
-                    </app-status-toggle>
+                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="Por Empezar"
+                        middleLabel="En Curso" rightLabel="Completadas" [leftCount]="pendingOpportunities.length"
+                        [secondCount]="porEmpezarOpportunities.length" [middleCount]="enCursoOpportunities.length"
+                        [rightCount]="completedOpportunities.length" (optionChanged)="onTabChange($event)">
+                    </app-status-toggle-voluntariado>
 
                     <!-- Search Bar (Centered below tabs) -->
                     <!-- Search Bar Removed -->
@@ -21,7 +22,10 @@
                     <div class="d-flex align-items-center flex-wrap gap-3">
                         <div class="d-flex align-items-center text-custom-blue">
                             <i class="bi bi-people me-2 fs-4"></i>
-                            <h4 class="fw-bold mb-0">Voluntariados {{ activeTab === 'left' ? 'Pendientes' : 'Aceptados'
+                            <h4 class="fw-bold mb-0">Voluntariados {{
+                                activeTab === 'left' ? 'Pendientes' :
+                                activeTab === 'second' ? 'Por Empezar' :
+                                activeTab === 'middle' ? 'En Curso' : 'Completadas'
                                 }}</h4>
                         </div>
 
@@ -71,7 +75,8 @@
                         } @else {
                         <div class="col-md-6" *ngFor="let item of filteredOpportunities">
                             <app-volunteering-card [title]="item.title" [organization]="item.organization"
-                                [skills]="item.skills" [date]="item.date" [ods]="item.ods" [status]="item.estado"
+                                [skills]="item.skills" [necesidades]="item.necesidades" [fechaInicio]="item.fechaInicio"
+                                [fechaFin]="item.fechaFin" [ods]="item.ods" [status]="item.estadoDisplay || item.estado"
                                 (onAction)="onAction(item)" (onInfo)="openInfoModal(item)"
                                 (onAssign)="openAssignModal(item)">
                             </app-volunteering-card>
@@ -118,29 +123,54 @@
                                 específicas, el impacto esperado y los requisitos adicionales.</p>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-3 bg-light rounded-3 h-100">
                             <small class="text-uppercase text-muted fw-bold"
                                 style="font-size: 0.7rem;">Ubicación</small>
                             <p class="mb-0 fw-medium">Madrid, Centro</p>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="p-3 bg-light rounded-3 h-100">
-                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fecha</small>
-                            <p class="mb-0 fw-medium">{{ selectedVolunteering.date }}</p>
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Inicio</small>
+                            <p class="mb-0 fw-medium">{{ selectedVolunteering.fechaInicio }}</p>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="p-3 bg-light rounded-3">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Fin</small>
+                            <p class="mb-0 fw-medium">{{ selectedVolunteering.fechaFin }}</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
                             <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">ODS
                                 Relacionados</small>
                             <div class="mt-2 d-flex gap-2 flex-wrap">
                                 <span *ngFor="let item of selectedVolunteering.ods"
-                                    class="badge text-white px-3 py-2 rounded-pill"
-                                    [style.backgroundColor]="item.color">
+                                    class="badge text-white px-3 py-1 rounded-pill" [style.backgroundColor]="item.color"
+                                    style="font-size: 0.7rem;">
                                     {{ item.nombre }}
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Voluntarios
+                                Inscritos</small>
+                            <div class="mt-2 d-flex flex-column gap-1" style="max-height: 120px; overflow-y: auto;">
+                                <div *ngFor="let ins of selectedEnrolledVolunteers" class="small">
+                                    <a [href]="'mailto:' + ins.email_voluntario"
+                                        class="text-custom-blue text-decoration-none fw-medium" title="Enviar correo">
+                                        <i class="bi bi-envelope-at me-1"></i>{{ ins.nombre_voluntario }}
+                                    </a>
+                                    <div class="text-muted" style="font-size: 0.75rem; margin-left: 1.2rem;">
+                                        {{ ins.curso_voluntario }}º {{ ins.nombre_ciclo_voluntario }}
+                                    </div>
+                                </div>
+                                <small *ngIf="selectedEnrolledVolunteers.length === 0" class="text-muted fst-italic">No
+                                    hay voluntarios asignados aún</small>
                             </div>
                         </div>
                     </div>

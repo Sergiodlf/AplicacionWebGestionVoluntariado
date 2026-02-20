@@ -9,12 +9,12 @@
         <div class="flex-grow-1 d-flex flex-column overflow-hidden">
             <div class="container-fluid p-4 pb-0 flex-shrink-0">
 
-                <!-- Header Section -->
                 <div class="d-flex flex-column align-items-center mb-5">
                     <h2 class="text-custom-blue fw-bold mb-4">Mis Voluntariados</h2>
 
-                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="" middleLabel="Aceptados"
-                        rightLabel="" [leftCount]="countPending" [middleCount]="countAccepted" [rightCount]="0"
+                    <app-status-toggle-voluntariado leftLabel="Pendientes" secondLabel="Por Empezar"
+                        middleLabel="En Curso" rightLabel="Completadas" [leftCount]="countPending"
+                        [secondCount]="countPorEmpezar" [middleCount]="countEnCurso" [rightCount]="countCompleted"
                         (optionChanged)="onTabChange($event)">
                     </app-status-toggle-voluntariado>
                 </div>
@@ -79,9 +79,10 @@
                         @for (item of volunteeringData; track item.id) {
                         <div class="col-12 col-md-6">
                             <app-voluntariado-card [title]="item.title" [organization]="item.organization"
-                                [skills]="item.skills" [date]="item.date" [ciclo]="item.ciclo" [ods]="item.ods"
-                                [status]="item.status" [isOrganization]="true" [buttonText]="item.buttonText"
-                                (onAction)="onAction(item)" (onEdit)="openEditModal(item)">
+                                [skills]="item.skills" [necesidades]="item.necesidades" [fechaInicio]="item.fechaInicio"
+                                [fechaFin]="item.fechaFin" [ciclo]="item.ciclo" [ods]="item.ods" [status]="item.status"
+                                [isOrganization]="true" [buttonText]="item.buttonText" (onAction)="onAction(item)"
+                                (onEdit)="openEditModal(item)">
                             </app-voluntariado-card>
 
                         </div>

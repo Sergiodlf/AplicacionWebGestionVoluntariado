@@ -20,7 +20,7 @@ import { filter, take } from 'rxjs/operators';
   styleUrl: './mis-voluntariados-organizacion.css',
 })
 export class MisVoluntariadosOrganizacion implements OnInit {
-  activeTab: 'left' | 'middle' = 'left';
+  activeTab: 'left' | 'second' | 'middle' | 'right' = 'left';
   tabLabel = 'Pendientes';
   volunteeringData: any[] = [];
   allVolunteeringData: any[] = [];
@@ -44,7 +44,9 @@ export class MisVoluntariadosOrganizacion implements OnInit {
 
   // Counts
   countPending = 0;
-  countAccepted = 0;
+  countPorEmpezar = 0;
+  countEnCurso = 0;
+  countCompleted = 0;
 
   // CIF for template
   currentCif: string = '';
@@ -61,12 +63,10 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   loadAllData() {
     this.isLoading = true;
 
-    this.isLoading = true;
-
     // Use userProfile$ observable to wait for the profile to be loaded
     this.authService.userProfile$.pipe(
-      filter(profile => !!profile && profile.tipo === 'organizacion'), // Wait for a valid organization profile
-      take(1) // Take only the first valid value to avoid repeated calls if profile updates
+      filter(profile => !!profile && profile.tipo === 'organizacion'),
+      take(1)
     ).subscribe(profile => {
       this.currentCif = profile!.datos.cif;
 
@@ -79,12 +79,8 @@ export class MisVoluntariadosOrganizacion implements OnInit {
       this.fetchActivities();
     });
 
-    // Fallback: If profile doesn't load within a timeout (e.g. user not logged in or error), handle it.
-    // However, the Observable pattern above is cleaner. 
-    // If we want to support the "localStorage backup" immediately if profile is null but user exists:
     if (!this.authService.getCurrentProfile()) {
-      // Check if we have backup in localStorage to show something while waiting or if auth fails
-      const backupCif = localStorage.getItem('user_cif'); // We specifically saved this in AuthService now
+      const backupCif = localStorage.getItem('user_cif');
       if (backupCif) {
         this.currentCif = backupCif;
         this.fetchActivities();
@@ -96,70 +92,83 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   fetchActivities() {
     if (!this.currentCif) return;
 
-
     const pending$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'PENDIENTE');
     const accepted$ = this.voluntariadoService.getActivitiesByOrganization(this.currentCif, undefined, 'ACEPTADA');
 
     forkJoin([pending$, accepted$]).subscribe({
       next: ([pendingRes, acceptedRes]) => {
-
-        // Helper to safely check status handling property variations
+        const normalize = (s: any) => String(s || '').toUpperCase().trim();
         const checkApproval = (item: any, expected: string) => {
-          const val = (item.estadoAprobacion || item.estado_aprobacion || '').toUpperCase();
+          const val = normalize(item.estadoAprobacion || item.estado_aprobacion || item.status || '');
+          if (expected === 'ACEPTADA') {
+            return val === 'ACEPTADA' || val === 'ACEPTADO' || val === 'CONFIRMADA' || val === 'CONFIRMADO' || val === 'APROBADA';
+          }
           return val === expected;
         };
 
-        // Validation: Filter again client-side in case the API returns mixed results
-        // We strictly enforce that 'accepted' tab ONLY contains confirmed/accepted items
-        const pendingResults = pendingRes.filter(i => checkApproval(i, 'PENDIENTE'));
-        const acceptedResults = acceptedRes.filter(i => checkApproval(i, 'ACEPTADA') || checkApproval(i, 'ACEPTADO'));
-
-
-        this.countPending = pendingResults.length;
-        this.countAccepted = acceptedResults.length;
-
         const orgName = localStorage.getItem('user_name') || 'Mi Organización';
 
-        const mapItem = (item: any, cat: string) => {
-          let statusLabel = '';
-          let buttonText = '';
-
-          // Labels only for Aceptados (middle) where lifecycle matters
-          if (cat === 'middle') {
-            const now = new Date();
-            const start = item.fechaInicio ? new Date(item.fechaInicio) : null;
-            const end = item.fechaFin ? new Date(item.fechaFin) : null;
-
-            if (start && now < start) {
-              statusLabel = 'Sin comenzar';
-            } else if (end && now > end) {
-              statusLabel = 'Completado';
-            } else {
-              statusLabel = 'En curso';
-            }
-
-            // buttonText removed
-          } else if (cat === 'left') {
-            // Pendientes
-            buttonText = 'Aceptar';
-          }
+        const mapItem = (item: any, cat: 'left' | 'second' | 'middle' | 'right') => {
+          const parseDateStr = (d: any) => {
+            if (!d) return '';
+            const date = new Date(d);
+            return isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+          };
 
           return {
             ...item,
+            id: item.codActividad || item.id || Math.random(),
             category: cat,
-            title: item.nombre,
+            title: item.nombre || item.title || 'Actividad sin nombre',
             organization: orgName,
             skills: item.habilidades || [],
-            date: item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha pendiente',
-            status: statusLabel, // Computed date-based status
-            buttonText: buttonText,
+            necesidades: this.parseJson(item.necesidades || item.skills),
+            fechaInicio: parseDateStr(item.fechaInicio || item.fecha_inicio),
+            fechaFin: parseDateStr(item.fechaFin || item.fecha_fin),
+            fechaInicioRaw: item.fechaInicio || item.fecha_inicio,
+            fechaFinRaw: item.fechaFin || item.fecha_fin,
+            status: cat === 'left' ? 'Pendiente' : (cat === 'second' ? 'Por Empezar' : (cat === 'middle' ? 'En Curso' : 'Completadas')),
+            date: parseDateStr(item.fechaInicio || item.fecha_inicio),
+            buttonText: cat === 'left' ? 'Aceptar' : '',
             ods: item.ods || []
           };
         };
 
+        const now = new Date();
+
+        const pendingMapped = pendingRes
+          .filter(i => checkApproval(i, 'PENDIENTE'))
+          .map(i => mapItem(i, 'left'));
+
+        const acceptedRaw = acceptedRes.filter(i => checkApproval(i, 'ACEPTADA'));
+
+        const porEmpezarMapped: any[] = [];
+        const enCursoMapped: any[] = [];
+        const completedMapped: any[] = [];
+
+        acceptedRaw.forEach(i => {
+          const start = i.fechaInicio ? new Date(i.fechaInicio) : null;
+          const end = i.fechaFin ? new Date(i.fechaFin) : null;
+
+          if (end && now > end) {
+            completedMapped.push(mapItem(i, 'right'));
+          } else if (start && now < start) {
+            porEmpezarMapped.push(mapItem(i, 'second'));
+          } else {
+            enCursoMapped.push(mapItem(i, 'middle'));
+          }
+        });
+
+        this.countPending = pendingMapped.length;
+        this.countPorEmpezar = porEmpezarMapped.length;
+        this.countEnCurso = enCursoMapped.length;
+        this.countCompleted = completedMapped.length;
+
         this.allVolunteeringData = [
-          ...pendingResults.map((i: any) => mapItem(i, 'left')),
-          ...acceptedResults.map((i: any) => mapItem(i, 'middle'))
+          ...pendingMapped,
+          ...porEmpezarMapped,
+          ...enCursoMapped,
+          ...completedMapped
         ];
 
         this.extractFilterOptions();
@@ -181,7 +190,7 @@ export class MisVoluntariadosOrganizacion implements OnInit {
     const locs = new Set<string>();
     const secs = new Set<string>();
     this.allVolunteeringData.forEach(v => {
-      if (v.direccion) locs.add(v.direccion); // Using direccion as location for now
+      if (v.direccion) locs.add(v.direccion);
       if (v.sector) secs.add(v.sector);
     });
     this.availableLocations = Array.from(locs).sort();
@@ -190,16 +199,10 @@ export class MisVoluntariadosOrganizacion implements OnInit {
 
   applyFilters() {
     this.volunteeringData = this.allVolunteeringData.filter(v => {
-      // 1. Tab Filter
       if (v.category !== this.activeTab) return false;
-
-      // 2. Search Term
       if (this.searchTerm && !v.title.toLowerCase().includes(this.searchTerm.toLowerCase())) return false;
-
-      // 3. Attribute Filters
       if (this.filterCriteria.localidad && v.direccion !== this.filterCriteria.localidad) return false;
       if (this.filterCriteria.sector && v.sector !== this.filterCriteria.sector) return false;
-
       return true;
     });
   }
@@ -231,7 +234,6 @@ export class MisVoluntariadosOrganizacion implements OnInit {
     return count;
   }
 
-
   editingActivity: any = null;
 
   openCreateModal() {
@@ -245,23 +247,40 @@ export class MisVoluntariadosOrganizacion implements OnInit {
   }
 
   onTabChange(tab: 'left' | 'second' | 'middle' | 'right') {
-    // We only use 'left' (Pendientes) and 'middle' (Aceptados) now
-    if (tab === 'left') {
-      this.activeTab = 'left';
-      this.tabLabel = 'Pendientes';
-    } else if (tab === 'middle') {
-      this.activeTab = 'middle';
-      this.tabLabel = 'Aceptados';
+    this.activeTab = tab;
+    switch (tab) {
+      case 'left': this.tabLabel = 'Pendientes'; break;
+      case 'second': this.tabLabel = 'Por Empezar'; break;
+      case 'middle': this.tabLabel = 'En Curso'; break;
+      case 'right': this.tabLabel = 'Completadas'; break;
     }
-
     this.applyFilters();
   }
 
   onAction(item: any) {
+    // Basic action placeholder
   }
 
   onVoluntariadoCreated(newVoluntariado: any) {
-    this.loadAllData(); // Reload list after creation
+    this.loadAllData();
     this.modalOpen = false;
+  }
+
+  parseJson(value: any): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      value = value.trim();
+      if (value.startsWith('[') && value.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [value];
+        } catch (e) {
+          console.error('Error parsing JSON:', value, e);
+        }
+      }
+      return value.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+    }
+    return [String(value)];
   }
 }

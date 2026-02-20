@@ -38,6 +38,7 @@ class AppFixtures extends Fixture
         $ciudades = ['Pamplona', 'Madrid', 'Barcelona', 'Sevilla', 'Valencia'];
         $idiomasList = ['Inglés', 'Francés', 'Alemán', 'Euskera', 'Italiano'];
         $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        $necesidadesData = ['Acompañamiento', 'Informática', 'Transporte', 'Apoyo Escolar', 'Traducción', 'Mantenimiento'];
         $turnos = ['Mañana', 'Tarde', 'Noche'];
 
         // 2. SEED BASIC ENTITIES (Habilidades, Intereses, ODS, Ciclos) - IDEMPOTENT
@@ -106,6 +107,18 @@ class AppFixtures extends Fixture
                 echo "  ♻️ Ciclo already exists: $name\n";
             }
             $ciclos[] = $c;
+        }
+
+        $necesidades = [];
+        foreach ($necesidadesData as $name) {
+            $n = $manager->getRepository(Necesidad::class)->findOneBy(['nombre' => $name]);
+            if (!$n) {
+                $n = new Necesidad();
+                $n->setNombre($name);
+                $manager->persist($n);
+                echo "  ✨ Created Necesidad: $name\n";
+            }
+            $necesidades[] = $n;
         }
 
         $manager->flush();
@@ -305,6 +318,9 @@ class AppFixtures extends Fixture
             $act->addOd($odsEntities[array_rand($odsEntities)]);
             $act->setSector($sectores[array_rand($sectores)]);
             $act->setDescripcion("Únete a nuestra causa para mejorar el entorno.");
+            // Add some needs
+            $act->addNecesidad($necesidades[$i % count($necesidades)]);
+            $act->addNecesidad($necesidades[($i + 1) % count($necesidades)]);
             $manager->persist($act);
             echo "  ✨ Created Actividad: $activityName\n";
         }

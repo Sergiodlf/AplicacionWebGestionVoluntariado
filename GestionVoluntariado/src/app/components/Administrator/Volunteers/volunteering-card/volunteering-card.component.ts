@@ -12,9 +12,11 @@ export class VolunteeringCardComponent {
   @Input() title: string = '';
   @Input() organization: string = '';
   @Input() skills: any[] = [];
-  @Input() date: string = '';
+  @Input() fechaInicio: string = '';
+  @Input() fechaFin: string = '';
   @Input() ods: any[] = [];
   @Input() status: string = '';
+  @Input() necesidades: any[] = [];
 
   @Output() onAction = new EventEmitter<void>();
   @Output() onInfo = new EventEmitter<void>();

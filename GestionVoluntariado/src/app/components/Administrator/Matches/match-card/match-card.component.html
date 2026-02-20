@@ -59,8 +59,8 @@
           <small *ngIf="match.organization.needs?.length === 0" class="text-muted fst-italic">Sin requisitos</small>
         </div>
 
-        <div class="text-muted small text-md-end" *ngIf="match.organization.schedule !== 'No especificado'">
-          {{ match.organization.schedule }} <i class="bi bi-clock ms-1"></i>
+        <div class="text-muted small text-md-end" *ngIf="match.organization.formattedDate">
+          {{ match.organization.formattedDate }} <i class="bi bi-calendar3 ms-1"></i>
         </div>
       </div>
 
@@ -80,9 +80,6 @@
           <i class="bi bi-check-circle-fill fs-4 d-block mb-1"></i>
           Aceptado
         </div>
-        <button class="btn btn-sm btn-outline-success rounded-pill w-100" (click)="onComplete.emit()">
-          <i class="bi bi-flag-fill"></i> Completar
-        </button>
         } @else if (match.status === 'COMPLETADA') {
         <div class="text-center text-primary fw-bold small">
           <i class="bi bi-trophy-fill fs-4 d-block mb-1"></i>

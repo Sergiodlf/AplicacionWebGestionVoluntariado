@@ -68,6 +68,8 @@ class InscripcionController extends AbstractController
                     
                     'codActividad' => $actividad->getCodActividad(),
                     'nombre_actividad' => $actividad->getNombre(),
+                    'curso_voluntario' => $voluntario->getCiclo() ? $voluntario->getCiclo()->getCurso() : '',
+                    'nombre_ciclo_voluntario' => $voluntario->getCiclo() ? $voluntario->getCiclo()->getNombre() : '',
                     'descripcion_actividad' => '', // $actividad->getDescripcion(),
                     'email_organizacion' => $actividad->getOrganizacion() ? $actividad->getOrganizacion()->getEmail() : '',
                     'horario' => $actividad->getHorario(),
