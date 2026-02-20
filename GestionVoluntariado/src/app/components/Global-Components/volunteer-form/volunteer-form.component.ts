@@ -108,7 +108,7 @@ export class VolunteerFormComponent implements OnInit, OnChanges {
       } else if (this.initialData.ciclo.nombre) {
         cicloValue = this.initialData.ciclo.nombre;
       }
-      
+
       // Remove the (Xº) suffix if present to match dropdown options
       // Backend returns "Administración y Finanzas (2º)"
       // But dropdown has "Administración y Finanzas"
@@ -117,15 +117,15 @@ export class VolunteerFormComponent implements OnInit, OnChanges {
 
     // Direct field mapping
     this.volunteerForm.patchValue({
-      nombreCompleto: this.initialData.nombreCompleto || (this.initialData.nombre && this.initialData.apellido1 ? `${this.initialData.nombre} ${this.initialData.apellido1}`.trim() : ''),
+      nombreCompleto: this.initialData.nombreCompleto || (this.initialData.nombre && this.initialData.apellido1 ? `${this.initialData.nombre} ${this.initialData.apellido1}`.trim() : this.initialData.nombre || ''),
       dni: this.initialData.dni,
       correo: this.initialData.correo || this.initialData.email,
-      zona: this.initialData.zona,
+      zona: this.initialData.zona || '',
       ciclo: cicloValue,
-      fechaNacimiento: this.initialData.fechaNacimiento,
-      experiencia: this.initialData.experiencia || this.initialData.experience,
-      coche: this.initialData.coche === true || this.initialData.coche === 'Si' || this.initialData.hasCar === true ? 'Si' : 
-             (this.initialData.coche === false || this.initialData.coche === 'No' || this.initialData.hasCar === false ? 'No' : this.initialData.coche)
+      fechaNacimiento: this.initialData.fechaNacimiento || this.initialData.birthDate || '',
+      experiencia: this.initialData.experiencia || this.initialData.experience || '',
+      coche: this.initialData.coche === true || this.initialData.coche === 'Si' || this.initialData.hasCar === true ? 'Si' :
+        (this.initialData.coche === false || this.initialData.coche === 'No' || this.initialData.hasCar === false ? 'No' : this.initialData.coche || '')
     });
 
 
@@ -146,8 +146,9 @@ export class VolunteerFormComponent implements OnInit, OnChanges {
     }
 
     // Idiomas mapping - always reload
-    if (this.initialData.idiomas) {
-      this.addedIdiomas = [...this.initialData.idiomas];
+    const idiomasData = this.initialData.idiomas || this.initialData.languages;
+    if (idiomasData) {
+      this.addedIdiomas = Array.isArray(idiomasData) ? [...idiomasData] : [idiomasData];
       this.volunteerForm.patchValue({ idiomas: this.addedIdiomas });
     }
 

@@ -52,49 +52,25 @@
   </div>
 
   <div class="mb-2">
-    <div class="d-flex align-items-center">
+    <div class="d-flex align-items-center mb-1">
       <i class="bi bi-gear text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Habilidades:</span>
-      <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let skill of parseList(skills())" class="badge bg-light text-custom-blue border">{{ skill.nombre
-          || skill
-          }}</span>
-      </div>
+      <span class="text-muted small">{{ getTextList(skills(), true) || 'Sin habilidades' }}</span>
     </div>
-  </div>
-
-  <div class="mb-2">
-    <div class="d-flex align-items-center">
+    <div class="d-flex align-items-center mb-1">
       <i class="bi bi-translate text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Idiomas:</span>
-      <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let lang of parseList(languages())" class="badge bg-light text-custom-blue border">{{ lang
-          }}</span>
-      </div>
+      <span class="text-muted small">{{ getTextList(languages(), false) || 'Sin idiomas' }}</span>
     </div>
-  </div>
-
-  <div class="mb-2">
-    <div class="d-flex align-items-center">
+    <div class="d-flex align-items-center mb-1">
       <i class="bi bi-clock text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Disponibilidad:</span>
-      <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let item of parseList(availability())" class="badge bg-light text-custom-blue border">
-          {{ item }}
-        </span>
-      </div>
+      <span class="text-muted small">{{ getTextList(availability(), false) || 'Sin disponibilidad' }}</span>
     </div>
-  </div>
-
-  <div>
     <div class="d-flex align-items-center">
       <i class="bi bi-heart text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Intereses:</span>
-      <div class="d-flex gap-1 flex-wrap">
-        <span *ngFor="let interest of parseList(interests())" class="badge bg-light text-muted border">{{
-          interest.nombre || interest
-          }}</span>
-      </div>
+      <span class="text-muted small">{{ getTextList(interests(), true) || 'Sin intereses' }}</span>
     </div>
   </div>
 </div>
