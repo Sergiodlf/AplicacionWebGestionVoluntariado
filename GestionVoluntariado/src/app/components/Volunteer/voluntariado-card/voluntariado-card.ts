@@ -26,4 +26,5 @@ export class VoluntariadoCard {
 
   @Output() onAction = new EventEmitter<void>();
   @Output() onEdit = new EventEmitter<void>();
+  @Output() onDetails = new EventEmitter<void>();
 }

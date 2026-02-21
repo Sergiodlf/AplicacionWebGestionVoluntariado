@@ -107,16 +107,32 @@ export class OrganizationFormComponent implements OnInit {
                 // Remove password if empty during edit
                 if (!formData.password) delete formData.password;
 
-                // Use AuthService helper for global reactive sync
-                this.authService.updateProfile(formData).subscribe({
-                    next: (response) => {
-                        this.onSubmit.emit(response.datos || response);
-                    },
-                    error: (err: any) => {
-                        this.errorMessage = 'Error al actualizar la organización. Por favor, intente de nuevo.';
-                        console.error('Error al actualizar la organización:', err);
-                    }
-                });
+                const userRole = localStorage.getItem('user_role');
+                const isDocente = userRole === 'docente' || userRole === 'admin';
+
+                if (isDocente && this.initialData.cif) {
+                    // Admin/Docente editing an organization
+                    this.organizationService.updateProfile(this.initialData.cif, formData).subscribe({
+                        next: (response) => {
+                            this.onSubmit.emit(response.datos || response);
+                        },
+                        error: (err: any) => {
+                            this.errorMessage = err.error?.message || 'Error al actualizar la organización por el administrador.';
+                            console.error('Admin edit error:', err);
+                        }
+                    });
+                } else {
+                    // Organization editing its own profile
+                    this.authService.updateProfile(formData).subscribe({
+                        next: (response) => {
+                            this.onSubmit.emit(response.datos || response);
+                        },
+                        error: (err: any) => {
+                            this.errorMessage = err.error?.message || 'Error al actualizar su propio perfil.';
+                            console.error('Self edit error:', err);
+                        }
+                    });
+                }
             } else {
                 // For new registration, pass the raw form data (including password) to the parent helper
                 // The parent (RegisterOrganizationComponent) handles Firebase + Backend registration

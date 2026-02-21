@@ -5,6 +5,7 @@ import { Navbar } from '../../../components/Global-Components/navbar/navbar';
 import { SidebarComponent } from '../../../components/Administrator/Sidebar/sidebar.component';
 import { CategoryService } from '../../../services/category.service';
 import { Category } from '../../../models/Category';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
     selector: 'app-categories',
@@ -15,6 +16,7 @@ import { Category } from '../../../models/Category';
 })
 export class CategoriesComponent implements OnInit {
     private categoryService = inject(CategoryService);
+    private notificationService = inject(NotificationService);
 
     skills: Category[] = [];
     interests: Category[] = [];
@@ -33,32 +35,70 @@ export class CategoriesComponent implements OnInit {
 
     addSkill() {
         if (!this.newSkillName.trim()) return;
-        this.categoryService.addHabilidad(this.newSkillName).subscribe(() => {
-            this.newSkillName = '';
-            this.loadCategories();
+
+        const exists = this.skills.some(s => s.nombre.toLowerCase() === this.newSkillName.trim().toLowerCase());
+        if (exists) {
+            this.notificationService.showWarning('Esta habilidad ya existe.');
+            return;
+        }
+
+        this.categoryService.addHabilidad(this.newSkillName).subscribe({
+            next: () => {
+                this.notificationService.showSuccess('Habilidad añadida correctamente.');
+                this.newSkillName = '';
+                this.loadCategories();
+            },
+            error: () => this.notificationService.showError('Error al añadir la habilidad.')
         });
     }
 
-    deleteSkill(id: number) {
-        if (confirm('¿Estás seguro de eliminar esta habilidad?')) {
-            this.categoryService.deleteHabilidad(id).subscribe(() => {
-                this.loadCategories();
+    async deleteSkill(id: number) {
+        const confirmed = await this.notificationService.showConfirmation(
+            '¿Eliminar habilidad?',
+            '¿Estás seguro de eliminar esta habilidad? Esta acción no se puede deshacer.'
+        );
+        if (confirmed) {
+            this.categoryService.deleteHabilidad(id).subscribe({
+                next: () => {
+                    this.notificationService.showSuccess('Habilidad eliminada.');
+                    this.loadCategories();
+                },
+                error: () => this.notificationService.showError('Error al eliminar la habilidad.')
             });
         }
     }
 
     addInterest() {
         if (!this.newInterestName.trim()) return;
-        this.categoryService.addInteres(this.newInterestName).subscribe(() => {
-            this.newInterestName = '';
-            this.loadCategories();
+
+        const exists = this.interests.some(i => i.nombre.toLowerCase() === this.newInterestName.trim().toLowerCase());
+        if (exists) {
+            this.notificationService.showWarning('Este interés ya existe.');
+            return;
+        }
+
+        this.categoryService.addInteres(this.newInterestName).subscribe({
+            next: () => {
+                this.notificationService.showSuccess('Interés añadido correctamente.');
+                this.newInterestName = '';
+                this.loadCategories();
+            },
+            error: () => this.notificationService.showError('Error al añadir el interés.')
         });
     }
 
-    deleteInterest(id: number) {
-        if (confirm('¿Estás seguro de eliminar este interés?')) {
-            this.categoryService.deleteInteres(id).subscribe(() => {
-                this.loadCategories();
+    async deleteInterest(id: number) {
+        const confirmed = await this.notificationService.showConfirmation(
+            '¿Eliminar interés?',
+            '¿Estás seguro de eliminar este interés? Esta acción no se puede deshacer.'
+        );
+        if (confirmed) {
+            this.categoryService.deleteInteres(id).subscribe({
+                next: () => {
+                    this.notificationService.showSuccess('Interés eliminado.');
+                    this.loadCategories();
+                },
+                error: () => this.notificationService.showError('Error al eliminar el interés.')
             });
         }
     }
