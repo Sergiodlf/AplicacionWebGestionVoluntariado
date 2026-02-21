@@ -11,6 +11,8 @@ import { Organization } from '../../../models/organizationModel';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { VoluntariadoService } from '../../../services/voluntariado-service';
+import { inject } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-organizations',
@@ -27,7 +29,12 @@ import { VoluntariadoService } from '../../../services/voluntariado-service';
   styleUrl: './organizations.css',
 })
 export class OrganizationsComponent implements OnInit, OnDestroy {
-  constructor(private organizationService: OrganizationService, private authService: AuthService, private voluntariadoService: VoluntariadoService) { }
+  private organizationService = inject(OrganizationService);
+  private authService = inject(AuthService);
+  private voluntariadoService = inject(VoluntariadoService);
+  private notificationService = inject(NotificationService);
+
+  constructor() { }
   activeTab: 'left' | 'middle' | 'right' = 'left'; // 'left' = Pending (Pendientes), 'middle' = Pending (compat), 'right' = Approved (Aceptados)
 
   organizations = signal<Organization[]>([]);
@@ -217,6 +224,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   onFormSubmit(data: Organization): void {
     this.closeModal();
     this.organizationService.notifyOrganizationUpdate();
+    this.notificationService.showSuccess('Organización creada con éxito.');
   }
 
   openActivityModal(activity: any) {
@@ -275,7 +283,7 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
   handleEditSubmit(updatedData: any) {
     this.loadOrganizations(true);
     this.closeEditModal();
-    alert('Organización actualizada con éxito');
+    this.notificationService.showSuccess('Organización actualizada con éxito');
   }
 
   // Password methods
@@ -299,18 +307,18 @@ export class OrganizationsComponent implements OnInit, OnDestroy {
 
   submitPasswordChange() {
     if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres');
+      this.notificationService.showWarning('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
     this.authService.adminChangePassword(this.selectedOrganizationForPassword.email, this.newPasswordValue).subscribe({
       next: () => {
         this.closePasswordModal();
-        alert('Contraseña actualizada correctamente.');
+        this.notificationService.showSuccess('Contraseña actualizada correctamente.');
       },
       error: (err: any) => {
         console.error('Error updating password', err);
-        alert('Error al actualizar la contraseña.');
+        this.notificationService.showError('Error al actualizar la contraseña.');
       }
     });
   }

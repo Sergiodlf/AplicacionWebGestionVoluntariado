@@ -4,7 +4,9 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { VolunteerService } from '../../../services/volunteer.service';
 import { CategoryService } from '../../../services/category.service';
 import { Router } from '@angular/router';
+import { NotificationService } from '../../../services/notification.service';
 import { AuthService } from '../../../services/auth.service';
+import { inject } from '@angular/core';
 import { Volunteer } from '../../../models/Volunteer';
 import { Subscription } from 'rxjs';
 
@@ -16,6 +18,8 @@ import { Subscription } from 'rxjs';
   styleUrl: './profile.css',
 })
 export class ProfileComponent implements OnInit {
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   profileForm: FormGroup;
   loading = true;
   editMode = false;
@@ -57,8 +61,7 @@ export class ProfileComponent implements OnInit {
     private volunteerService: VolunteerService,
     private categoryService: CategoryService,
     private router: Router,
-    private location: Location,
-    private authService: AuthService
+    private location: Location
   ) {
     this.profileForm = this.fb.group({
       nombre: ['', Validators.required],
@@ -241,7 +244,7 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  
+
   // Modal de cambio de contraseña
 
   newPasswordValue: string = '';
@@ -269,18 +272,18 @@ export class ProfileComponent implements OnInit {
 
   submitPasswordChange() {
     if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres');
+      this.notificationService.showWarning('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
-    this.authService.changePassword(this.newPasswordValue, this.profileForm.value.email).subscribe({
+    this.authService.changePassword(this.newPasswordValue).subscribe({
       next: () => {
         this.closePasswordModal();
-        alert('Contraseña actualizada correctamente.');
+        this.notificationService.showSuccess('Contraseña actualizada correctamente.');
       },
       error: (err: any) => {
         console.error('Error updating password', err);
-        alert('Error al actualizar la contraseña.');
+        this.notificationService.showError('Error al actualizar la contraseña.');
       }
     });
   }

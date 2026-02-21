@@ -33,6 +33,8 @@ export class Voluntariados implements OnInit {
   // Filter State
   searchTerm: string = '';
   showFilterModal = signal(false);
+  showActivityDetailsModal = signal(false);
+  selectedActivityForDetails: any = null;
   tempFilters = {
     localidad: '',
     sector: '',
@@ -67,6 +69,11 @@ export class Voluntariados implements OnInit {
               organization: v.nombre_organizacion, // Map Organization Name
               skills: v.habilidades || [],
               date: v.fechaInicio,
+              fechaInicio: v.fechaInicio,
+              fechaFin: v.fechaFin,
+              inscritos_count: v.inscritos_count || 0,
+              cupo: v.cupo || v.maxParticipantes || 0,
+              necesidades: v.necesidades || [],
               ods: v.ods || [],
             } as Voluntariado;
           });
@@ -188,6 +195,16 @@ export class Voluntariados implements OnInit {
 
   onAction(item: any) {
     this.inscribirse(item);
+  }
+
+  openActivityModal(activity: any) {
+    this.selectedActivityForDetails = activity;
+    this.showActivityDetailsModal.set(true);
+  }
+
+  closeActivityModal() {
+    this.showActivityDetailsModal.set(false);
+    this.selectedActivityForDetails = null;
   }
 
   inscribirse(item: Voluntariado) {

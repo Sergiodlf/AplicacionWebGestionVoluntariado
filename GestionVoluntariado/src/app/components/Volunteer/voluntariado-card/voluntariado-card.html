@@ -7,6 +7,13 @@
       </div>
     </div>
     <div class="d-flex align-items-center gap-2">
+      <!-- Info Button with Badge Aesthetic -->
+      <span class="badge bg-light text-custom-blue border cursor-pointer hover-shadow-sm px-3 py-2 rounded-pill"
+        (click)="onDetails.emit(); $event.stopPropagation()"
+        style="cursor: pointer; transition: all 0.2s; font-size: 0.75rem;">
+        <i class="bi bi-info-circle me-1"></i> Ver Info
+      </span>
+
       <!-- Edit Button for Organizations -->
       @if(isOrganization) {
       <button class="btn btn-light btn-sm rounded-circle shadow-sm text-muted"
@@ -60,13 +67,19 @@
     </div>
   </div>
 
-  <div class="mb-1" *ngIf="fechaInicio || fechaFin">
+  <!-- Fechas -->
+  <div class="mb-1" *ngIf="date || fechaInicio || fechaFin">
     <div class="d-flex align-items-center">
       <i class="bi bi-calendar3 text-custom-blue me-2"></i>
       <span class="fw-bold text-custom-blue me-2">Fechas:</span>
       <span class="text-muted small">
-        <span *ngIf="fechaInicio" class="me-2">Inicio: {{ fechaInicio }}</span>
-        <span *ngIf="fechaFin">Fin: {{ fechaFin }}</span>
+        <ng-container *ngIf="fechaInicio || fechaFin; else singleDate">
+          <span *ngIf="fechaInicio" class="me-2">Inicio: {{ fechaInicio }}</span>
+          <span *ngIf="fechaFin">Fin: {{ fechaFin }}</span>
+        </ng-container>
+        <ng-template #singleDate>
+          <span>{{ date }}</span>
+        </ng-template>
       </span>
     </div>
   </div>

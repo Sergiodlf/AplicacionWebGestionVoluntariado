@@ -3,6 +3,8 @@ import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { OrganizationService } from '../../../services/organization.service';
 import { AuthService } from '../../../services/auth.service';
+import { inject } from '@angular/core';
+import { NotificationService } from '../../../services/notification.service';
 import { Organization } from '../../../models/organizationModel';
 
 @Component({
@@ -13,6 +15,9 @@ import { Organization } from '../../../models/organizationModel';
   styleUrl: './profile.css',
 })
 export class ProfileOrganizationComponent implements OnInit {
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private organizationService = inject(OrganizationService);
   profileForm: FormGroup;
   loading = true;
   editMode = false;
@@ -37,8 +42,6 @@ export class ProfileOrganizationComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private organizationService: OrganizationService,
-    private authService: AuthService,
     private location: Location
   ) {
     this.profileForm = this.fb.group({
@@ -189,18 +192,18 @@ export class ProfileOrganizationComponent implements OnInit {
 
   submitPasswordChange() {
     if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres');
+      this.notificationService.showWarning('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
-    this.authService.changePassword(this.newPasswordValue, this.profileForm.value.email).subscribe({
+    this.authService.changePassword(this.newPasswordValue).subscribe({
       next: () => {
         this.closePasswordModal();
-        alert('Contraseña actualizada correctamente.');
+        this.notificationService.showSuccess('Contraseña actualizada correctamente.');
       },
       error: (err: any) => {
         console.error('Error updating password', err);
-        alert('Error al actualizar la contraseña.');
+        this.notificationService.showError('Error al actualizar la contraseña.');
       }
     });
   }

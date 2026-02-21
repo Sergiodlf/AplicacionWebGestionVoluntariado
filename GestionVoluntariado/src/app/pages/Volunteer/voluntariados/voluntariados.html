@@ -56,7 +56,9 @@
           <div class="col-md-6" *ngFor="let item of displayedVoluntariados" [hidden]="isLoading">
             <app-voluntariado-card [title]="item.title || item.nombre"
               [organization]="item.organization || item.organizacion" [skills]="item.skills || []"
-              [date]="item.date || ''" [ciclo]="item.ciclo || ''" [ods]="item.ods || []" (onAction)="onAction(item)">
+              [date]="item.date || item.fechaInicio || ''" [fechaInicio]="item.fechaInicio || ''"
+              [fechaFin]="item.fechaFin || ''" [ciclo]="item.ciclo || ''" [ods]="item.ods || []"
+              (onAction)="onAction(item)" (onDetails)="openActivityModal(item)">
             </app-voluntariado-card>
           </div>
         </div>
@@ -109,4 +111,115 @@
       </div>
     </div>
   </div>
+
+  <!-- Activity Details Modal -->
+  @if (showActivityDetailsModal() && selectedActivityForDetails) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header border-0 bg-custom-blue text-white p-4">
+          <div class="d-flex align-items-center">
+            <div class="rounded-circle bg-white text-custom-blue d-flex align-items-center justify-content-center me-3"
+              style="width: 50px; height: 50px;">
+              <i class="bi bi-info-lg fs-3"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0">{{ selectedActivityForDetails.title ||
+                selectedActivityForDetails.nombre }}</h5>
+              <small class="opacity-75">{{ selectedActivityForDetails.organization ||
+                selectedActivityForDetails.nombre_organizacion }}</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" (click)="closeActivityModal()"
+            aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 bg-light">
+          <div class="row g-4">
+            <!-- Left Info Panel -->
+            <div class="col-md-7">
+              <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                <h6 class="fw-bold text-custom-blue border-bottom pb-2 mb-3">Detalles de la Actividad</h6>
+
+                <div class="mb-4">
+                  <p class="text-muted small mb-0 fw-bold text-uppercase">Descripción:</p>
+                  <p class="text-secondary">{{ selectedActivityForDetails.descripcion || 'Sin descripción detallada.' }}
+                  </p>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-sm-6">
+                    <p class="text-muted small mb-0 fw-bold text-uppercase">Fecha Inicio:</p>
+                    <p class="text-secondary"><i class="bi bi-calendar-event me-2"></i>{{
+                      selectedActivityForDetails.fechaInicio || 'No definida' }}</p>
+                  </div>
+                  <div class="col-sm-6" *ngIf="selectedActivityForDetails.fechaFin">
+                    <p class="text-muted small mb-0 fw-bold text-uppercase">Fecha Fin:</p>
+                    <p class="text-secondary"><i class="bi bi-calendar-check me-2"></i>{{
+                      selectedActivityForDetails.fechaFin }}</p>
+                  </div>
+                  <div class="col-sm-6" *ngIf="selectedActivityForDetails.direccion">
+                    <p class="text-muted small mb-0 fw-bold text-uppercase">Ubicación:</p>
+                    <p class="text-secondary"><i class="bi bi-geo-alt me-2"></i>{{ selectedActivityForDetails.direccion
+                      }}</p>
+                  </div>
+                  <div class="col-sm-6" *ngIf="selectedActivityForDetails.ciclo">
+                    <p class="text-muted small mb-0 fw-bold text-uppercase">Relacionado con:</p>
+                    <p class="text-custom-blue fw-bold small"><i class="bi bi-mortarboard me-2"></i>{{
+                      selectedActivityForDetails.ciclo }}</p>
+                  </div>
+                </div>
+
+                <div class="mt-4" *ngIf="selectedActivityForDetails.necesidades?.length">
+                  <h6 class="fw-bold text-custom-blue mb-2 small">Necesidades específicas:</h6>
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (nec of selectedActivityForDetails.necesidades; track nec) {
+                    <span class="badge bg-light text-secondary border rounded-pill px-3">{{ nec.nombre || nec }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Status Panel -->
+            <div class="col-md-5">
+              <div
+                class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white d-flex flex-column justify-content-between">
+                <div>
+                  <h6 class="fw-bold text-custom-blue border-bottom pb-2 mb-3">Disponibilidad</h6>
+
+                  <div class="text-center py-4 rounded-4 bg-light mb-4 shadow-sm border">
+                    <div class="mb-2">
+                      <span class="display-4 fw-bold text-custom-blue">{{ selectedActivityForDetails.inscritos_count ||
+                        0 }}</span>
+                      <span class="fs-4 text-muted mx-2">/</span>
+                      <span class="fs-4 text-secondary">{{ selectedActivityForDetails.cupo || '∞' }}</span>
+                    </div>
+                    <p class="text-muted small mb-0">Voluntarios Inscritos</p>
+                    <div class="progress mx-4 mt-3 rounded-pill" style="height: 10px;">
+                      <div class="progress-bar bg-custom-blue" role="progressbar"
+                        [style.width.%]="(selectedActivityForDetails.inscritos_count / (selectedActivityForDetails.cupo || 1)) * 100">
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="alert alert-info border-0 rounded-4 py-2 small d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    <div>Recuerda que tu participación ayuda a cumplir los ODS.</div>
+                  </div>
+                </div>
+
+                <div class="d-grid mt-4">
+                  <button class="btn btn-custom-blue text-white py-3 rounded-pill fw-bold shadow-sm"
+                    (click)="inscribirse(selectedActivityForDetails); closeActivityModal()">
+                    <i class="bi bi-pencil-square me-2"></i> ¡Quiero Apuntarme!
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
 </div>
