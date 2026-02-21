@@ -13,12 +13,17 @@
             <h1 class="mb-0">{{ editMode ? 'Editando mis Datos' : 'Mi Perfil' }}</h1>
         </div>
         <div class="header-actions">
+            <button
+                class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px;" title="Cambiar Contraseña" (click)="openPasswordModal()">
+                <i class="bi bi-key"></i>
+            </button>
             <button *ngIf="!editMode" (click)="toggleEdit()" class="btn-edit-toggle">
                 <i class="bi bi-pencil-square"></i> Editar Perfil
             </button>
             <button *ngIf="editMode" (click)="submitProfile()"
                 class="btn btn-custom-blue rounded-pill px-4 text-white shadow-sm">
-                Guardar Datos
+                Guardar Cambios
             </button>
         </div>
     </div>
@@ -71,8 +76,7 @@
                 <!-- Experiencia -->
                 <div class="info-item">
                     <label><i class="bi bi-briefcase"></i> Experiencia</label>
-                    <p *ngIf="!editMode" class="animate-text">{{ volunteer?.experiencia || volunteer?.experience || 'Sin
-                        especificar' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ volunteer?.experiencia || volunteer?.experience || 'Sin especificar' }}</p>
                     <textarea *ngIf="editMode" formControlName="experiencia" class="premium-style-input w-100" rows="1"
                         placeholder="Describe tu experiencia..."></textarea>
                 </div>
@@ -80,8 +84,7 @@
                 <!-- Vehículo -->
                 <div class="info-item">
                     <label><i class="bi bi-car-front"></i> Vehículo</label>
-                    <p *ngIf="!editMode" class="animate-text">{{ (volunteer?.coche || volunteer?.hasCar) ? 'Dispone de
-                        coche propio' : 'No dispone de coche' }}</p>
+                    <p *ngIf="!editMode" class="animate-text">{{ (volunteer?.coche || volunteer?.hasCar) ? 'Dispone de coche propio' : 'No dispone de coche' }}</p>
                     <select *ngIf="editMode" formControlName="coche" class="premium-style-input w-100">
                         <option [value]="true">Dispone de coche propio</option>
                         <option [value]="false">No dispone de coche</option>
@@ -175,3 +178,39 @@
         </div>
     </div>
 </div>
+
+<!-- Change Password Modal -->
+@if (showPasswordModal) {
+
+  <!-- Backdrop -->
+  <div class="modal-backdrop fade show modal-backdrop-custom" (click)="closePasswordModal()"></div>
+
+  <!-- Modal -->
+  <div class="modal fade show d-block" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h3 class="modal-title fw-bold text-custom-blue">Cambiar Contraseña</h3>
+          <button class="btn-close" (click)="closePasswordModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted">Ingresa la nueva contraseña:</p>
+          <form autocomplete="off" (submit)="$event.preventDefault()">
+            <div class="form-group mb-4">
+              <input type="password" class="form-control rounded-pill px-4 py-3"
+                placeholder="Nueva contraseña (mínimo 6 caracteres)" [(ngModel)]="newPasswordValue"
+                [ngModelOptions]="{standalone: true}" autocomplete="new-password">
+            </div>
+          </form>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-danger px-4 rounded-pill"
+              (click)="closePasswordModal()">Cancelar</button>
+            <button type="button" class="btn btn-custom-blue text-white px-4 rounded-pill"
+              (click)="submitPasswordChange()">Guardar Contraseña</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+}

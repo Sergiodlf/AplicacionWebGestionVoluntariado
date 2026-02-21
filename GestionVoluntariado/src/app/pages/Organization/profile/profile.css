@@ -346,3 +346,10 @@
         border-radius: 0;
     }
 }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: nowrap;
+}

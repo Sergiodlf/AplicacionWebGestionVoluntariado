@@ -87,6 +87,7 @@ class LoginController extends AbstractController
         }
     }
 
+    // Actualmente no se usa, pero por si acaso se implementa en el futuro
     #[Route('/login/google', name: 'login_google', methods: ['POST'])]
     public function loginGoogle(Request $request): JsonResponse
     {
@@ -138,6 +139,7 @@ class LoginController extends AbstractController
         }
     }
 
+    // Actualmente no se usa, pero por si acaso se implementa en el futuro
     #[Route('/forgot-password', name: 'forgot_password', methods: ['POST'])]
     public function forgotPassword(Request $request): JsonResponse
     {
@@ -169,11 +171,10 @@ class LoginController extends AbstractController
     }
 
     #[Route('/change-password', name: 'change_password', methods: ['POST'])]
-    public function changePassword(Request $request): JsonResponse
+    public function changePassword(Request $request, \App\Service\FirebaseServiceInterface $firebaseService): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
-        $oldPassword = $data['oldPassword'] ?? null;
         $newPassword = $data['newPassword'] ?? null;
 
         // Si no envía email, intentar obtenerlo del usuario autenticado (si hay token)
@@ -184,12 +185,12 @@ class LoginController extends AbstractController
             }
         }
 
-        if (!$email || !$oldPassword || !$newPassword) {
+        if (!$email || !$newPassword) {
             return $this->errorResponse('Email, contraseña actual y nueva contraseña son obligatorios.', 400);
         }
 
         try {
-            $this->authService->changePassword($email, $oldPassword, $newPassword);
+            $firebaseService->adminChangePassword($email, $newPassword);
             return $this->json(['message' => 'Contraseña actualizada correctamente.']);
         } catch (\Exception $e) {
             return $this->errorResponse('Error al cambiar la contraseña: ' . $e->getMessage(), 400);

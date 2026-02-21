@@ -4,8 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { OrganizationService } from '../../../services/organization.service';
 import { AuthService } from '../../../services/auth.service';
 import { Organization } from '../../../models/organizationModel';
-import { ProfileResponse } from '../../../models/profile.model';
-import { OrganizationFormComponent } from '../../../components/Global-Components/organization-form/organization-form.component';
 
 @Component({
   selector: 'app-profile-organization',
@@ -21,6 +19,8 @@ export class ProfileOrganizationComponent implements OnInit {
   message = '';
   isError = false;
   organization: Organization | null = null;
+  // Password modal state
+  showPasswordModal: boolean = false;
 
   availableSectors: string[] = [
     'Educación', 'Salud', 'Social', 'Medio Ambiente',
@@ -159,6 +159,49 @@ export class ProfileOrganizationComponent implements OnInit {
       cp: data.cp,
       descripcion: data.descripcion,
       contacto: data.contacto || ''
+    });
+  }
+
+  // Modal de cambio de contraseña
+
+  newPasswordValue: string = '';
+
+  openPasswordModal() {
+    // For profile page, change password applies to current organization
+    this.showPasswordModal = true;
+    this.newPasswordValue = '';
+    this.setBodyScroll(true);
+  }
+
+  closePasswordModal() {
+    this.showPasswordModal = false;
+    this.newPasswordValue = '';
+    this.setBodyScroll(false);
+  }
+
+  private setBodyScroll(lock: boolean) {
+    if (lock) {
+      document.body.classList.add('body-modal-open');
+    } else {
+      document.body.classList.remove('body-modal-open');
+    }
+  }
+
+  submitPasswordChange() {
+    if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    this.authService.changePassword(this.newPasswordValue, this.profileForm.value.email).subscribe({
+      next: () => {
+        this.closePasswordModal();
+        alert('Contraseña actualizada correctamente.');
+      },
+      error: (err: any) => {
+        console.error('Error updating password', err);
+        alert('Error al actualizar la contraseña.');
+      }
     });
   }
 }

@@ -3,7 +3,6 @@ import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { VolunteerService } from '../../../services/volunteer.service';
 import { CategoryService } from '../../../services/category.service';
-import { VolunteerFormComponent } from '../../../components/Global-Components/volunteer-form/volunteer-form.component';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { Volunteer } from '../../../models/Volunteer';
@@ -12,7 +11,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, VolunteerFormComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -23,6 +22,8 @@ export class ProfileComponent implements OnInit {
   message = '';
   isError = false;
   volunteer: any | null = null;
+  // Password modal state
+  showPasswordModal: boolean = false;
 
   // Options for dropdowns
   availableZones: string[] = [
@@ -238,5 +239,49 @@ export class ProfileComponent implements OnInit {
         ciclo: this.volunteer.ciclo
       });
     }
+  }
+
+  
+  // Modal de cambio de contraseña
+
+  newPasswordValue: string = '';
+
+  openPasswordModal() {
+    // For profile page, change password applies to current organization
+    this.showPasswordModal = true;
+    this.newPasswordValue = '';
+    this.setBodyScroll(true);
+  }
+
+  closePasswordModal() {
+    this.showPasswordModal = false;
+    this.newPasswordValue = '';
+    this.setBodyScroll(false);
+  }
+
+  private setBodyScroll(lock: boolean) {
+    if (lock) {
+      document.body.classList.add('body-modal-open');
+    } else {
+      document.body.classList.remove('body-modal-open');
+    }
+  }
+
+  submitPasswordChange() {
+    if (!this.newPasswordValue || this.newPasswordValue.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    this.authService.changePassword(this.newPasswordValue, this.profileForm.value.email).subscribe({
+      next: () => {
+        this.closePasswordModal();
+        alert('Contraseña actualizada correctamente.');
+      },
+      error: (err: any) => {
+        console.error('Error updating password', err);
+        alert('Error al actualizar la contraseña.');
+      }
+    });
   }
 }

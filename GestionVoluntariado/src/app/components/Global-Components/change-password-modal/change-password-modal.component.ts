@@ -45,7 +45,7 @@ export class ChangePasswordModalComponent {
 
     const { oldPassword, newPassword } = this.form.value;
 
-    this.authService.changePassword(oldPassword, newPassword, this.email).subscribe({
+    this.authService.changePassword(newPassword, this.email).subscribe({
       next: () => {
         this.loading = false;
         this.successMessage = 'Contraseña actualizada con éxito.';

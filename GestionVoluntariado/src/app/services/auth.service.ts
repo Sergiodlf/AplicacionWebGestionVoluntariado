@@ -203,8 +203,8 @@ export class AuthService {
     return this.userProfileSubject.value;
   }
 
-  changePassword(oldPass: string, newPass: string, email?: string): Observable<any> {
-    return this.http.post('/api/auth/change-password', { oldPassword: oldPass, newPassword: newPass, email: email });
+  changePassword(newPass: string, email?: string): Observable<any> {
+    return this.http.post('/api/auth/change-password', { newPassword: newPass, email: email });
   }
 
   adminChangePassword(email: string, newPassword: string): Observable<any> {
