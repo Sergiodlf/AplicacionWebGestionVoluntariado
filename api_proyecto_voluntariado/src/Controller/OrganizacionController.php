@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 
-
-use App\Entity\Organizacion;
 use App\Service\OrganizationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface; 
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/organizations')]
 class OrganizacionController extends AbstractController
@@ -38,9 +36,9 @@ class OrganizacionController extends AbstractController
         $organizaciones = $this->organizationService->getAll($criteria);
 
         return $this->json(
-            $organizaciones, 
-            Response::HTTP_OK, 
-            [], 
+            $organizaciones,
+            Response::HTTP_OK,
+            [],
             ['groups' => ['org:read']]
         );
     }
@@ -48,15 +46,15 @@ class OrganizacionController extends AbstractController
     //#[Route('/api/organizations', name: 'api_organizations_create', methods: ['POST'])]
     #[Route('', name: 'api_organizations_create', methods: ['POST'])]
     public function createOrganization(
-        Request $request, 
+        Request $request,
         SerializerInterface $serializer,
         ValidatorInterface $validator
     ): JsonResponse {
         try {
             /** @var \App\Model\RegistroOrganizacionDTO $dto */
             $dto = $serializer->deserialize(
-                $request->getContent(), 
-                \App\Model\RegistroOrganizacionDTO::class, 
+                $request->getContent(),
+                \App\Model\RegistroOrganizacionDTO::class,
                 'json'
             );
         } catch (\Exception $e) {
@@ -72,11 +70,11 @@ class OrganizacionController extends AbstractController
             }
             return $this->errorResponse('Errores de validación', Response::HTTP_BAD_REQUEST, $errorMessages);
         }
-        
+
         // Uniqueness check
         $dupeError = $this->organizationService->checkDuplicates($dto->cif, $dto->email);
         if ($dupeError) {
-             return $this->errorResponse($dupeError, Response::HTTP_CONFLICT);
+            return $this->errorResponse($dupeError, Response::HTTP_CONFLICT);
         }
 
         $isAdmin = false;
@@ -92,9 +90,9 @@ class OrganizacionController extends AbstractController
         }
 
         return $this->json(
-            $createdOrg, 
-            Response::HTTP_CREATED, 
-            [], 
+            $createdOrg,
+            Response::HTTP_CREATED,
+            [],
             ['groups' => ['org:read']]
         );
     }
@@ -116,18 +114,22 @@ class OrganizacionController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $nuevoEstado = $data['estado'] ?? null;
-        
+
         if ($nuevoEstado) {
-            $enumStatus = \App\Enum\OrganizationStatus::tryFrom(strtolower($nuevoEstado));
-            if (!$enumStatus) {
-                return $this->errorResponse('Estado inválido. Valores permitidos: ' . implode(', ', array_column(\App\Enum\OrganizationStatus::cases(), 'value')), Response::HTTP_BAD_REQUEST);
+            try {
+                $enumStatus = \App\Enum\OrganizationStatus::from(strtoupper(trim($nuevoEstado)));
+            } catch (\ValueError $e) {
+                return $this->errorResponse(
+                    'Estado inválido. Valores permitidos: ' . implode(', ', array_map(fn($c) => $c->name, \App\Enum\OrganizationStatus::cases())),
+                    Response::HTTP_BAD_REQUEST
+                );
             }
-            
+
             $updatedOrg = $this->organizationService->updateState($cif, $enumStatus);
             if (!$updatedOrg) {
-                 return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
+                return $this->errorResponse('Organización no encontrada.', Response::HTTP_NOT_FOUND);
             }
-            
+
             return $this->json($updatedOrg, Response::HTTP_OK, [], ['groups' => ['org:read']]);
         }
 
@@ -154,7 +156,7 @@ class OrganizacionController extends AbstractController
     public function update(string $cif, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        
+
         try {
             $updatedOrg = $this->organizationService->updateOrganization($cif, $data);
         } catch (\Exception $e) {

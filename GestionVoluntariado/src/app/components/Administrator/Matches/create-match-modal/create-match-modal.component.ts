@@ -66,10 +66,10 @@ export class CreateMatchModalComponent implements OnInit, OnDestroy {
           return st === 'ACEPTADO';
         });
         this.activities = result.activities.filter((a: any) => {
-          const st = (a.estado || '').toUpperCase();
+          const st = (a.estadoAprobacion || '').toUpperCase();
           // We allow Pending (execution), Open, Accepted or In-course.
           // Basically just not wanting Cancelled or Rejected (if those are states).
-          return st !== 'CANCELADA' && st !== 'RECHAZADA';
+          return st === 'ACEPTADA';
         });
 
         if (this.selectedActivityId) {
