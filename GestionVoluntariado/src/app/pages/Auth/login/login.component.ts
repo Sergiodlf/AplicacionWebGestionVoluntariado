@@ -4,12 +4,11 @@ import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
-import { ChangePasswordModalComponent } from '../../../components/Global-Components/change-password-modal/change-password-modal.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, HttpClientModule, ChangePasswordModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, HttpClientModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })

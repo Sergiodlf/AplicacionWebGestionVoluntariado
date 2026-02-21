@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\Loginable;
+use App\Security\Loginable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

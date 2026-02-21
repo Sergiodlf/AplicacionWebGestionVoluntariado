@@ -7,7 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use App\Enum\VolunteerStatus;
 use App\Security\Loginable;
@@ -238,8 +237,7 @@ class Voluntario implements Loginable, Notifiable
     // --- Loginable ---
     public function canLogin(): bool
     {
-        return $this->estadoVoluntario === VolunteerStatus::ACEPTADO 
-            || $this->estadoVoluntario === VolunteerStatus::LIBRE;
+        return $this->estadoVoluntario === VolunteerStatus::ACEPTADO;
     }
 
     public function getLoginDeniedReason(): ?string
