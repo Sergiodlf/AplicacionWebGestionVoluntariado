@@ -7,6 +7,7 @@ import { OrganizationService } from '../../../services/organization.service';
 import { Organization } from '../../../models/organizationModel';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
     selector: 'app-organization-form',
@@ -19,6 +20,7 @@ export class OrganizationFormComponent implements OnInit {
 
     private organizationService = inject(OrganizationService);
     private authService = inject(AuthService);
+    private notificationService = inject(NotificationService);
 
     @Input() submitLabel: string = 'Registrarme';
     @Input() isModal: boolean = true;
@@ -114,10 +116,13 @@ export class OrganizationFormComponent implements OnInit {
                     // Admin/Docente editing an organization
                     this.organizationService.updateProfile(this.initialData.cif, formData).subscribe({
                         next: (response) => {
+                            this.notificationService.showSuccess('Organización actualizada correctamente.');
                             this.onSubmit.emit(response.datos || response);
                         },
                         error: (err: any) => {
-                            this.errorMessage = err.error?.message || 'Error al actualizar la organización por el administrador.';
+                            const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+                            this.errorMessage = backendMsg;
+                            this.notificationService.showError('Error al actualizar la organización: ' + backendMsg);
                             console.error('Admin edit error:', err);
                         }
                     });
@@ -125,10 +130,13 @@ export class OrganizationFormComponent implements OnInit {
                     // Organization editing its own profile
                     this.authService.updateProfile(formData).subscribe({
                         next: (response) => {
+                            this.notificationService.showSuccess('Perfil actualizado correctamente.');
                             this.onSubmit.emit(response.datos || response);
                         },
                         error: (err: any) => {
-                            this.errorMessage = err.error?.message || 'Error al actualizar su propio perfil.';
+                            const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+                            this.errorMessage = backendMsg;
+                            this.notificationService.showError('Error al actualizar su perfil: ' + backendMsg);
                             console.error('Self edit error:', err);
                         }
                     });
