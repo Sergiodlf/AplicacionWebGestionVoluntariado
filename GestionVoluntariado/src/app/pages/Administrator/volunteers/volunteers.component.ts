@@ -284,11 +284,14 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     this.volunteerService.updateStatus(volunteer.dni, 'ACEPTADO').subscribe({
       next: () => {
         this.loadingVolunteerId = null;
+        this.notificationService.showSuccess('Voluntario aceptado correctamente.');
         this.refresh$.next(true);
       },
       error: (err: any) => {
         console.error('Error updating status:', err);
         this.loadingVolunteerId = null;
+        const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error al aceptar voluntario: ' + backendMsg);
       },
     });
   }
@@ -299,11 +302,14 @@ export class VolunteersComponent implements OnInit, OnDestroy {
     this.volunteerService.updateStatus(volunteer.dni, 'RECHAZADO').subscribe({
       next: () => {
         this.loadingVolunteerId = null;
+        this.notificationService.showSuccess('Voluntario rechazado correctamente.');
         this.refresh$.next(true);
       },
       error: (err: any) => {
         console.error('Error updating status:', err);
         this.loadingVolunteerId = null;
+        const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error al rechazar voluntario: ' + backendMsg);
       },
     });
   }

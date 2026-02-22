@@ -39,7 +39,7 @@ export class RegisterOrganizationComponent {
             error: (error) => {
                 console.error('Error during backend registration:', error);
                 this.authService.isRegistrationInProgress = false;
-                const backendMsg = error.error?.error || 'Inténtalo de nuevo.';
+                const backendMsg = error.error?.message || error.error?.msg || error.error?.error || error.error || error.message || 'Inténtalo de nuevo.';
                 this.notificationService.showError('Error en el registro: ' + backendMsg);
             }
         });

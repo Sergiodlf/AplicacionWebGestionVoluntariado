@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Organization } from '../../../../models/organizationModel'; // Asegúrate de ajustar la ruta
 import { OrganizationService } from '../../../../services/organization.service'; // Asegúrate de ajustar la ruta
+import { NotificationService } from '../../../../services/notification.service';
 
 @Component({
   selector: 'app-organization-card',
@@ -12,7 +13,10 @@ import { OrganizationService } from '../../../../services/organization.service';
 })
 export class OrganizationCardComponent {
 
-  constructor(private organizationService: OrganizationService) { }
+  constructor(
+    private organizationService: OrganizationService,
+    private notificationService: NotificationService
+  ) { }
 
   @Input({ required: true }) organization!: Organization;
 
@@ -44,11 +48,13 @@ export class OrganizationCardComponent {
     this.organizationService.acceptOrganization(this.organization.cif).subscribe({
       next: () => {
         // CRÍTICO: El hijo notifica al sistema que recargue la lista
+        this.notificationService.showSuccess('Organización aceptada correctamente.');
         this.organizationService.notifyOrganizationUpdate();
       },
       error: (err) => {
         console.error('Error al aceptar organización:', err);
-        // Manejo de error
+        const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error al aceptar organización: ' + backendMsg);
       }
     });
   }
@@ -58,11 +64,13 @@ export class OrganizationCardComponent {
     this.organizationService.rejectOrganization(this.organization.cif).subscribe({
       next: () => {
         // CRÍTICO: El hijo notifica al sistema que recargue la lista
+        this.notificationService.showSuccess('Organización rechazada correctamente.');
         this.organizationService.notifyOrganizationUpdate();
       },
       error: (err) => {
         console.error('Error al rechazar organización:', err);
-        // Manejo de error
+        const backendMsg = err.error?.message || err.error?.msg || err.error?.error || err.error || err.message || 'Inténtalo de nuevo.';
+        this.notificationService.showError('Error al rechazar organización: ' + backendMsg);
       }
     });
   }
