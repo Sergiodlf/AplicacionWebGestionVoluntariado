@@ -6,6 +6,7 @@ import { tap, map, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { ProfileResponse } from '../models/profile.model';
 import { VoluntariadoService } from './voluntariado-service';
+import { environment } from '../../environments/environment';
 
 export interface LoginResponse {
   message: string;
@@ -53,7 +54,7 @@ export class AuthService {
   // --- API LOGIN ---
   login(email: string, pass: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.http.post<LoginResponse>('/api/auth/login', { email, password: pass })
+      this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password: pass })
         .pipe(
           tap(response => {
             this.setSession(response);
@@ -143,7 +144,7 @@ export class AuthService {
   private profileRequest$: Observable<ProfileResponse> | null = null;
 
   getProfile(): Observable<ProfileResponse> {
-    return this.http.get<ProfileResponse>('/api/auth/profile');
+    return this.http.get<ProfileResponse>(`${environment.apiUrl}/auth/profile`);
   }
 
   loadProfile(): Observable<ProfileResponse> {
@@ -178,7 +179,7 @@ export class AuthService {
   }
 
   updateProfile(data: any): Observable<any> {
-    return this.http.put<ProfileResponse>('/api/auth/profile', data).pipe(
+    return this.http.put<ProfileResponse>(`${environment.apiUrl}/auth/profile`, data).pipe(
       tap(response => {
         // Update subject with the data returned from update (already in ProfileResponse format)
         if (response && response.datos) {
@@ -204,11 +205,11 @@ export class AuthService {
   }
 
   changePassword(newPass: string, email?: string): Observable<any> {
-    return this.http.post('/api/auth/change-password', { newPassword: newPass, email: email });
+    return this.http.post(`${environment.apiUrl}/auth/change-password`, { newPassword: newPass, email: email });
   }
 
   adminChangePassword(email: string, newPassword: string): Observable<any> {
-    return this.http.post('/api/auth/admin/change-password', { email: email, newPassword: newPassword });
+    return this.http.post(`${environment.apiUrl}/auth/admin/change-password`, { email: email, newPassword: newPassword });
   }
 
   async refreshToken(): Promise<void> {
@@ -226,7 +227,7 @@ export class AuthService {
 
     try {
       const result: any = await this.http
-        .post('/api/auth/refresh-token', { refreshToken })
+        .post(`${environment.apiUrl}/auth/refresh-token`, { refreshToken })
         .toPromise();
 
       localStorage.setItem('user_token', result.token);

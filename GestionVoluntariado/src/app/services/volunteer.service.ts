@@ -2,15 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, map, tap } from 'rxjs';
 import { Volunteer } from '../models/Volunteer';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VolunteerService {
 
-  private apiUrl = '/api/auth/register/voluntario';
-  private apiGetUrl = '/api/voluntarios';
-  private apiCategoriesUrl = '/api/categories';
+  private apiUrl = `${environment.apiUrl}/auth/register/voluntario`;
+  private apiGetUrl = `${environment.apiUrl}/voluntarios`;
+  private apiCategoriesUrl = `${environment.apiUrl}/categories`;
 
   private volunteersSubject = new BehaviorSubject<Volunteer[] | null>(null);
   volunteers$ = this.volunteersSubject.asObservable();
@@ -36,11 +37,11 @@ export class VolunteerService {
   }
 
   updateStatus(dni: string, status: string): Observable<any> {
-    return this.http.patch(`/api/voluntarios/${dni}`, { estado: status });
+    return this.http.patch(`${environment.apiUrl}/voluntarios/${dni}`, { estado: status });
   }
 
   updateProfile(dni: string, data: any): Observable<any> {
-    return this.http.put(`/api/voluntarios/${dni}`, data);
+    return this.http.put(`${environment.apiUrl}/voluntarios/${dni}`, data);
   }
 
   getVolunteerByEmail(email: string): Observable<Volunteer> {
@@ -55,7 +56,7 @@ export class VolunteerService {
   }
 
   getProfile(): Observable<Volunteer> {
-    return this.http.get<any>('/api/auth/profile').pipe(
+    return this.http.get<any>(`${environment.apiUrl}/auth/profile`).pipe(
       map((response: any) => {
         const v = response.datos;
         return {

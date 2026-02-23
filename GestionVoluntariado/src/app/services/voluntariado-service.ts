@@ -3,13 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Voluntariado } from '../models/Voluntariado';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class VoluntariadoService {
-  private apiUrl = '/api/actividades';
-  private inscripcionesUrl = '/api/inscripciones';
+  private apiUrl = `${environment.apiUrl}/actividades`;
+  private inscripcionesUrl = `${environment.apiUrl}/inscripciones`;
 
   private inscripcionesSubject = new BehaviorSubject<any[] | null>(null);
   inscripciones$ = this.inscripcionesSubject.asObservable();
